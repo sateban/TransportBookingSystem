@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaflet Map Example</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="styles/leaflet.css" />
+    <link rel="stylesheet" href="styles/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="styles/leaflet.draw.css" />
+    <link rel="stylesheet" href="styles/Control.Geocoder.css" />
+
+    <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" /> -->
+
+    <style>
+      /* Set the size of the map container */
+      #map {
+        height: 100lvh;
+        width: 100%;
+        /* background: red; */
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        /* padding: 0; */
+      }
+/* 
+      #toolbar {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+      }
+      #toolbar button {
+        display: block;
+        margin: 5px 0;
+      } */
+
+    </style>
+  </head>
+  <body>
+    <!-- <div style="margin: 5px;"> -->
+    <!-- <h1>Map</h1>
+      <button id="test">Button</button> -->
+    <!-- <p id="location">Waiting for location...</p> -->
+    <!-- </div> -->
+    <!-- <div id="toolbar">
+      <button id="zoomIn">Zoom In</button>
+    </div> -->
+    <button id="zoomOut">Zoom Out</button>
+    <div id="error"></div>
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="script/jquery.3.2.1.min.js"></script>
+    <script src="script/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script>
+    <script src="script/leaflet-routing-machine.js"></script>
+    <script src="script/leaflet.draw.js"></script>
+    <script src="script/Control.Geocoder.js"></script>
+
+    <script src="script/script.js"></script>
+  </body>
+</html>
