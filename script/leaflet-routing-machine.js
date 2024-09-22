@@ -17954,6 +17954,8 @@ module.exports = L.Routing = {
 
 			options = L.extend({}, this.options.routingOptions, options);
 			url = this.buildRouteUrl(waypoints, options);
+            // console.log(url);
+
 			if (this.options.requestParameters) {
 				url += L.Util.getParamString(this.options.requestParameters, url);
 			}
@@ -17974,7 +17976,7 @@ module.exports = L.Routing = {
 				wps.push(new Waypoint(wp.latLng, wp.name, wp.options));
 			}
 
-			return xhr = corslite(url, L.bind(function(err, resp) {
+			xhr = corslite(url, L.bind(function(err, resp) {
 				var data,
 					error =  {};
 
@@ -18006,6 +18008,10 @@ module.exports = L.Routing = {
 					xhr.abort();
 				}
 			}, this));
+
+            // Jake
+            window.xhr = xhr;
+            return xhr;
 		},
 
 		requiresMoreDetail: function(route, zoom, bounds) {
@@ -18229,6 +18235,14 @@ module.exports = L.Routing = {
 
 			computeInstructions =
 				true;
+
+            // console.log(this.options.serviceUrl + '/' + this.options.profile + '/' +
+			// 	locs.join(';') + '?' +
+			// 	(options.geometryOnly ? (options.simplifyGeometry ? '' : 'overview=full') : 'overview=false') +
+			// 	'&alternatives=' + computeAlternative.toString() +
+			// 	'&steps=' + computeInstructions.toString() +
+			// 	(this.options.useHints ? '&hints=' + hints.join(';') : '') +
+			// 	(options.allowUTurns ? '&continue_straight=' + !options.allowUTurns : ''));
 
 			return this.options.serviceUrl + '/' + this.options.profile + '/' +
 				locs.join(';') + '?' +

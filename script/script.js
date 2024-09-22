@@ -1,3 +1,5 @@
+let isListeningForLocation = false;
+
 var map; // Declare the map variable globally
 var marker; // Declare the marker variable globally
 
@@ -7,6 +9,7 @@ let waypoints = [
 ];
 
 function initializeMap() {
+  console.log("Initializing Map");
   // Initialize the map only once
   // map = L.map("map").setView([0, 0], 3); // Set initial view (default center)
   // let boundPoint = waypoints.map((point) => {
@@ -14,21 +17,20 @@ function initializeMap() {
   //   let newLng = point.lng;
   //   return L.latLng(newLat, newLng);
   // });
-  
 
   // let bounds = L.latLngBounds(boundPoint[0], boundPoint[1]);
   let bounds = boundPoint(waypoints); //L.latLngBounds(boundPoint[0], boundPoint[1]);
 
   map = L.map("map", {
     // drawControl: true,
-    maxBounds: bounds,
+    // maxBounds: bounds,
     minZoom: 8, // zoom out -> the small the greater the zoom out, default useing 15
     maxZoom: 18,
     center: [0, 0],
     trackResize: 5,
-    maxBoundsViscosity: 1.0,  // Optional: Makes the bounds more restrictive (0 to 1)
-    zoomControl:true, 
-    maxNativeZoom:28, 
+    maxBoundsViscosity: 1.0, // Optional: Makes the bounds more restrictive (0 to 1)
+    zoomControl: true,
+    maxNativeZoom: 28,
     // zoom: 19,
     // rotate: true,
   });
@@ -42,84 +44,82 @@ function initializeMap() {
 
   var control = L.Routing.control({
     waypoints: waypoints,
-    routeWhileDragging: true
+    routeWhileDragging: false,
   }).addTo(map);
 
-    // Initialize geocoder control
-    var geocoder = L.Control.geocoder({
-      defaultMarkGeocode: false,
+  // Initialize geocoder control
+  var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false,
+  })
+    .on("markgeocode", function (e) {
+      var latlng = e.geocode.center;
+      console.log("Test Here", e);
+      control.setWaypoints([
+        // L.latLng(51.5, -0.09),  // Starting point
+        waypoints[0],
+        latlng, // End point from geocoder
+      ]);
+
+      let w = [
+        waypoints[0],
+        latlng,
+        // L.latLng(11.6794671, 122.3640332),
+      ];
+      // w[0]["lat"] = waypoints[0];
+      // w[0]["lng"] = latlng;
+      // console.log(w);
+      // console.log(waypoints[0], latlng, w[0]);
+
+      // map.setView(latlng, 13);
+      // map.options.minZoom = 8;
+      // map.options.maxBounds = boundPoint(waypoints);
+
+      fitWaypointsOnSearch(w);
+      // console.log(w);
     })
-      .on("markgeocode", function (e) {
-        var latlng = e.geocode.center;
-        console.log("Test Here", { latlng });
-        control.setWaypoints([
-          // L.latLng(51.5, -0.09),  // Starting point
-          waypoints[0],
-          latlng, // End point from geocoder
-        ]);
-        let w = [
-          waypoints[0],
-          latlng
-          // L.latLng(11.6794671, 122.3640332),
-        ];
-        // w[0]["lat"] = waypoints[0];
-        // w[0]["lng"] = latlng;
-        // console.log(w);
-        // console.log(waypoints[0], latlng, w[0]);
+    .addTo(map);
 
-        // map.setView(latlng, 13);
-        // map.options.minZoom = 8; 
-        // map.options.maxBounds = boundPoint(waypoints);
+  control.on("routesfound", function (e) {
+    const routes = e.routes;
+    const totalDistance = routes[0].summary.totalDistance; // Distance in meters
+    // console.log(`Total Distance: ${totalDistance} meters`);
+    $("#distance").text(`Total Distance: ${totalDistance} meters`);
 
-        fitWaypointsOnSearch(w);
-        // console.log(w);
-        
-      })
-      .addTo(map);
+    // Optionally, display the distance on the map or in a popup
+    L.popup()
+      .setLatLng(routes[0].waypoints[0].latLng) // Display near the starting point
+      .setContent(`Total Distance: ${(totalDistance / 1000).toFixed(2)} km`)
+      .openOn(map);
+  });
 
+  // L.DomEvent.on(routingControl, "routesfound", function (e) {
+  //   const routes = e.routes; // Get the routes
+  //   const routePoints = routes[0].coordinates; // Get the coordinates of the first route
 
-  // Set the map bounds
-
-  // Ensure the map stays within bounds when panning
-  // map.on("drag", function () {
-  //   var center = map.getCenter();
-  //   console.log(center);
-  //   var newBounds = L.latLngBounds(center, center);
-  //   map.setMaxBounds(newBounds);
+  //   // Now calculate the bounds
+  //   const bounds = calculateBounds(routePoints);
+  //   console.log(bounds);
   // });
 
-  // map.setMaxBounds(map.getBounds());
-
-  // Initialize drawing tools
-  // var drawnItems = new L.FeatureGroup();
-  // map.addLayer(drawnItems);
-
-  // var drawControl = new L.Control.Draw({
-  //   edit: {
-  //     featureGroup: drawnItems,
-  //   },
-  // });
-  // map.addControl(drawControl);
-
-  // // Handle drawing events
-  // map.on(L.Draw.Event.CREATED, function (e) {
-  //   var layer = e.layer;
-  //   drawnItems.addLayer(layer);
-  // });
-
-  // Add toolbar functionality
-  // document.getElementById("zoomIn").addEventListener("click", function () {
-  //   map.zoomIn();
-  // });
-
-  // document.getElementById("zoomOut").addEventListener("click", function () {
-  //   map.zoomOut();
-  // });
-
-  // var streetsLayer =
-  // L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}{r}?access_token=pk.eyJ1IjoibGllZG1hbiIsImEiOiJjazIweGloNHAxOWZkM2NxZ3YyaHhtNXJ6In0._Hw--m4ilmGxw0YR39vmYA', {
-  // 		attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>"
-  // 	});
+  $(".leaflet-top.leaflet-right").append(`
+    <div class="leaflet-control-geocoder leaflet-bar leaflet-control" id="find-location">
+      <button
+        class="leaflet-control-geocoder-icon"
+        type="button"
+        aria-label="Initiate a new search"
+        style="outline-style: none; background-image: url(/assets/images/location.svg)"
+      >
+        &nbsp;
+      </button>
+      <div class="leaflet-control-geocoder-form">
+        <input class="" type="text" placeholder="Search..." />
+      </div>
+      <div class="leaflet-control-geocoder-form-no-error">Nothing found.</div>
+      <ul
+        class="leaflet-control-geocoder-alternatives leaflet-control-geocoder-alternatives-minimized"
+      ></ul>
+    </div>
+    `);
 
   // Add a click event listener to the map
   map.on("click", function (e) {
@@ -131,34 +131,71 @@ function initializeMap() {
     console.log(`Latitude: ${lat}, Longitude: ${lng}`);
   });
 
-  // Load and display GeoJSON data
-  // fetch("Antique.geojson")
-  // fetch("test.geojson")
-  //   .then((response) => response.json())
-  //   .then((data) => {
-  //     L.geoJSON(data, {
-  //       style: function (feature) {
-  //         return {
-  //           color: feature.properties.color || "blue",
-  //           weight: 5,
-  //           opacity: 0.7,
-  //         };
-  //       },
-  //       onEachFeature: function (feature, layer) {
-  //         layer.bindPopup(feature.properties.name || "No name");
-  //         // console.log(feature.properties.name);
-  //       },
-  //     }).addTo(map);
-  //   })
-  //   .catch((error) => console.error("Error loading GeoJSON:", error));
+  $("#find-location").on("click", () => {
+    $("#overlayed-text").text("Retrieving Location...");
+    // Allow user to read when the request is sent quickly
+    $(".overlay").fadeIn(500);
+    let counter = 0;
+    let json = { request_current_location: true };
+
+    sendData(json);
+    isListeningForLocation = true;
+
+    let loading = setInterval(() => {
+      counter++;
+
+      if (counter % 2 == 0) {
+        $(".overlay").fadeIn(500);
+      } else {
+        $(".overlay").fadeOut(500);
+      }
+
+      // When response received from Android
+      // disabled loading overlay
+      if (!isListeningForLocation) {
+        clearInterval(loading);
+
+        let retLoc = JSON.parse($("#response-listener").text());
+        console.log(retLoc.lat);
+        // waypoints = setWayPointsNewValue(+retLoc.lat, +retLoc.lng);
+        let wp = L.latLng(+retLoc.lat, +retLoc.lng); // New values
+        fitWaypointsNewValue(wp);
+
+      }
+    }, 600);
+  });
 
   streetsLayer.addTo(map);
 
   fitWaypoints();
 }
 
+function fitWaypointsNewValue(wp) {
+  var bounds = L.latLngBounds([wp], [wp]);
+  // map.fitBounds(bounds, { padding: [50, 50] }); // Adjust padding as needed
+  // map.fitBounds(bounds); // Adjust padding as needed
+  map.fitBounds(bounds, {
+    // padding: [50, 50],       // Optional padding
+    animate: true,           // Enable animation
+    duration: 1.5            // Duration of the animation in seconds (default is 0.25)
+});
+
+  map.setZoom(16); // Ensure zoom doesn't go beyond 15
+}
+
+// function setWayPointsNewValue(latitude, longitude){
+//   return waypoints[0] = L.latLng(latitude, longitude); // New values
+// }
+
+function setLatLng(latitude, longitude) {
+  let latlngFromAndroid = { lat: latitude, lng: longitude };
+  let latlngFromAndroidStr = JSON.stringify(latlngFromAndroid);
+
+  $("#response-listener").text(latlngFromAndroidStr);
+}
+
 function receiveLocation2(latitude, longitude, inBrowserCall = false) {
-  // document.getElementById("location").innerHTML =
+  // document.getElementById("error").innerHTML =
   //   "Latitude: " +
   //   latitude +
   //   ", Longitude: " +
@@ -167,6 +204,8 @@ function receiveLocation2(latitude, longitude, inBrowserCall = false) {
   //   Math.random();
   sessionStorage.setItem("lat", latitude);
   sessionStorage.setItem("lon", longitude);
+
+  waypoints[0] = L.latLng(latitude, longitude); // New values
 
   if (!map) {
     initializeMap(); // Initialize the map if it hasn't been done yet
@@ -181,7 +220,7 @@ function receiveLocation2(latitude, longitude, inBrowserCall = false) {
   //   rotate: true,
   // });
   // Update the map view
-  map.setView([latitude, longitude], 3);
+  // map.setView([latitude, longitude], 3);
 
   // Function to add route with border effect
   function addRouteWithBorder(route) {
@@ -218,7 +257,7 @@ function receiveLocation2(latitude, longitude, inBrowserCall = false) {
       // }, // Disable markers
       draggableWaypoints: false, // Disable dragging
       addWaypoints: false, // Prevent adding waypoints
-      routeWhileDragging: true,
+      routeWhileDragging: false,
       lineOptions: {
         styles: [{ color: "#0f53ff", weight: 6 }],
       },
@@ -254,233 +293,187 @@ function receiveLocation2(latitude, longitude, inBrowserCall = false) {
       .bindPopup("Starting <b>Point</b>")
       .openPopup();
   }
-
-  // var latitude = 14.370958441729798;
-  // var longitude = 120.93901384235421; // Replace with your longitude
-
-  // var map = L.map("map").setView([latitude, longitude], 13);
-
-  // var latitude = +latitude; //14.370958441729798;
-  // var longitude = +longitude; //120.93901384235421; // Replace with your longitude
-
-  // map.on('load', function() {
-  //   map.invalidateSize();
-  // });
-
-  // var streetsLayer = L.tileLayer(
-  //   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  //   {
-  //     // attribution:
-  //     //   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  //     maxZoom: 19,
-  //   }
-  // );
-
-  // Initialize the map and set its view to the specified geographical coordinates and zoom level
-  // Initialize the map and set its view to the specified geographical coordinates and zoom level
-  //  var map = L.map('map').setView([51.505, -0.09], 13);
-
-  // Add a tile layer to the map (OpenStreetMap)
-  //  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  // 	 // attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  //  }).addTo(map);
-
-  // var streetsLayer = L.vectorGrid.protobuf(" http://127.0.0.1:8000/tiles/{z}/{x}/{y}.pbf", {
-  //   vectorTileLayerStyles: {
-  //       myLayerName: {
-  //           weight: 2,
-  //           color: '#ff0000',
-  //           fillColor: '#ffff00',
-  //           fillOpacity: 0.5
-  //       }
-  //   },
-  //   attribution: 'Map data &copy; contributors'
-  // }).addTo(map);
-
-  // var satelliteLayer = L.tileLayer(
-  //   "https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-  //   {
-  //     // attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>',
-  //     maxZoom: 20,
-  //   }
-  // );
-
-  // var terrainLayer = L.tileLayer(
-  //   "https://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png",
-  //   {
-  //     attribution: '&copy; <a href="http://maps.stamen.com">Stamen Design</a>',
-  //     maxZoom: 18,
-  //   }
-  // );
-
-  // var trafficLayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/traffic-day-v2/tiles/{z}/{x}/{y}?access_token=YOUR_MAPBOX_ACCESS_TOKEN', {
-  // 	attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a> contributors',
-  // 	maxZoom: 19
-  // });
-
-  // var baseLayer =L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  // 	maxZoom: 19,
-  // 	attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>'
-  // }).addTo(map);
-
-  // var terrain = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-  // 	maxZoom: 20,
-  // 	subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
-  //   }).addTo(map);
-
-  // Add a base layer group with options
-  // var baseLayers = {
-  //   Streets: streetsLayer,
-  //   Satellite: satelliteLayer,
-  // //   Terrain: terrain,
-  // };
-
-  // Add the default layer
-  // streetsLayer.addTo(map);
-
-  // Add layer control
-  // L.control.layers(baseLayers).addTo(map);
-
-  // Add a marker to the map
-  // L.marker([latitude, longitude])
-  //   .addTo(map)
-  //   //  .bindPopup('This is a test')
-  //   .bindPopup("A pretty CSS3 popup.<br> Easily customizable.")
-  //   .openPopup();
-
-  // receiveLocation(14.359, 120.9048901);
-
-  // function receiveLocation(latitude, longitude) {
-  //   document.getElementById('location').innerHTML = 'Latitude: ' + latitude + ', Longitude: ' + longitude + Math.random();
-  //   sessionStorage.setItem("lat", latitude);
-  //   sessionStorage.setItem("lon", longitude);
-  // //receiveLocation(100, 100);
-
-  // var latitude = +latitude; //14.370958441729798;
-  // var longitude = +longitude; //120.93901384235421; // Replace with your longitude
-
-  // // Initialize the map and set its view to the specified geographical coordinates and zoom level
-  // var map = L.map("map").setView([latitude, longitude], 13);
-  // map.invalidateSize();
-  // document.getElementById('location').innerHTML += " Map Invalidate";
-  // // Initialize the map and set its view to the specified geographical coordinates and zoom level
-  // //  var map = L.map('map').setView([51.505, -0.09], 13);
-
-  // // Add a tile layer to the map (OpenStreetMap)
-  // //  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  // // 	 // attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  // //  }).addTo(map);
-
-  // var streetsLayer =
-  // L.tileLayer(
-  // "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  // {
-  // // attribution:
-  // //   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  // maxZoom: 19,
-  // }
-  // );
-
-  // // var satelliteLayer = L.tileLayer(
-  // //   "https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-  // //   {
-  // //     // attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>',
-  // //     maxZoom: 20,
-  // //   }
-  // // );
-
-  // // var terrainLayer = L.tileLayer(
-  // //   "https://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png",
-  // //   {
-  // //     attribution: '&copy; <a href="http://maps.stamen.com">Stamen Design</a>',
-  // //     maxZoom: 18,
-  // //   }
-  // // );
-
-  // // var trafficLayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/traffic-day-v2/tiles/{z}/{x}/{y}?access_token=YOUR_MAPBOX_ACCESS_TOKEN', {
-  // // 	attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a> contributors',
-  // // 	maxZoom: 19
-  // // });
-
-  // // var baseLayer =L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  // // 	maxZoom: 19,
-  // // 	attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>'
-  // // }).addTo(map);
-
-  // // var terrain = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-  // // 	maxZoom: 20,
-  // // 	subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
-  // //   }).addTo(map);
-
-  // // Add a base layer group with options
-  // // var baseLayers = {
-  // //   Streets: streetsLayer,
-  // //   Satellite: satelliteLayer,
-  // // //   Terrain: terrain,
-  // // };
-
-  // // Add the default layer
-  // //L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  // //    maxZoom: 19,
-  // //}).addTo(map);
-  // streetsLayer.addTo(map);
-  // //terrain.addTo(map);
-  // // Add layer control
-  // // L.control.layers(baseLayers).addTo(map);
-
-  // // Add a marker to the map
-  // L.marker([latitude, longitude])
-  // .addTo(map)
-  // //  .bindPopup('This is a test')
-  // .bindPopup("A pretty CSS3 popup.<br> Easily customizable.")
-  // .openPopup();
 }
 
 // receiveLocation(14.370958441729798, 120.93901384235421);
 // receiveLocation(11.380985878331284, 122.06387884559439);
-receiveLocation2(11.6837159, 122.3571831, true);
+// receiveLocation2(11.6837159, 122.3571831, true);
+// initializeMap();
 
 function fitWaypoints() {
   var bounds = L.latLngBounds(waypoints);
   // map.fitBounds(bounds, { padding: [50, 50] }); // Adjust padding as needed
   map.fitBounds(bounds); // Adjust padding as needed
 
-  // Optionally, set a maximum zoom level to prevent excessive zoom out
-  //  var zoom = map.getBoundsZoom(bounds, true); // Calculate the zoom level for the bounds
-  //  console.log(zoom);
-  //  if (zoom > 15) { // Set your desired max zoom level
   map.setZoom(map.getZoom() - 2); // Ensure zoom doesn't go beyond 15
-  //  }
-  // L.map("map", {
-  //   drawControl: false,
-  //   minZoom: 1,
-  //   maxZoom: 3,
-  //   center: [0, 0],
-  //   zoom: 4,
-  //   rotate: true,
-  // });
 }
 
 function fitWaypointsOnSearch(w) {
   var bounds = L.latLngBounds(w);
-  // map.options.maxBounds = boundPoint(w);
-  
-  map.fitBounds(bounds); // Adjust padding as needed
+
+  map.fitBounds(bounds, {
+    // padding: [100, 100], // Top/bottom and left/right padding in pixels
+  });
+
   // Use fitBounds with padding to ensure the map fits correctly
-  map.setZoom(map.getZoom() - 5); // Ensure zoom doesn't go beyond 15
-  
-  // map.fitBounds(bounds, {
-  //   padding: [50, -50], // Adjust this padding (in pixels) as needed to avoid clipping
-  // });
-  // map.setMaxBounds(boundPoint(w));
-  // var paddedBounds = bounds.pad(-0.5); // Slightly expand the bounds by 5%
-  // map.setMaxBounds(paddedBounds);
+  // map.setZoom(map.getZoom()); // Ensure zoom doesn't go beyond 15
+  // map.setMaxZoom(map.getZoom()); // Ensure zoom doesn't go beyond 15
+  map.setMinZoom(map.getZoom() - 2); // Ensure zoom doesn't go beyond 15
 
-
-
+  console.log("map.getZoom()", map.getZoom());
+  setMaxBoundsOnSearch(w);
 }
 
-function boundPoint(waypoints){
+function setMaxBoundsOnSearch(w) {
+  // var currentZoom = map.getZoom();
+  // Update the maxBoundsViscosity based on the zoom level (optional)
+  // var viscosity = currentZoom > 12 ? 0.1 : 0.5; // Allow more flexibility when zoomed in
+  readSVGPath()
+    .then((value) => {
+      // console.log("Value", value);
+      w[0].lat = value[0];
+      w[0].lng = value[1];
+      w[1].lat = value[2];
+      w[1].lng = value[3];
+
+      const originalBounds = L.latLngBounds(
+        w.map((w) => L.latLng(w.lat, w.lng))
+      );
+      const expandedBounds = expandBounds(originalBounds, 80);
+
+      map.setMaxBounds(expandedBounds);
+
+      // var rectangle = L.rectangle(expandedBounds, {
+      //   color: "#ff7800", // Rectangle border color
+      //   weight: 2, // Border thickness
+      //   fillOpacity: 0.2, // Fill opacity
+      // }).addTo(map);
+    })
+    .catch((error) => {
+      console.log("Error", error);
+    });
+
+  // console.log({ expandedBounds });
+  // console.log(readSVGPath());
+}
+
+function readSVGPath() {
+  // Regular expression to match all coordinate pairs
+  let foundElement = null;
+  let isReady = false;
+  let wp = {};
+
+  let panner = setInterval(() => {
+    map.panBy([1, 1]);
+  }, 1000);
+
+  return new Promise((resolve, reject) => {
+    try {
+      // Listen for the 'moveend' event, which happens after the view has been changed
+      map.on("moveend", function () {
+        // console.log("Map view has been updated, including setMaxBounds.");
+
+        let domRed = $(".leaflet-interactive");
+        for (let i = 0; i < domRed.length; i++) {
+          let redPath = $(domRed).eq(i).css("stroke");
+
+          if (redPath == "rgb(255, 0, 0)") {
+            // console.log(redPath);
+            foundElement = $(domRed).eq(i).attr("d");
+            break;
+          }
+        }
+
+        if (foundElement != null && !isReady) {
+          // console.log(foundElement);
+
+          const regex = /[\d.-]+/g;
+          // console.log(foundElement);
+
+          const coords = foundElement.match(regex).map(Number);
+
+          // Initialize arrays to hold latitude and longitude
+          const latLngArray = [];
+
+          // Iterate through the coordinates
+          for (let i = 0; i < coords.length; i += 2) {
+            const x = coords[i];
+            const y = coords[i + 1];
+
+            // Convert SVG coordinates to LatLng (adjust as needed for your projection)
+            const latLng = map.layerPointToLatLng(L.point(x, y)); // 'map' is your Leaflet map instance
+            latLngArray.push(latLng);
+          }
+
+          // Now latLngArray contains the corresponding LatLng points
+          // console.log(latLngArray);
+
+          // Initialize min and max variables with extreme values
+          let minLat = Infinity,
+            maxLat = -Infinity;
+          let minLng = Infinity,
+            maxLng = -Infinity;
+
+          // Iterate over latLngArray to find the min and max values
+          latLngArray.forEach((latLng) => {
+            const lat = latLng.lat;
+            const lng = latLng.lng;
+
+            // Update min and max latitudes
+            if (lat < minLat) minLat = lat;
+            if (lat > maxLat) maxLat = lat;
+
+            // Update min and max longitudes
+            if (lng < minLng) minLng = lng;
+            if (lng > maxLng) maxLng = lng;
+          });
+
+          // Output the results
+          // console.log("Min Lat:", minLat);
+          // console.log("Max Lat:", maxLat);
+          // console.log("Min Lng:", minLng);
+          // console.log("Max Lng:", maxLng);
+
+          isReady = true;
+
+          wp[0] = minLat;
+          wp[1] = minLng;
+          wp[2] = maxLat;
+          wp[3] = maxLng;
+
+          // return "test";
+          clearInterval(panner);
+          resolve(wp);
+        }
+      });
+    } catch (error) {
+      // Reject the promise if any errors occur
+      reject(error);
+    }
+  });
+}
+
+function expandBounds(bounds, percentage) {
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+
+  const latDiff = ne.lat - sw.lat;
+  const lngDiff = ne.lng - sw.lng;
+
+  const newSw = L.latLng(
+    sw.lat - (latDiff * (percentage / 100)) / 2,
+    sw.lng - (lngDiff * (percentage / 100)) / 2
+  );
+
+  const newNe = L.latLng(
+    ne.lat + (latDiff * (percentage / 100)) / 2,
+    ne.lng + (lngDiff * (percentage / 100)) / 2
+  );
+
+  return L.latLngBounds(newSw, newNe);
+}
+
+function boundPoint(waypoints) {
   let boundPoint = waypoints.map((point) => {
     let newLat = point.lat;
     let newLng = point.lng;
@@ -490,19 +483,18 @@ function boundPoint(waypoints){
   return boundPoint;
 }
 
+function sendData(jsonData) {
+  window.Android.sendDataToAndroid(JSON.stringify(jsonData));
+}
+
 $("#test").on("click", () => {
   console.log("Test");
   fitWaypoints();
 });
 
-var jsonData = {
-  key1: "value1",
-  key2: "value2",
-  // Add more key-value pairs as needed
-};
-
 window.Test = (w) => {
-  map.setMaxBounds(boundPoint(w));
+  // map.setMaxBounds(boundPoint(w));
+  map.panBy([1, 1]);
 };
 
 // Send JSON data to Android
@@ -516,4 +508,32 @@ $("#zoomOut").on("click", () => {
     console.log("Hello error", e);
     $("#error").text(e);
   }
+});
+
+$(document).ready(function () {
+  // Select the div element using jQuery
+  const targetDiv = $("#response-listener")[0]; // jQuery returns a collection, so we need to get the first element
+
+  // Create a MutationObserver instance
+  const observer = new MutationObserver(function (mutationsList) {
+    mutationsList.forEach(function (mutation) {
+      if (mutation.type === "childList" || mutation.type === "characterData") {
+        console.log("Div content changed:");
+
+        isListeningForLocation = false;
+      }
+    });
+  });
+
+  // Start observing the div for changes
+  observer.observe(targetDiv, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+
+  // // Change the div content programmatically using jQuery
+  // $('#changeDiv').click(function() {
+  //     $('#response-listener').text('Change Div Content');
+  // });
 });
