@@ -9,7 +9,7 @@ let waypoints = [
 ];
 
 function initializeMap() {
-  console.log("Initializing Map");
+  console.log("Initializing Map...");
   // Initialize the map only once
   // map = L.map("map").setView([0, 0], 3); // Set initial view (default center)
   // let boundPoint = waypoints.map((point) => {
