@@ -107,7 +107,7 @@ function initializeMap() {
         class="leaflet-control-geocoder-icon"
         type="button"
         aria-label="Initiate a new search"
-        style="outline-style: none; background-image: url(/assets/images/location.svg)"
+        style="outline-style: none; background-image: url('assets/images/location.svg')"
       >
         &nbsp;
       </button>
@@ -494,7 +494,8 @@ $("#test").on("click", () => {
 
 window.Test = (w) => {
   // map.setMaxBounds(boundPoint(w));
-  map.panBy([1, 1]);
+  // map.panBy([1, 1]);
+  receiveLocation2(14, 210);
 };
 
 // Send JSON data to Android
@@ -537,3 +538,4 @@ $(document).ready(function () {
   //     $('#response-listener').text('Change Div Content');
   // });
 });
+
