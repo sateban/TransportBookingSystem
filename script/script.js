@@ -50,7 +50,8 @@ function initializeMap() {
     // }
   }).addTo(map);
 
-  map.zoomControl.setPosition('bottomright');
+  // map.zoomControl.setPosition('bottomright');
+  // map.zoomControl.setPosition('bottomright');
 
   // Initialize geocoder control
   var geocoder = L.Control.geocoder({
