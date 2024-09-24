@@ -45,7 +45,12 @@ function initializeMap() {
   var control = L.Routing.control({
     waypoints: waypoints,
     routeWhileDragging: false,
+    // zoom: {
+    //   position: 'bottomleft'
+    // }
   }).addTo(map);
+
+  map.zoomControl.setPosition('bottomright');
 
   // Initialize geocoder control
   var geocoder = L.Control.geocoder({
@@ -166,6 +171,7 @@ function initializeMap() {
   });
 
   streetsLayer.addTo(map);
+
 
   fitWaypoints();
 }
@@ -298,7 +304,7 @@ function receiveLocation2(latitude, longitude, inBrowserCall = false) {
 // receiveLocation(14.370958441729798, 120.93901384235421);
 // receiveLocation(11.380985878331284, 122.06387884559439);
 // receiveLocation2(11.6837159, 122.3571831, true);
-// initializeMap();
+initializeMap();
 
 function fitWaypoints() {
   var bounds = L.latLngBounds(waypoints);
