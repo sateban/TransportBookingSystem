@@ -580,10 +580,12 @@ function RetrieveActualAddressName(coordinates) {
         $("#input-pickup-location").val(address);
         $("#input-pickup-location").attr("lat", lat);
         $("#input-pickup-location").attr("lng", lon);
+        isPickupListeningForLocation = false;
       } else if(isDropListeningForLocation){
         $("#input-dropoff-location").val(address);
         $("#input-dropoff-location").attr("lat", lat);
         $("#input-dropoff-location").attr("lng", lon);
+        isDropListeningForLocation = false;
       }
       
     })
@@ -732,11 +734,11 @@ $("#input-pickup-location").on("focus blur", (e) => {
   let currentLocation = $("#pickup-use-current-location");
   let dropLocation = $("#drop-use-current-location");
   dropLocation.css("visibility", "hidden");
-  dropLocation.fadeOut(500);
+  // dropLocation.fadeOut(500);
 
   if (e.type == "focus") {
     currentLocation.css("visibility", "visible");
-    currentLocation.fadeIn(500);
+    // currentLocation.fadeIn(500);
   }
   // else {
   //   currentLocation.fadeOut(500);
@@ -748,11 +750,11 @@ $("#input-dropoff-location").on("focus blur", (e) => {
   let dropLocation = $("#drop-use-current-location");
   let currentLocation = $("#pickup-use-current-location");
   currentLocation.css("visibility", "hidden");
-  currentLocation.fadeOut(500);
+  // currentLocation.fadeOut(500);
 
   if (e.type == "focus") {
     dropLocation.css("visibility", "visible");
-    dropLocation.fadeIn(500);
+    // dropLocation.fadeIn(500);
   }
   // else {
   //   dropLocation.fadeOut(500);
@@ -772,4 +774,46 @@ $("#drop-use-current-location").on("click", (e) => {
   let json = { request_current_location: true };
   sendData(json);
   isDropListeningForLocation = true;
+});
+
+// 🔲 Done button
+$("#btn-done").on("click", (e) => {
+  let pickupText = $("#input-pickup-location").val();
+  let dropoffText = $("#input-dropoff-location").val();
+  console.log(pickupText, dropoffText);
+
+  if(pickupText == "" && dropoffText == ""){
+    iziToast.warning({
+      title: "Incomplete Fields",
+      message: `Please enter Pickup and Drop-off locations`,
+      icon: "fa fa-exclamation-circle",
+      position: "topRight",
+      timeout: 5000
+    });
+  } else if(pickupText == "" && dropoffText != ""){
+    iziToast.warning({
+      title: "Incomplete Field",
+      message: `Please enter Pickup locations`,
+      icon: "fa fa-exclamation-circle",
+      position: "topRight",
+      timeout: 5000
+    });
+  } else if(pickupText != "" && dropoffText == ""){
+    iziToast.warning({
+      title: "Incomplete Field",
+      message: `Please enter Drop-off locations`,
+      icon: "fa fa-exclamation-circle",
+      position: "topRight",
+      timeout: 5000
+    });
+  } else {
+    iziToast.success({
+      title: "Searching Router",
+      message: `Please wait`,
+      icon: "fa fa-check",
+      position: "topRight",
+      timeout: 3500
+    });
+  }
+
 });
