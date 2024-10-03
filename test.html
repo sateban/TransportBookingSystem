@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Routing with Search Results</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+</head>
+<body>
+    <div id="map" style="height: 500px;"></div>
+    <input type="text" id="search-input" placeholder="Enter location" />
+    <button onclick="searchLocation()">Search</button>
+    <ul id="results-list"></ul>
+
+    <script>
+        var map = L.map('map').setView([51.505, -0.09], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        var control = L.Routing.control({
+            waypoints: [
+                L.latLng(51.505, -0.09), // Initial point
+                L.latLng(51.51, -0.1)   // Destination point
+            ],
+            routeWhileDragging: true
+        }).addTo(map);
+
+        // Function to geocode address and display multiple results
+        function geocode(address, callback) {
+            var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + address;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        callback(data);  // Return the list of results
+                    } else {
+                        alert('Location not found!');
+                    }
+                })
+                .catch(error => console.log('Error with geocoding:', error));
+        }
+
+        // Function to search and display results
+        function searchLocation() {
+            var address = document.getElementById('search-input').value;
+            geocode(address, function(results) {
+                var resultsList = document.getElementById('results-list');
+                resultsList.innerHTML = '';  // Clear previous results
+
+                results.forEach(function(result, index) {
+                    var li = document.createElement('li');
+                    li.textContent = result.display_name;
+                    li.setAttribute('data-lat', result.lat);
+                    li.setAttribute('data-lon', result.lon);
+                    li.onclick = function() {
+                        selectLocation(result.lat, result.lon, result.display_name);
+                    };
+                    resultsList.appendChild(li);
+                });
+            });
+        }
+
+        // Function to update the map with the selected location
+        function selectLocation(lat, lon, displayName) {
+            control.setWaypoints([
+                L.latLng(lat, lon),  // Selected location
+                L.latLng(51.51, -0.1)  // Destination (can be dynamic as well)
+            ]);
+
+            alert('Selected location: ' + displayName);
+        }
+    </script>
+</body>
+</html>

@@ -9,6 +9,11 @@
     <link rel="stylesheet" href="styles/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="styles/leaflet.draw.css" />
     <link rel="stylesheet" href="styles/Control.Geocoder.css" />
+    <!-- <link rel="stylesheet" href="styles/font-awesome.min.css" /> -->
+    <!-- <link rel="stylesheet" href="styles/fontawesome-free-5.15.4-web/css/all.css" /> -->
+    <link rel="stylesheet" href="styles/all.css" />
+    <link rel="stylesheet" href="styles/jquery-ui.css" />
+    <link rel="stylesheet" href="styles/style.css" />
 
     <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" /> -->
 
@@ -17,7 +22,16 @@
       #map {
         height: 100lvh;
         width: 100%;
-        /* background: red; */
+
+        /* position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden; 
+        z-index: -100; */
       }
 
       html,
@@ -25,6 +39,7 @@
         height: 100%;
         width: 100%;
         margin: 0;
+        overflow: hidden;
         /* padding: 0; */
       }
 
@@ -46,24 +61,11 @@
       .leaflet-routing-container.leaflet-bar.leaflet-routing-collapsible.leaflet-control {
         display: none;
       }
-
-      .overlay {
-        display: none;
-        position: absolute;
-        /* top: 50%; */
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%); 
-        padding: 20px;
-        border-radius: 10px; 
-        text-align: center; 
-        z-index: 1000;
-        font-family: monospace;
-        width: 100%;
-      }
     </style>
   </head>
   <body>
+    <div id="map"></div>
+
     <!-- <div style="margin: 5px;"> -->
     <!-- <h1>Map</h1>
       <button id="test">Button</button> -->
@@ -72,20 +74,131 @@
     <!-- <div id="toolbar">
       <button id="zoomIn">Zoom In</button>
     </div> -->
-    <div id="response-listener" style="display: none;">listener</div>
+    <div id="response-listener" style="position: absolute; top: 10px; display: block; z-index: 1000000;">listener</div>
     <!-- <button id="changeDiv">Change Div Content</button> -->
-    
+
     <div class="overlay">
       <h3 id="overlayed-text"></h3>
+    </div>
+
+    <div class="header-container" id="card">
+      <div class="header">
+        <h3 class="title">Pick Up Detail</h3>
+        <button class="close-btn" onclick="closeCard()">
+          <i class="fas fa-window-close"></i>
+        </button>
+      </div>
+      <hr />
+      <!-- Additional content goes here -->
+    </div>
+
+    <div class="overlay-search-pickup">
+      <div class="container search-pickup-box">
+        <div class="header-container">
+          <div class="header">
+            <h3 class="title">Napat Tours Van</h3>
+            <button class="close-btn">
+              <i class="fas fa-window-close"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- <div class="region-select">
+          <button class="region-btn">
+            <span class="globe-icon">🌐</span>
+            <span class="region-text">Mega Manila ▼</span>
+          </button>
+        </div> -->
+        <div class="location-box">
+          <div class="location pickup">
+            <div class="location-title">
+              <!-- <span style="padding-right: 10px;"><i class="fa fa-map-marker"></i></span> -->
+              <span
+                ><span style="padding-right: 10px"
+                  ><i
+                    class="fa fa-map-marker"
+                    style="color: #ce0037; font-size: 20px"
+                  ></i></span
+                >Pickup</span
+              >
+            </div>
+            <button class="search-btn" id="btn-search-pickup">
+              Search Pickup Location
+            </button>
+          </div>
+
+          <div class="location dropoff">
+            <div class="location-title">
+              <!-- <span style="padding-right: 10px;"><i class="fa fa-location-arrow"></i></span> -->
+              <span
+                ><span style="padding-right: 8px"
+                  ><i
+                    class="fa fa-location-arrow"
+                    style="color: #00aa31; font-size: 20px"
+                  ></i></span
+                >Drop-off</span
+              >
+            </div>
+            <button class="search-btn" id="btn-search-dropoff">
+              Search Drop-off Location
+            </button>
+          </div>
+        </div>
+
+        <div class="location-box input" style="display: none">
+          <div class="location pickup">
+            <div class="location-title">
+              <!-- <span style="padding-right: 10px;"><i class="fa fa-map-marker"></i></span> -->
+              <span style="padding-right: 10px"
+                ><i
+                  class="fa fa-map-marker"
+                  style="color: #ce0037; font-size: 20px"
+                ></i
+              ></span>
+            </div>
+            <input
+              type="text"
+              class="input-locations"
+              name="Pickup Location"
+              id="input-pickup-location"
+            />
+          </div>
+          <div class="current-location" id="pickup-use-current-location">
+            <i class="fad fa-location"> </i>
+            <div class="location-text">&nbsp;Use Current Location</div>
+          </div>
+          <div class="location dropoff">
+            <div class="location-title">
+              <!-- <span style="padding-right: 10px;"><i class="fa fa-location-arrow"></i></span> -->
+              <span style="padding-right: 8px"
+                ><i
+                  class="fa fa-location-arrow"
+                  style="color: #00aa31; font-size: 20px"
+                ></i
+              ></span>
+            </div>
+            <input
+              type="text"
+              class="input-locations"
+              name="Drop-Off Location"
+              id="input-dropoff-location"
+            />
+          </div>
+          <div class="current-location" id="drop-use-current-location">
+            <i class="fad fa-location"> </i>
+            <div class="location-text">&nbsp;Use Current Location</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- <button id="zoomOut">Zoom Out</button> -->
     <!-- <div id="error"></div> -->
     <div id="distance">Testing123</div>
-    <div id="map"></div>
 
     <!-- Leaflet JavaScript -->
     <script src="script/jquery.3.2.1.min.js"></script>
+    <script src="script/jquery-ui.js"></script>
     <script src="script/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script>
     <script src="script/leaflet-routing-machine.js"></script>

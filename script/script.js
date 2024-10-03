@@ -1,4 +1,6 @@
 let isListeningForLocation = false;
+let isPickupListeningForLocation = false;
+let isDropListeningForLocation = false;
 
 var map; // Declare the map variable globally
 var marker; // Declare the marker variable globally
@@ -51,7 +53,7 @@ function initializeMap() {
   }).addTo(map);
 
   // map.zoomControl.setPosition('bottomright');
-  // map.zoomControl.setPosition('bottomright');
+  map.zoomControl.setPosition("topright");
 
   // Initialize geocoder control
   var geocoder = L.Control.geocoder({
@@ -166,13 +168,11 @@ function initializeMap() {
         // waypoints = setWayPointsNewValue(+retLoc.lat, +retLoc.lng);
         let wp = L.latLng(+retLoc.lat, +retLoc.lng); // New values
         fitWaypointsNewValue(wp);
-
       }
     }, 600);
   });
 
   streetsLayer.addTo(map);
-
 
   fitWaypoints();
 }
@@ -183,9 +183,9 @@ function fitWaypointsNewValue(wp) {
   // map.fitBounds(bounds); // Adjust padding as needed
   map.fitBounds(bounds, {
     // padding: [50, 50],       // Optional padding
-    animate: true,           // Enable animation
-    duration: 1.5            // Duration of the animation in seconds (default is 0.25)
-});
+    animate: true, // Enable animation
+    duration: 1.5, // Duration of the animation in seconds (default is 0.25)
+  });
 
   map.setZoom(16); // Ensure zoom doesn't go beyond 15
 }
@@ -529,6 +529,22 @@ $(document).ready(function () {
         console.log("Div content changed:");
 
         isListeningForLocation = false;
+
+        // 📌 Pickup Listener
+        if (
+          isPickupListeningForLocation &&
+          !["listener", ""].includes($("#response-listener").text()) // Make exception for default and empty values
+        ) {
+          RetrieveActualAddressName(JSON.parse($("#response-listener").text()));
+        }
+
+        // 📌 Drop-off Listener
+        if (
+          isDropListeningForLocation &&
+          !["listener", ""].includes($("#response-listener").text()) // Make exception for default and empty values
+        ) {
+          RetrieveActualAddressName(JSON.parse($("#response-listener").text()));
+        }
       }
     });
   });
@@ -546,3 +562,214 @@ $(document).ready(function () {
   // });
 });
 
+// 🔰 Reverse GeoCoding to Translate Latitude and Longitude to Actual Address
+function RetrieveActualAddressName(coordinates) {
+  var lat = coordinates.lat;
+  var lon = coordinates.lng;
+
+  // Reverse geocoding using Nominatim
+  var url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=jsonv2`;
+
+  // Fetch the address data from Nominatim
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      var address = data.display_name; // Extract address from the response
+
+      if(isPickupListeningForLocation){
+        $("#input-pickup-location").val(address);
+        $("#input-pickup-location").attr("lat", lat);
+        $("#input-pickup-location").attr("lng", lon);
+      } else if(isDropListeningForLocation){
+        $("#input-dropoff-location").val(address);
+        $("#input-dropoff-location").attr("lat", lat);
+        $("#input-dropoff-location").attr("lng", lon);
+      }
+      
+    })
+    .catch((error) => console.error("Error fetching data:", error));
+}
+
+// Drop-off Location
+$("#btn-search-pickup").on("click", (e) => {
+  // console.log(e);
+  hideSearchLocation();
+  $("#input-pickup-location").focus();
+});
+
+// Pickup Location
+$("#btn-search-dropoff").on("click", () => {
+  hideSearchLocation();
+  $("#input-dropoff-location").focus();
+});
+
+$(".close-btn").on("click", () => {
+  let searchPickupContainer = $(".search-pickup-box");
+  let overlaySearchPickup = $(".overlay-search-pickup");
+  searchPickupContainer.addClass("hide");
+  overlaySearchPickup.delay(200).fadeOut(500);
+
+  // card.classList.add("hide");
+});
+
+function hideSearchLocation() {
+  $(".location-box").css("display", "none");
+  // $(".location-box.input").css("display", "block");
+  $(".location-box.input").fadeIn(1000);
+}
+
+let facilitiesArray = [
+  {
+    value: ",  ",
+    key: 0,
+    id: "admin",
+    label: ",   • ADMIN",
+    year: "NA",
+    role: "admin",
+  },
+  {
+    value: "Taylor, Christopher L",
+    key: 1,
+    id: "christophertl",
+    label: "Taylor, Christopher L • GUARD",
+    year: "NA",
+    role: "guard",
+  },
+];
+
+$("#input-pickup-location").autocomplete({
+  source: function (request, response) {
+    $.ajax({
+      url: "https://nominatim.openstreetmap.org/search",
+      // "https://nominatim.openstreetmap.org/search?format=json&q=" +
+      // $("#input-pickup-location").val() + "",
+      data: {
+        // term: request.term, // Term being typed by the user
+        format: "json",
+        q: request.term,
+        // viewbox: "10.188466,480.474426,12.155372,484.646484",
+        // bounded: 1,
+        term: request.term,
+      },
+      success: function (data) {
+        let downloadedData = [];
+
+        for (let i = 1; i < data.length; i++) {
+          let d = data[i - 1];
+          downloadedData.push({
+            key: i + 1,
+            value: d.display_name,
+            label: d.display_name,
+            id: d.osm_id,
+          });
+        }
+
+        console.log(downloadedData);
+        response(downloadedData); // Pass the data to jQuery UI autocomplete
+      },
+      error: function () {
+        console.error("Failed to fetch data.");
+        response([]); // Return empty array on error
+      },
+    });
+
+    // // Use `label` property from each object to display in autocomplete suggestions
+    // const results = $.map(facilitiesArray, function(item) {
+    //   // Filter based on `value` or `label` to show relevant results
+    //   if (item.value.toLowerCase().includes(request.term.toLowerCase())) {
+    //     return {
+    //       label: item.label,
+    //       value: item.value, // This sets the value in the input field
+    //       id: item.id,
+    //       role: item.role
+    //     };
+    //   } else {
+    //     return null;
+    //   }
+    // });
+
+    // console.log(results);
+    // response(results);
+  },
+  select: function (event, ui) {
+    event.preventDefault(); // Prevent the default behavior
+    $("#input-pickup-location").val(ui.item.value); // Set value to the input
+    console.log("Selected: ", ui.item); // Log the selected item
+  },
+  search: function (event, ui) {
+    console.log(event, ui);
+  },
+  focus: function (event, ui) {
+    event.preventDefault();
+    // $("#input-pickup-location").val(ui.item.value); // Set value while navigating suggestions
+  },
+  close: function (event, ui) {
+    // code below makes the selection to not disapper, good for debugging
+    // if (!$("ul.ui-autocomplete").is(":visible")) {
+    //   $("ul.ui-autocomplete").show();
+    // }
+  },
+  open: function (event, ui) {
+    var $input = $(this);
+    var $autocomplete = $(".ui-autocomplete");
+
+    // Dynamically set the width of the autocomplete suggestions to match the input width
+    $autocomplete.css({
+      width: $input.outerWidth() + "px",
+    });
+  },
+});
+
+// function showSearchInput(){
+//   $(".location-box").css("display", "none");
+// }
+
+/**
+ * Auto Look-up for Location
+ */
+
+$("#input-pickup-location").on("focus blur", (e) => {
+  let currentLocation = $("#pickup-use-current-location");
+  let dropLocation = $("#drop-use-current-location");
+  dropLocation.css("visibility", "hidden");
+  dropLocation.fadeOut(500);
+
+  if (e.type == "focus") {
+    currentLocation.css("visibility", "visible");
+    currentLocation.fadeIn(500);
+  }
+  // else {
+  //   currentLocation.fadeOut(500);
+  //   currentLocation.css("visibility", "hidden");
+  // }
+});
+
+$("#input-dropoff-location").on("focus blur", (e) => {
+  let dropLocation = $("#drop-use-current-location");
+  let currentLocation = $("#pickup-use-current-location");
+  currentLocation.css("visibility", "hidden");
+  currentLocation.fadeOut(500);
+
+  if (e.type == "focus") {
+    dropLocation.css("visibility", "visible");
+    dropLocation.fadeIn(500);
+  }
+  // else {
+  //   dropLocation.fadeOut(500);
+  //   dropLocation.css("visibility", "hidden");
+  // }
+});
+
+// 📌 Request Location from Android
+$("#pickup-use-current-location").on("click", (e) => {
+  let json = { request_current_location: true };
+  sendData(json);
+  isPickupListeningForLocation = true;
+});
+
+// 📌 Request Drop-off from Android
+$("#drop-use-current-location").on("click", (e) => {
+  let json = { request_current_location: true };
+  sendData(json);
+  isDropListeningForLocation = true;
+});

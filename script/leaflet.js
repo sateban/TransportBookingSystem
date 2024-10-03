@@ -2799,6 +2799,8 @@
     qe = B.extend({
       options: {
         position: "topleft",
+        distanceText: '<span aria-hidden="true" id="text-total-distance">Total Distance</span>',
+        distanceTitle: "Total Distance",
         zoomInText: '<span aria-hidden="true">+</span>',
         zoomInTitle: "Zoom in",
         zoomOutText: '<span aria-hidden="true">&#x2212;</span>',
@@ -2809,6 +2811,13 @@
           i = P("div", e + " leaflet-bar"),
           n = this.options;
         return (
+          // (this._zoomOutButton = this._createButton(
+          //   n.distanceText,
+          //   n.distanceTitle,
+          //   e + "-out",
+          //   i,
+          //   {}
+          // )),
           (this._zoomInButton = this._createButton(
             n.zoomInText,
             n.zoomInTitle,
