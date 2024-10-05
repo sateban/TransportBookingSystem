@@ -639,7 +639,7 @@ let facilitiesArray = [
   },
 ];
 
-$("#input-pickup-location").autocomplete({
+$("#input-pickup-location, #input-dropoff-location").autocomplete({
   source: function (request, response) {
     $.ajax({
       url: "https://nominatim.openstreetmap.org/search",
@@ -652,12 +652,14 @@ $("#input-pickup-location").autocomplete({
         // viewbox: "10.188466,480.474426,12.155372,484.646484",
         // bounded: 1,
         term: request.term,
+        bounded: 1,
+        viewbox: "121.781,10.361,123.225,12.004" // Retrieved from https://norbertrenner.de/osm/bbox.html
       },
       success: function (data) {
         let downloadedData = [];
 
-        for (let i = 1; i < data.length; i++) {
-          let d = data[i - 1];
+        for (let i = 0; i < data.length; i++) {
+          let d = data[i - 0];
           downloadedData.push({
             key: i + 1,
             value: d.display_name,
@@ -666,7 +668,7 @@ $("#input-pickup-location").autocomplete({
           });
         }
 
-        console.log(downloadedData);
+        console.log(data);
         response(downloadedData); // Pass the data to jQuery UI autocomplete
       },
       error: function () {
@@ -694,8 +696,11 @@ $("#input-pickup-location").autocomplete({
     // response(results);
   },
   select: function (event, ui) {
+    let target = event.target;
+    // console.log("target: ", ui);
+
     event.preventDefault(); // Prevent the default behavior
-    $("#input-pickup-location").val(ui.item.value); // Set value to the input
+    $(target).val(ui.item.value); // Set value to the input
     console.log("Selected: ", ui.item); // Log the selected item
   },
   search: function (event, ui) {
@@ -722,6 +727,7 @@ $("#input-pickup-location").autocomplete({
   },
 });
 
+
 // function showSearchInput(){
 //   $(".location-box").css("display", "none");
 // }
@@ -732,12 +738,22 @@ $("#input-pickup-location").autocomplete({
 
 $("#input-pickup-location").on("focus blur", (e) => {
   let currentLocation = $("#pickup-use-current-location");
+  let currentPinLocation = $("#pickup-pin-location");
   let dropLocation = $("#drop-use-current-location");
-  dropLocation.css("visibility", "hidden");
+  let dropPinLocation = $("#drop-pin-location");
+  let pickupGPSOptions = $("#pickup-gps-options");
+  let dropGPSOptions = $("#drop-gps-options");
+  // dropGPSOptions.css("display", "none");
+  dropGPSOptions.fadeOut(500);
+  // dropLocation.css("visibility", "hidden");
+  // dropPinLocation.css("visibility", "hidden");
   // dropLocation.fadeOut(500);
 
   if (e.type == "focus") {
-    currentLocation.css("visibility", "visible");
+    // pickupGPSOptions.css("display", "block");
+    pickupGPSOptions.fadeIn(500);
+    // currentLocation.css("visibility", "visible");
+    // currentPinLocation.css("visibility", "visible");
     // currentLocation.fadeIn(500);
   }
   // else {
@@ -748,12 +764,22 @@ $("#input-pickup-location").on("focus blur", (e) => {
 
 $("#input-dropoff-location").on("focus blur", (e) => {
   let dropLocation = $("#drop-use-current-location");
+  let dropPinLocation = $("#drop-pin-location");
   let currentLocation = $("#pickup-use-current-location");
-  currentLocation.css("visibility", "hidden");
+  let currentPinLocation = $("#pickup-pin-location");
+  let pickupGPSOptions = $("#pickup-gps-options");
+  let dropGPSOptions = $("#drop-gps-options");
+  // pickupGPSOptions.css("display", "none");
+  pickupGPSOptions.fadeOut(500);
+  // currentLocation.css("visibility", "hidden");
+  // currentPinLocation.css("visibility", "hidden");
   // currentLocation.fadeOut(500);
 
   if (e.type == "focus") {
-    dropLocation.css("visibility", "visible");
+    // dropGPSOptions.css("display", "block");
+    dropGPSOptions.fadeIn(500);
+    // dropLocation.css("visibility", "visible");
+    // dropPinLocation.css("visibility", "visible");
     // dropLocation.fadeIn(500);
   }
   // else {
