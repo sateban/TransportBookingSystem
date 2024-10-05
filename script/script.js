@@ -494,6 +494,22 @@ function sendData(jsonData) {
   window.Android.sendDataToAndroid(JSON.stringify(jsonData));
 }
 
+function hideHailingOverlay(){
+  let searchPickupContainer = $(".search-pickup-box");
+  let overlaySearchPickup = $(".overlay-search-pickup");
+  searchPickupContainer.addClass("hide");
+  overlaySearchPickup.delay(200).fadeOut(500);
+}
+
+function showHailingOverlay(){
+// window.showHailingOverlay = () => {
+  let searchPickupContainer = $(".search-pickup-box");
+  let overlaySearchPickup = $(".overlay-search-pickup");
+  searchPickupContainer.removeClass("hide");
+  searchPickupContainer.addClass("show");
+  overlaySearchPickup.delay(200).fadeIn(500);
+}
+
 $("#test").on("click", () => {
   console.log("Test");
   fitWaypoints();
@@ -606,11 +622,7 @@ $("#btn-search-dropoff").on("click", () => {
 });
 
 $(".close-btn").on("click", () => {
-  let searchPickupContainer = $(".search-pickup-box");
-  let overlaySearchPickup = $(".overlay-search-pickup");
-  searchPickupContainer.addClass("hide");
-  overlaySearchPickup.delay(200).fadeOut(500);
-
+hideHailingOverlay();
   // card.classList.add("hide");
 });
 
@@ -744,14 +756,14 @@ $("#input-pickup-location").on("focus blur", (e) => {
   let pickupGPSOptions = $("#pickup-gps-options");
   let dropGPSOptions = $("#drop-gps-options");
   // dropGPSOptions.css("display", "none");
-  dropGPSOptions.fadeOut(500);
+  dropGPSOptions.fadeOut(300);
   // dropLocation.css("visibility", "hidden");
   // dropPinLocation.css("visibility", "hidden");
   // dropLocation.fadeOut(500);
 
   if (e.type == "focus") {
     // pickupGPSOptions.css("display", "block");
-    pickupGPSOptions.fadeIn(500);
+    pickupGPSOptions.fadeIn(300);
     // currentLocation.css("visibility", "visible");
     // currentPinLocation.css("visibility", "visible");
     // currentLocation.fadeIn(500);
@@ -770,14 +782,14 @@ $("#input-dropoff-location").on("focus blur", (e) => {
   let pickupGPSOptions = $("#pickup-gps-options");
   let dropGPSOptions = $("#drop-gps-options");
   // pickupGPSOptions.css("display", "none");
-  pickupGPSOptions.fadeOut(500);
+  pickupGPSOptions.fadeOut(300);
   // currentLocation.css("visibility", "hidden");
   // currentPinLocation.css("visibility", "hidden");
   // currentLocation.fadeOut(500);
 
   if (e.type == "focus") {
     // dropGPSOptions.css("display", "block");
-    dropGPSOptions.fadeIn(500);
+    dropGPSOptions.fadeIn(300);
     // dropLocation.css("visibility", "visible");
     // dropPinLocation.css("visibility", "visible");
     // dropLocation.fadeIn(500);
@@ -800,6 +812,16 @@ $("#drop-use-current-location").on("click", (e) => {
   let json = { request_current_location: true };
   sendData(json);
   isDropListeningForLocation = true;
+});
+
+// 📍 Manually Map Pin for Pickup
+$("#pickup-pin-location").on("click", (e) => {
+
+});
+
+// 📍 Manually Map Pin for Drop-off
+$("#drop-pin-location").on("click", (e) => {
+
 });
 
 // 🔲 Done button
