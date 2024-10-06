@@ -1,6 +1,18 @@
 let isListeningForLocation = false;
 let isPickupListeningForLocation = false;
 let isDropListeningForLocation = false;
+let allowReadingCoordinates = false;
+let isManualPickup = false;
+let locationDetails = {
+  coordinates: {
+    lat: 0.0,
+    lng: 0.0,
+  },
+};
+
+let inputFocus = {
+  currentFocused: "",
+};
 
 var map; // Declare the map variable globally
 var marker; // Declare the marker variable globally
@@ -494,20 +506,104 @@ function sendData(jsonData) {
   window.Android.sendDataToAndroid(JSON.stringify(jsonData));
 }
 
-function hideHailingOverlay(){
+function hideHailingOverlay() {
   let searchPickupContainer = $(".search-pickup-box");
   let overlaySearchPickup = $(".overlay-search-pickup");
+  searchPickupContainer.removeClass("show");
   searchPickupContainer.addClass("hide");
   overlaySearchPickup.delay(200).fadeOut(500);
 }
 
-function showHailingOverlay(){
-// window.showHailingOverlay = () => {
+function showHailingOverlay() {
+  // window.showHailingOverlay = () => {
   let searchPickupContainer = $(".search-pickup-box");
   let overlaySearchPickup = $(".overlay-search-pickup");
   searchPickupContainer.removeClass("hide");
   searchPickupContainer.addClass("show");
   overlaySearchPickup.delay(200).fadeIn(500);
+}
+
+function showReturnToHailing() {
+  $(".hailing-overlay").fadeIn(500);
+}
+
+function hideReturnToHailing() {
+  $(".hailing-overlay").fadeOut(500);
+}
+
+function showCenterMarker() {
+  $(".center-marker").fadeIn(500);
+}
+
+function hideCenterMarker() {
+  $(".center-marker").fadeOut(500);
+}
+
+function showChooseDestination() {
+  $(".destination-overlay").fadeIn(500);
+}
+
+function hideChooseDestination() {
+  $(".destination-overlay").fadeOut(500);
+  // console.log("Fading Out");
+}
+
+// function hideChooseDestination() {
+//   iziToast.destroy();
+// }
+
+function xshowChooseDestination() {
+  iziToast.show({
+    // theme: 'dark',
+    icon: "fas fa-map-pin",
+    iconColor: "#ff8f00",
+    // title: "Choose Destination",
+    // message: 'Welcome!',
+    timeout: false,
+    position: "bottomCenter", // bottomRight, bottomLeft, topRight, topLeft, topCenter, bottomCenter
+    // progressBarColor: 'rgb(0, 255, 184)',
+    buttons: [
+      // ['<button>Ok</button>', function (instance, toast) {
+      //     alert("Hello world!");
+      // }, true], // true to focus
+      [
+        "<button>Choose this Destination</button>",
+        function (instance, toast) {
+          instance.hide(
+            {
+              transitionOut: "fadeOutUp",
+              onClosing: function (instance, toast, closedBy) {
+                console.info("closedBy: " + closedBy); // The return will be: 'closedBy: buttonName'
+              },
+            },
+            toast,
+            "buttonName"
+          );
+        },
+      ],
+    ],
+    onOpening: function (instance, toast) {
+      console.info("callback abriu!");
+      checkViewHeightStatus();
+    },
+    onClosing: function (instance, toast, closedBy) {
+      console.info("closedBy: " + closedBy); // tells if it was closed by 'drag' or 'button'
+    },
+  });
+}
+
+function checkViewHeightStatus() {
+  let bodyHeight = +sessionStorage.getItem("bodyHeight");
+  let iziWrapper = $(".iziToast-wrapper");
+  let iziWrapperHeight = +iziWrapper.css("height").split("px")[0];
+  $(".title")
+    .eq(1)
+    .text(bodyHeight + " | " + iziWrapper.css("height"));
+
+  iziWrapper.css("bottom", "100px");
+  // if (iziWrapper.length > 0) {
+  //   iziWrapper.css("bottom", (bodyHeight - (bodyHeight - iziWrapperHeight)) + "px")
+  // }
 }
 
 $("#test").on("click", () => {
@@ -592,20 +688,58 @@ function RetrieveActualAddressName(coordinates) {
     .then((data) => {
       var address = data.display_name; // Extract address from the response
 
-      if(isPickupListeningForLocation){
-        $("#input-pickup-location").val(address);
-        $("#input-pickup-location").attr("lat", lat);
-        $("#input-pickup-location").attr("lng", lon);
-        isPickupListeningForLocation = false;
-      } else if(isDropListeningForLocation){
-        $("#input-dropoff-location").val(address);
-        $("#input-dropoff-location").attr("lat", lat);
-        $("#input-dropoff-location").attr("lng", lon);
-        isDropListeningForLocation = false;
+      // Use for Auto Retrieve location
+      if (!isManualPickup) {
+        if (isPickupListeningForLocation) {
+          $("#input-pickup-location").val(address);
+          $("#input-pickup-location").attr("lat", lat);
+          $("#input-pickup-location").attr("lng", lon);
+          isPickupListeningForLocation = false;
+        } else if (isDropListeningForLocation) {
+          $("#input-dropoff-location").val(address);
+          $("#input-dropoff-location").attr("lat", lat);
+          $("#input-dropoff-location").attr("lng", lon);
+          isDropListeningForLocation = false;
+        }
       }
-      
+      // Manual Pick
+      else {
+        let iFocus = inputFocus.currentFocused;
+        iziToast.destroy();
+
+        if (iFocus == "pickup") {
+          $("#input-pickup-location").val(address);
+          $("#input-pickup-location").attr("lat", lat);
+          $("#input-pickup-location").attr("lng", lon);
+        } else if (iFocus == "drop") {
+          $("#input-dropoff-location").val(address);
+          $("#input-dropoff-location").attr("lat", lat);
+          $("#input-dropoff-location").attr("lng", lon);
+        }
+
+        if (iFocus != "") {
+          iziToast.success({
+            title: "Success",
+            message: `Retrieved Location: ${address}`,
+            icon: "fa fa-map-pin",
+            position: "topRight",
+            timeout: 4000,
+          });
+        }
+      }
     })
-    .catch((error) => console.error("Error fetching data:", error));
+    .catch((error) => {
+      iziToast.destroy();
+
+      console.error("Error fetching data:", error);
+      iziToast.warning({
+        title: "Error",
+        message: `Error fetching data:", ${error}`,
+        icon: "fa fa-exclamation-circle",
+        position: "topRight",
+        timeout: 4000,
+      });
+    });
 }
 
 // Drop-off Location
@@ -613,16 +747,21 @@ $("#btn-search-pickup").on("click", (e) => {
   // console.log(e);
   hideSearchLocation();
   $("#input-pickup-location").focus();
+  inputFocus.currentFocused = "pickup";
 });
 
 // Pickup Location
 $("#btn-search-dropoff").on("click", () => {
   hideSearchLocation();
   $("#input-dropoff-location").focus();
+  inputFocus.currentFocused = "drop";
 });
 
 $(".close-btn").on("click", () => {
-hideHailingOverlay();
+  hideHailingOverlay();
+  showReturnToHailing();
+  hideCenterMarker();
+  hideChooseDestination();
   // card.classList.add("hide");
 });
 
@@ -630,6 +769,14 @@ function hideSearchLocation() {
   $(".location-box").css("display", "none");
   // $(".location-box.input").css("display", "block");
   $(".location-box.input").fadeIn(1000);
+}
+
+function setWebViewHeight(value) {
+  console.log("setWebViewHeight: ", value);
+  let finalHeight = Math.floor(+value * 0.75);
+  $(".hailing-overlay").css("top", finalHeight + "px");
+  $("body").css("height", Math.ceil(+value) + "px");
+  sessionStorage.setItem("bodyHeight", Math.ceil(+value));
 }
 
 let facilitiesArray = [
@@ -665,7 +812,7 @@ $("#input-pickup-location, #input-dropoff-location").autocomplete({
         // bounded: 1,
         term: request.term,
         bounded: 1,
-        viewbox: "121.781,10.361,123.225,12.004" // Retrieved from https://norbertrenner.de/osm/bbox.html
+        viewbox: "121.781,10.361,123.225,12.004", // Retrieved from https://norbertrenner.de/osm/bbox.html
       },
       success: function (data) {
         let downloadedData = [];
@@ -738,7 +885,6 @@ $("#input-pickup-location, #input-dropoff-location").autocomplete({
     });
   },
 });
-
 
 // function showSearchInput(){
 //   $(".location-box").css("display", "none");
@@ -816,12 +962,60 @@ $("#drop-use-current-location").on("click", (e) => {
 
 // 📍 Manually Map Pin for Pickup
 $("#pickup-pin-location").on("click", (e) => {
-
+  hideHailingOverlay();
+  showReturnToHailing();
+  allowReadingCoordinates = true;
+  showCenterMarker();
+  showChooseDestination();
+  // showChooseDestination();
+  // checkViewHeightStatus();
 });
 
 // 📍 Manually Map Pin for Drop-off
 $("#drop-pin-location").on("click", (e) => {
+  hideHailingOverlay();
+  showReturnToHailing();
+  allowReadingCoordinates = true;
+  showCenterMarker();
+  showChooseDestination();
+});
 
+// Return button
+$(".hailing-overlay").on("click", () => {
+  showHailingOverlay();
+  hideReturnToHailing();
+  allowReadingCoordinates = false;
+  hideCenterMarker();
+  hideChooseDestination();
+});
+
+// Choose Destination Button
+$(".destination-overlay").on("click", () => {
+  // console.log(locationDetails["coordinates"]);
+  let lat = locationDetails["coordinates"].lat;
+  let lng = locationDetails["coordinates"].lng;
+
+  if (lat <= 0 && lng <= 0) {
+    iziToast.warning({
+      title: "Please move marker",
+      // message: `Please enter Pickup and Drop-off locations`,
+      icon: "fa fa-exclamation-circle",
+      position: "topRight",
+      timeout: 5000,
+    });
+  } else {
+    iziToast.info({
+      title: "Loading selected location",
+      // message: `Please enter Pickup and Drop-off locations`,
+      icon: "fa fa-map-pin",
+      position: "topRight",
+      timeout: 4000,
+    });
+
+    showHailingOverlay();
+    isManualPickup = true;
+    RetrieveActualAddressName(locationDetails.coordinates);
+  }
 });
 
 // 🔲 Done button
@@ -830,29 +1024,29 @@ $("#btn-done").on("click", (e) => {
   let dropoffText = $("#input-dropoff-location").val();
   console.log(pickupText, dropoffText);
 
-  if(pickupText == "" && dropoffText == ""){
+  if (pickupText == "" && dropoffText == "") {
     iziToast.warning({
       title: "Incomplete Fields",
       message: `Please enter Pickup and Drop-off locations`,
       icon: "fa fa-exclamation-circle",
       position: "topRight",
-      timeout: 5000
+      timeout: 5000,
     });
-  } else if(pickupText == "" && dropoffText != ""){
+  } else if (pickupText == "" && dropoffText != "") {
     iziToast.warning({
       title: "Incomplete Field",
       message: `Please enter Pickup locations`,
       icon: "fa fa-exclamation-circle",
       position: "topRight",
-      timeout: 5000
+      timeout: 5000,
     });
-  } else if(pickupText != "" && dropoffText == ""){
+  } else if (pickupText != "" && dropoffText == "") {
     iziToast.warning({
       title: "Incomplete Field",
       message: `Please enter Drop-off locations`,
       icon: "fa fa-exclamation-circle",
       position: "topRight",
-      timeout: 5000
+      timeout: 5000,
     });
   } else {
     iziToast.success({
@@ -860,8 +1054,43 @@ $("#btn-done").on("click", (e) => {
       message: `Please wait`,
       icon: "fa fa-check",
       position: "topRight",
-      timeout: 3500
+      timeout: 3500,
     });
   }
-
 });
+
+// Read Coordinates on Movement for Manual Pin
+// map.on("move", updateCoordinates);
+map.on("moveend", updateCoordinates);
+
+// Update coordinates function
+function updateCoordinates() {
+  if (allowReadingCoordinates) {
+    var center = map.getCenter();
+    console.log(
+      "Lat: " + center.lat.toFixed(5) + ", Lng: " + center.lng.toFixed(5)
+    );
+
+    locationDetails["coordinates"].lat = center.lat;
+    locationDetails["coordinates"].lng = center.lng;
+
+    // Check location if within Antique
+    var viewboxBounds = L.latLngBounds(
+      // 121.781,10.361,123.225,12.004 left bottom right top
+      L.latLng(12.004, 123.225), // North-East corner
+      L.latLng(10.361, 121.781) // South-West corner
+    );
+
+    console.log(viewboxBounds, map.getBounds());
+    // if (!map.getBounds().intersects(viewboxBounds)) {
+    if (!viewboxBounds.contains(map.getBounds())) {
+      console.log("Map has moved outside the viewbox!");
+    }
+
+    // var rectangle = L.rectangle(viewboxBounds, {
+    //   color: "#ff7800", // Rectangle border color
+    //   weight: 2, // Border thickness
+    //   fillOpacity: 0.2, // Fill opacity
+    // }).addTo(map);
+  }
+}
