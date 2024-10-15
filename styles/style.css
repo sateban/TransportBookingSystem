@@ -13,6 +13,60 @@
   width: 100%;
 }
 
+.hailing-overlay {
+  /* display: none; */
+  position: fixed;
+  top: 50%;
+  /* bottom: 8vh; */
+  right: 5px;
+  transform: translate(-50%, -50%);
+  /* padding: 20px; */
+  border-radius: 10px;
+  text-align: center;
+  z-index: 1000;
+  font-family: monospace;
+  display: none;
+  width: 50px;
+  height: 50px;
+}
+
+
+.hailing-overlay i {
+  font-size: 50px;
+}
+
+.hailing-overlay {
+  background-image: url("../assets/images/undo.png");
+  /* background-image: url(/assets/images/undo.png) !important; */
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  /* width: 100px; */
+}
+
+.destination-overlay {
+  position: fixed;
+  top: 80%;
+  right: 80px;
+  transform: translate(-50%, -50%);
+  border-radius: 10px;
+  text-align: center;
+  z-index: 1000;
+  font-family: monospace;
+  display: none;
+  width: 50px !important;
+  height: 50px;
+}
+
+.destination-overlay {
+  background-image: url("../assets/images/destination.png");
+  /* background-image: url(/assets/images/undo.png) !important; */
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  /* width: 100px; */
+}
+
 .overlay-search-pickup {
   /* display: none; */
   touch-action: none;
@@ -211,24 +265,29 @@ button {
 
 .hide {
   transform: translateY(100vh); /* Moves the card down the screen */
-  opacity: 0; /* Fade out the card */
+  /* opacity: 0; */
 }
 
+.show {
+  transform: translateY(0vh); /* Moves the card down the screen */
+  /* opacity: 1; */
+  transition: 1s;
+}
 
 .input-locations {
-	width: 100%;
-	border: none;
-	height: 30px;
-	font-size: 16px;
-	outline: none;
+  width: 100%;
+  border: none;
+  height: 30px;
+  font-size: 16px;
+  outline: none;
 }
 
 .location-box.input {
-	transition: 1s;
+  transition: 1s;
 }
 
 .ui-autocomplete {
-	z-index: 10000 !important; /* Set your desired z-index value */
+  z-index: 10000 !important; /* Set your desired z-index value */
 }
 
 #ui-id-1 {
@@ -238,15 +297,76 @@ button {
 
 .location {
   margin-top: 25px;
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif;
 }
 
 .current-location {
   text-align: left;
-  visibility: hidden;
+  /* visibility: hidden; */
   display: flex;
+  margin-bottom: 10px;
 }
 
 .current-location i {
   color: rgb(0, 153, 255);
+  width: 20px;
+  text-align: center;
+}
+
+.current-location i.fa-map-pin {
+  color: #ff8f00 !important;
+}
+
+.location-text {
+  margin-left: 10px; /* Ensures space between the icon and text */
+}
+
+.button {
+  margin-top: 25px;
+  /* text-align: right; */
+}
+
+button.btn-done {
+  /* padding: 15px; */
+  font-size: 15px;
+  padding: 10px;
+  width: 50%;
+  text-align: center;
+  border: none;
+  border-radius: 5px;
+  background: #59adff;
+  color: white;
+  /* height: 30px !important; */
+}
+
+#pickup-gps-options,
+#drop-gps-options {
+  display: none;
+}
+
+.drag-bar {
+  width: 100%;
+  display: flex;
+  /* align-items: center; */
+  justify-content: center;
+}
+
+.drag-bar div {
+  width: 50%;
+  background: #e4e4e4;
+  height: 8px;
+  border-radius: 10px;
+}
+
+/* Marker */
+/* Center the marker icon exactly in the middle */
+.center-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -12px; /* Half of the marker's width */
+  margin-top: -24px; /* Half of the marker's height */
+  z-index: 1000;
+  display: none;
 }
