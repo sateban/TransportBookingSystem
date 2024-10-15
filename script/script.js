@@ -1050,7 +1050,7 @@ $("#btn-done").on("click", (e) => {
     });
   } else {
     iziToast.success({
-      title: "Searching Router",
+      title: "Searching Route",
       message: `Please wait`,
       icon: "fa fa-check",
       position: "topRight",
