@@ -269,7 +269,8 @@ div.loader h1 span {
 }
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: end;
+  cursor: pointer;
   align-items: center;
   background-color: var(--white-color);
   padding: var(--third-padding);

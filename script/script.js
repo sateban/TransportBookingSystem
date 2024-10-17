@@ -56,6 +56,8 @@ function initializeMap() {
     }
   );
 
+  console.log(waypoints);
+
   var control = L.Routing.control({
     waypoints: waypoints,
     routeWhileDragging: false,
@@ -68,49 +70,49 @@ function initializeMap() {
   map.zoomControl.setPosition("topright");
 
   // Initialize geocoder control
-  var geocoder = L.Control.geocoder({
-    defaultMarkGeocode: false,
-  })
-    .on("markgeocode", function (e) {
-      var latlng = e.geocode.center;
-      console.log("Test Here", e);
-      control.setWaypoints([
-        // L.latLng(51.5, -0.09),  // Starting point
-        waypoints[0],
-        latlng, // End point from geocoder
-      ]);
+  // var geocoder = L.Control.geocoder({
+  //   defaultMarkGeocode: false,
+  // })
+  //   .on("markgeocode", function (e) {
+  //     var latlng = e.geocode.center;
+  //     console.log("Test Here", e);
+  //     control.setWaypoints([
+  //       // L.latLng(51.5, -0.09),  // Starting point
+  //       waypoints[0],
+  //       latlng, // End point from geocoder
+  //     ]);
 
-      let w = [
-        waypoints[0],
-        latlng,
-        // L.latLng(11.6794671, 122.3640332),
-      ];
-      // w[0]["lat"] = waypoints[0];
-      // w[0]["lng"] = latlng;
-      // console.log(w);
-      // console.log(waypoints[0], latlng, w[0]);
+  //     let w = [
+  //       waypoints[0],
+  //       latlng,
+  //       // L.latLng(11.6794671, 122.3640332),
+  //     ];
+  //     // w[0]["lat"] = waypoints[0];
+  //     // w[0]["lng"] = latlng;
+  //     // console.log(w);
+  //     // console.log(waypoints[0], latlng, w[0]);
 
-      // map.setView(latlng, 13);
-      // map.options.minZoom = 8;
-      // map.options.maxBounds = boundPoint(waypoints);
+  //     // map.setView(latlng, 13);
+  //     // map.options.minZoom = 8;
+  //     // map.options.maxBounds = boundPoint(waypoints);
 
-      fitWaypointsOnSearch(w);
-      // console.log(w);
-    })
-    .addTo(map);
+  //     fitWaypointsOnSearch(w);
+  //     // console.log(w);
+  //   })
+  //   .addTo(map);
 
-  control.on("routesfound", function (e) {
-    const routes = e.routes;
-    const totalDistance = routes[0].summary.totalDistance; // Distance in meters
-    // console.log(`Total Distance: ${totalDistance} meters`);
-    $("#distance").text(`Total Distance: ${totalDistance} meters`);
+  // control.on("routesfound", function (e) {
+  //   const routes = e.routes;
+  //   const totalDistance = routes[0].summary.totalDistance; // Distance in meters
+  //   // console.log(`Total Distance: ${totalDistance} meters`);
+  //   $("#distance").text(`Total Distance: ${totalDistance} meters`);
 
-    // Optionally, display the distance on the map or in a popup
-    L.popup()
-      .setLatLng(routes[0].waypoints[0].latLng) // Display near the starting point
-      .setContent(`Total Distance: ${(totalDistance / 1000).toFixed(2)} km`)
-      .openOn(map);
-  });
+  //   // Optionally, display the distance on the map or in a popup
+  //   L.popup()
+  //     .setLatLng(routes[0].waypoints[0].latLng) // Display near the starting point
+  //     .setContent(`Total Distance: ${(totalDistance / 1000).toFixed(2)} km`)
+  //     .openOn(map);
+  // });
 
   // L.DomEvent.on(routingControl, "routesfound", function (e) {
   //   const routes = e.routes; // Get the routes
@@ -187,6 +189,8 @@ function initializeMap() {
   streetsLayer.addTo(map);
 
   fitWaypoints();
+
+  // MapHelper.removeRoutingControl();
 }
 
 function fitWaypointsNewValue(wp) {
@@ -302,16 +306,16 @@ function receiveLocation2(latitude, longitude, inBrowserCall = false) {
   });
 
   // Update the marker position
-  if (marker) {
-    marker.setLatLng([latitude, longitude]);
-  } else {
-    marker = L.marker(
-      [latitude, longitude] // { icon: customIcon }
-    )
-      .addTo(map)
-      .bindPopup("Starting <b>Point</b>")
-      .openPopup();
-  }
+  // if (marker) {
+  //   marker.setLatLng([latitude, longitude]);
+  // } else {
+  //   marker = L.marker(
+  //     [latitude, longitude] // { icon: customIcon }
+  //   )
+  //     .addTo(map)
+  //     .bindPopup("Starting <b>Point</b>")
+  //     .openPopup();
+  // }
 }
 
 // receiveLocation(14.370958441729798, 120.93901384235421);
@@ -672,6 +676,7 @@ $(document).ready(function () {
   // $('#changeDiv').click(function() {
   //     $('#response-listener').text('Change Div Content');
   // });
+
 });
 
 // 🔰 Reverse GeoCoding to Translate Latitude and Longitude to Actual Address
@@ -681,6 +686,8 @@ function RetrieveActualAddressName(coordinates) {
 
   // Reverse geocoding using Nominatim
   var url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=jsonv2`;
+
+  console.log(isPickupListeningForLocation, inputFocus.currentFocused);
 
   // Fetch the address data from Nominatim
   fetch(url)
@@ -754,6 +761,17 @@ $("#btn-search-pickup").on("click", (e) => {
 $("#btn-search-dropoff").on("click", () => {
   hideSearchLocation();
   $("#input-dropoff-location").focus();
+  inputFocus.currentFocused = "drop";
+});
+
+
+// Drop-off Location
+$("#pickup-use-current-location .location-text, #pickup-pin-location .location-text").on("click", (e) => {
+  inputFocus.currentFocused = "pickup";
+});
+
+// Pickup Location
+$("#current-location .location-text, #drop-pin-location .location-text").on("click", () => {
   inputFocus.currentFocused = "drop";
 });
 
@@ -1015,6 +1033,7 @@ $(".destination-overlay").on("click", () => {
     showHailingOverlay();
     isManualPickup = true;
     RetrieveActualAddressName(locationDetails.coordinates);
+    hideCenterMarker();
   }
 });
 
@@ -1054,14 +1073,94 @@ $("#btn-done").on("click", (e) => {
       message: `Please wait`,
       icon: "fa fa-check",
       position: "topRight",
-      timeout: 3500,
+      timeout: 1000,
     });
+
+    const startPoint = { lat: +$("#input-pickup-location").attr("lat"), lng: +$("#input-pickup-location").attr("lng") };
+    const endPoint = { lat: +$("#input-dropoff-location").attr("lat"), lng: +$("#input-dropoff-location").attr("lng") };
+
+    showRoute(startPoint, endPoint);
+    hideHailingOverlay();
+
+    setTimeout(() => {
+      iziToast.question({
+        timeout: false,
+        close: false,
+        overlay: true,
+        displayMode: 'once',
+        id: 'question',
+        zindex: 999,
+        title: 'Route Selection',
+        message: 'Select this destination?',
+        position: 'center',
+        buttons: [
+          ['<button><b>YES</b></button>', function (instance, toast) {
+            
+            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+            iziToast.success({
+              title: "Route Selected",
+              message: `Searching for nearby drivers, please wait...`,
+              icon: "fa fa-check",
+              position: "topRight",
+              timeout: false,
+            });
+
+            let json = { search_driver: true };
+            sendData(json);
+            
+          }, true],
+          ['<button>NO</button>', function (instance, toast) {
+            
+            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+            
+            showHailingOverlay();
+          }],
+        ],
+        onClosing: function(instance, toast, closedBy){
+          console.info('Closing | closedBy: ' + closedBy);
+        },
+        onClosed: function(instance, toast, closedBy){
+          console.info('Closed | closedBy: ' + closedBy);
+        }
+      });
+    }, 1800);
   }
 });
 
 // Read Coordinates on Movement for Manual Pin
 // map.on("move", updateCoordinates);
 map.on("moveend", updateCoordinates);
+
+function showRoute(start, end) {
+  // const map = initializeMap();
+
+  // Add routing control
+  let control = L.Routing.control({
+      waypoints: [
+          L.latLng(start.lat, start.lng), // Starting point
+          L.latLng(end.lat, end.lng),     // Destination point
+      ],
+      routeWhileDragging: true, // Allows the user to drag and modify the route
+      fitSelectedRoutes: true,  // Auto-zooms the map to fit the route
+  }).addTo(map);
+
+  control.on("routesfound", function (e) {
+    const routes = e.routes;
+    const totalDistance = routes[0].summary.totalDistance; // Distance in meters
+    // console.log(`Total Distance: ${totalDistance} meters`);
+    $("#distance").text(`Total Distance: ${totalDistance} meters`);
+
+    // Optionally, display the distance on the map or in a popup
+    L.popup()
+      .setLatLng(routes[0].waypoints[0].latLng) // Display near the starting point
+      .setContent(`Total Distance: ${(totalDistance / 1000).toFixed(2)} km`)
+      .openOn(map);
+  });
+}
+
+function clearMarkers(){
+
+}
 
 // Update coordinates function
 function updateCoordinates() {
@@ -1084,7 +1183,20 @@ function updateCoordinates() {
     console.log(viewboxBounds, map.getBounds());
     // if (!map.getBounds().intersects(viewboxBounds)) {
     if (!viewboxBounds.contains(map.getBounds())) {
-      console.log("Map has moved outside the viewbox!");
+      console.log("Alert: Map has moved outside the viewbox!");
+      iziToast.destroy();
+
+      showHailingOverlay();
+      iziToast.warning({
+        title: "Map Outside",
+        message: `Location selection is beyond the scope route of service, please try again`,
+        icon: "fa fa-check",
+        position: "topRight",
+        timeout: 3000,
+      });
+
+      $("#input-pickup-location").val("");
+      $("#input-dropoff-location").val("");
     }
 
     // var rectangle = L.rectangle(viewboxBounds, {

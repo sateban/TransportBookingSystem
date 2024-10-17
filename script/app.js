@@ -98,6 +98,11 @@ $(document).ready(() => {
   ) {
     // window.location.href = "admin.html";
   }
+   else {
+    if(window.location.href.split("/")[3] != "index.html"){
+      window.location.href = "index.html";
+    }
+  }
 
   const connectedRef = ref(database, "users/");
   onValue(connectedRef, (snapshot) => {
@@ -128,9 +133,9 @@ $(document).ready(() => {
         lists += `<td>${d[driver].dateaccountregistered}</td>`;
         lists += `</tr>`;
       }
-      // $("#btn-add-new").prev().remove();
-
+      
       $("#btn-add-new").before(lists);
+      // $("#btn-add-new").prev().remove();
       // isAllowedToAppend = true;
       // }
     } else {
@@ -296,9 +301,9 @@ $(document).ready(() => {
                 timeout: 4000,
               });
 
-              setTimeout(() => {
+              // setTimeout(() => {
                 window.location.href = window.location.href;
-              }, 1500);
+              // }, 1500);
             })
             .catch((error) => {
               // iziToast.destroy();
@@ -357,4 +362,37 @@ $(document).ready(() => {
       return `${year}/${month}/${day}`;
     }
   }
+
+  
+  $("#btn-sign-out").on("click", () => {
+    iziToast.question({
+      // timeout: 20000,
+      close: false,
+      overlay: true,
+      // displayMode: 'once',
+      id: 'question',
+      zindex: 999,
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      position: 'center',
+      buttons: [
+          ['<button><b>YES</b></button>', function (instance, toast) {
+              instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+              window.location.href = "index.html";
+              sessionStorage.setItem("uid", "");
+          }, true],
+          ['<button>NO</button>', function (instance, toast) {
+   
+              instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
+   
+          }],
+      ],
+      onClosing: function(instance, toast, closedBy){
+          console.info('Closing | closedBy: ' + closedBy);
+      },
+      onClosed: function(instance, toast, closedBy){
+          console.info('Closed | closedBy: ' + closedBy);
+      }
+  });
+  });
 });
