@@ -9,7 +9,12 @@
     <link href="assets/bootstrap/css/bootstrap.css" rel="stylesheet" />
     <link rel="stylesheet" href="styles/jquery-ui.css" />
     <link rel="stylesheet" href="styles/iziToast.css" />
-    <link rel="stylesheet" href="styles/all.css"  />
+    <link rel="stylesheet" href="styles/all.css" />
+    <link rel="stylesheet" href="styles/select2.min.css" />
+    <link
+      rel="stylesheet"
+      href="assets/datatable/dataTables.bootstrap.min.css"
+    />
     <!-- <link
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap"
       rel="stylesheet"
@@ -21,7 +26,7 @@
       <h1>Loading<span>....</span></h1>
     </div>
     <div class="page-content index-page">
-      <div class="sidebar">
+      <div class="sidebar" style="display: none">
         <div class="brand">
           <i class="fa-solid fa-xmark xmark"></i>
           <img class="img" src="assets/images/napat_tours.png" width="50%" />
@@ -86,8 +91,8 @@
         <div class="header">
           <i class="fa-solid fa-bars bar-item"></i>
           <!-- <div class="search"> -->
-            <!-- <input type="search" placeholder="Type A Keyword" /> -->
-             <i class="fa fa-sign-out" id="btn-sign-out"></i>
+          <!-- <input type="search" placeholder="Type A Keyword" /> -->
+          <i class="fa fa-sign-out" id="btn-sign-out"></i>
           <!-- </div> -->
         </div>
         <div class="main-content">
@@ -116,11 +121,21 @@
                   class="projects-box-section2"
                   style="padding: 0 !important"
                 >
+                  <div
+                    class="box-section1"
+                    style="margin-bottom: unset !important"
+                  >
+                    <div class="box-title">
+                      <h2>Driver</h2>
+                    </div>
+                  </div>
                   <table style="width: 100%">
-                    <thead>
+                    <thead> 
                       <tr>
                         <td>Plate Number</td>
                         <td>Driver</td>
+                        <td>Email</td>
+                        <!-- <td>Password</td> -->
                         <td>Age</td>
                         <td>Address</td>
                         <td>Contact</td>
@@ -129,8 +144,25 @@
                       </tr>
                     </thead>
                     <tbody id="list-of-drivers">
-                      <tr id="btn-add-new" style="cursor: pointer;">
-                        <td colspan="7" id="encode-add" style="text-align: center; font-size: 30px;">
+                      <!-- <tr id="btn-add-new" style="cursor: pointer">
+                        <td
+                          colspan="8"
+                          id="encode-add"
+                          style="text-align: center; font-size: 30px"
+                        >
+                          <i class="fa fa-plus-circle"></i>
+                        </td>
+                      </tr> -->
+                    </tbody>
+                  </table>
+                  <table style="width: 100%">
+                    <tbody id="">
+                      <tr id="btn-add-new" style="cursor: pointer">
+                        <td
+                          colspan="8"
+                          id="encode-add"
+                          style="text-align: center; font-size: 30px"
+                        >
                           <i class="fa fa-plus-circle"></i>
                         </td>
                       </tr>
@@ -138,10 +170,71 @@
                   </table>
                 </div>
               </div>
+
+              <!-- 2nd -->
+              <br />
+              <br />
+              <br />
+
+              <div class="box">
+                <div
+                  class="box-section1"
+                  style="margin-bottom: unset !important"
+                >
+                  <div class="box-title">
+                    <h2>Tour Setups</h2>
+                  </div>
+                </div>
+                <div class="fourth-box-section2">
+                  <div
+                    class="small-box"
+                    id="total-booking"
+                    data-toggle="modal"
+                    data-target="#modalTotalBookings"
+                  >
+                    <i class="fa-regular fa-rectangle-list fa-2x mb-10"></i>
+                    <h6>Total Bookings (Today)</h6>
+                    <!-- <h6></h6> -->
+                  </div>
+
+                  <div
+                    class="small-box"
+                    id="trip-history"
+                    data-toggle="modal"
+                    data-target="#modalTripHistory"
+                  >
+                    <i class="fa fa-history fa-2x mb-10"></i>
+                    <h6>Trip History</h6>
+                  </div>
+
+                  <div
+                    class="small-box"
+                    id="manage-schedule"
+                    data-toggle="modal"
+                    data-target="#modalManageSchedule"
+                  >
+                    <i
+                      class="fad fa-business-time fa-circle-check fa-2x mb-10"
+                    ></i>
+                    <h6>Manage Schedule</h6>
+                  </div>
+
+                  <div
+                    class="small-box"
+                    id="update-info"
+                    data-toggle="modal"
+                    data-target="#modalUpdateInfo"
+                  >
+                    <i class="fa fa-eraser fa-2x mb-10"></i>
+                    <h6>Update Info</h6>
+                  </div>
+                </div>
+              </div>
+
               <!-- <a>Profile </a> -->
             </div>
-
-            <!-- <div class="box">
+            <!-- 
+            <div class="box">
               <div class="box-section1">
                 <div class="box-title">
                   <h2>Quick Draft</h2>
@@ -158,9 +251,252 @@
         </div>
       </main>
     </div>
+
+    <!-- Modal For Total Bookings -->
+    <div
+      class="modal fade"
+      id="modalTotalBookings"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalTotalBookingsTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Total Bookings</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <h5 class="text-total-bookings" id="date-today"></h5>
+            <h6 class="text-total-bookings" id="">5 Bookings</h6>
+            <br />
+            <br />
+
+            <table id="tbl-total-bookings" class="table" style="width: 100%">
+              <thead>
+                <tr>
+                  <td>Date</td>
+                  <td>Driver</td>
+                  <td>Passenger</td>
+                  <td>From</td>
+                  <td>To</td>
+                  <td>Pickup Time</td>
+                  <td>Arrival Time</td>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal For Trip History -->
+    <div
+      class="modal fade"
+      id="modalTripHistory"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalTripHistoryTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Trip History</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <br />
+            <br />
+
+            <table id="tbl-trip-history" class="table" style="width: 100%">
+              <thead>
+                <tr>
+                  <td>Date</td>
+                  <td>Driver</td>
+                  <td>Passenger</td>
+                  <td>From</td>
+                  <td>To</td>
+                  <td>Pickup Time</td>
+                  <td>Arrival Time</td>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal For Manage Schedule -->
+    <div
+      class="modal fade"
+      id="modalManageSchedule"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalManageScheduleTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="examplemodalTripHistoryTitle">
+              Manage Schedule
+            </h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <br />
+            <br />
+
+            <table id="tbl-manage-schedule" class="table" style="width: 100%">
+              <thead>
+                <tr>
+                  <td>Driver</td>
+                  <td>Schedule Date</td>
+                  <td>Schedule Time</td>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal For Update Info -->
+    <div
+      class="modal fade"
+      id="modalUpdateInfo"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalUpdateInfoTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Update Info</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <br />
+
+            <table id="tbl-update-info" class="table" style="width: 100%">
+              <thead>
+                <tr>
+                  <td>Plate Number</td>
+                  <td>Driver</td>
+                  <td>Email</td>
+                  <td>Password</td>
+                  <td>Age</td>
+                  <td>Address</td>
+                  <td>Contact</td>
+                  <td>Van Model</td>
+                  <td>Date Registered</td>
+                </tr>
+              </thead>
+              <tbody id="tbl-tbody-update-info">
+                <tr>
+                  <td>FAD-4537</td>
+                  <td>Finjet Napat</td>
+                  <td>Test</td>
+                  <td>Test</td>
+                  <td>32</td>
+                  <td>Barusbus, Libertad, Antique</td>
+                  <td>09095570661</td>
+                  <td>NA</td>
+                  <td>2024-10-16</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="script/jquery.3.2.1.min.js"></script>
+    <script src="assets/bootstrap/js/popper.js"></script>
+    <script src="assets/datatable/datatables.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.js"></script>
     <script src="script/jquery-ui.js"></script>
     <script src="script/iziToast.min.js"></script>
+    <script src="script/FullCalendar.js"></script>
+    <script src="script/calendar.js"></script>
     <script type="module" src="script/app.js"></script>
     <script src="script/script2.js"></script>
   </body>

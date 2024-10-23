@@ -144,7 +144,7 @@ div.loader h1 span {
   min-height: 100vh;
   background-color: var(--main-color);
   display: grid;
-  grid-template-columns: 220px 1fr;
+  /* grid-template-columns: 220px 1fr; */
 }
 .index-page {
   display: none;
@@ -2626,4 +2626,29 @@ main .projects-box .projects-box-section2 table tr td a.rejected {
 .new-row-input {
   width: 100%;
   text-align: center;
+}
+
+/* .fourth-box-section2 h6 {
+  
+} */
+
+.small-box {
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.small-box:hover {
+  background-color: rgb(243, 243, 243);
+}
+
+.modal-dialog.modal-dialog-centered {
+  max-width: 95%;
+}
+
+.text-total-bookings {
+  text-align: center;
+}
+
+#tbl-update-info {
+  cursor: pointer;
 }
