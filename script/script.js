@@ -676,7 +676,6 @@ $(document).ready(function () {
   // $('#changeDiv').click(function() {
   //     $('#response-listener').text('Change Div Content');
   // });
-
 });
 
 // 🔰 Reverse GeoCoding to Translate Latitude and Longitude to Actual Address
@@ -764,16 +763,20 @@ $("#btn-search-dropoff").on("click", () => {
   inputFocus.currentFocused = "drop";
 });
 
-
 // Drop-off Location
-$("#pickup-use-current-location .location-text, #pickup-pin-location .location-text").on("click", (e) => {
+$(
+  "#pickup-use-current-location .location-text, #pickup-pin-location .location-text"
+).on("click", (e) => {
   inputFocus.currentFocused = "pickup";
 });
 
 // Pickup Location
-$("#current-location .location-text, #drop-pin-location .location-text").on("click", () => {
-  inputFocus.currentFocused = "drop";
-});
+$("#current-location .location-text, #drop-pin-location .location-text").on(
+  "click",
+  () => {
+    inputFocus.currentFocused = "drop";
+  }
+);
 
 $(".close-btn").on("click", () => {
   hideHailingOverlay();
@@ -803,7 +806,7 @@ let facilitiesArray = [
     key: 0,
     id: "admin",
     label: ",   • ADMIN",
-    year: "NA", 
+    year: "NA",
     role: "admin",
   },
   {
@@ -1076,8 +1079,14 @@ $("#btn-done").on("click", (e) => {
       timeout: 1000,
     });
 
-    const startPoint = { lat: +$("#input-pickup-location").attr("lat"), lng: +$("#input-pickup-location").attr("lng") };
-    const endPoint = { lat: +$("#input-dropoff-location").attr("lat"), lng: +$("#input-dropoff-location").attr("lng") };
+    const startPoint = {
+      lat: +$("#input-pickup-location").attr("lat"),
+      lng: +$("#input-pickup-location").attr("lng"),
+    };
+    const endPoint = {
+      lat: +$("#input-dropoff-location").attr("lat"),
+      lng: +$("#input-dropoff-location").attr("lng"),
+    };
 
     showRoute(startPoint, endPoint);
     hideHailingOverlay();
@@ -1087,41 +1096,113 @@ $("#btn-done").on("click", (e) => {
         timeout: false,
         close: false,
         overlay: true,
-        displayMode: 'once',
-        id: 'question',
+        displayMode: "once",
+        id: "question",
         zindex: 999,
-        title: 'Route Selection',
-        message: 'Select this destination?',
-        position: 'center',
+        title: "Route Selection",
+        message: "Select this destination?",
+        position: "center",
         buttons: [
-          ['<button><b>YES</b></button>', function (instance, toast) {
-            
-            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
-            iziToast.success({
-              title: "Route Selected",
-              message: `Searching for nearby drivers, please wait...`,
-              icon: "fa fa-check",
-              position: "topRight",
-              timeout: false,
-            });
+          [
+            "<button><b>YES</b></button>",
+            function (instance, toast) {
+              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
 
-            let json = { search_driver: true };
-            sendData(json);
-            
-          }, true],
-          ['<button>NO</button>', function (instance, toast) {
-            
-            instance.hide({ transitionOut: 'fadeOut' }, toast, 'button');
-            
-            showHailingOverlay();
-          }],
+              $("#find-location").fadeOut();
+
+              iziToast.success({
+                title: "Route Selected",
+                message: `Searching for nearby drivers, please wait...`,
+                icon: "fa fa-check",
+                position: "topRight",
+                timeout: false,
+              });
+
+              // let json = { search_driver: true };
+              // sendData(json);
+
+              // searchAvailableDrivers()
+              //   .then((data) => {
+              //     console.log(data); // Output: "Data fetched!"
+              //     return "Processing data...";
+              //   })
+              //   .then((processedData) => {
+              //     console.log(processedData); // Output: "Processing data..."
+              //   })
+              //   .catch((error) => {
+              //     console.error("Error:", error);
+              //   });
+
+              let onlineDriver = getDriverReference();
+              let onValue = getOnValue();
+
+              onValue(onlineDriver, (snapshot) => {
+                const data = snapshot.val();
+                let listOnlineDriver = [];
+                console.log(data);
+
+                for (let driver in data) {
+                  let detail = data[driver];
+
+                  if (detail.isAvailable) {
+                    listOnlineDriver.push({
+                      driverName: detail.drivername,
+                      driverID: detail.driverid,
+                    });
+                  }
+                }
+
+                if (listOnlineDriver.length > 0) {
+                  iziToast.destroy();
+
+                  if (listOnlineDriver.length > 1) {
+                    iziToast.success({
+                      title: `Found ${listOnlineDriver.length} available Drivers`,
+                      message: `Selecting nearest and available driver`,
+                      icon: "fa fa-check",
+                      position: "topRight",
+                      timeout: false,
+                    });
+                  } else {
+                    // One driver found
+                    iziToast.success({
+                      title: `Found ${listOnlineDriver.length} available Driver`,
+                      message: `Waiting for the driver to confirm, please wait`,
+                      icon: "fa fa-check",
+                      position: "topRight",
+                      timeout: false,
+                    });
+                  }
+                } else {
+                  iziToast.destroy();
+
+                  iziToast.info({
+                    title: "No Available Driver",
+                    message: `Please wait, still searching...`,
+                    icon: "fa fa-exclamation-circle",
+                    position: "topRight",
+                    timeout: false,
+                  });
+                }
+              });
+            },
+            true,
+          ],
+          [
+            "<button>NO</button>",
+            function (instance, toast) {
+              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+
+              showHailingOverlay();
+            },
+          ],
         ],
-        onClosing: function(instance, toast, closedBy){
-          console.info('Closing | closedBy: ' + closedBy);
+        onClosing: function (instance, toast, closedBy) {
+          console.info("Closing | closedBy: " + closedBy);
         },
-        onClosed: function(instance, toast, closedBy){
-          console.info('Closed | closedBy: ' + closedBy);
-        }
+        onClosed: function (instance, toast, closedBy) {
+          console.info("Closed | closedBy: " + closedBy);
+        },
       });
     }, 1800);
   }
@@ -1136,12 +1217,12 @@ function showRoute(start, end) {
 
   // Add routing control
   let control = L.Routing.control({
-      waypoints: [
-          L.latLng(start.lat, start.lng), // Starting point
-          L.latLng(end.lat, end.lng),     // Destination point
-      ],
-      routeWhileDragging: true, // Allows the user to drag and modify the route
-      fitSelectedRoutes: true,  // Auto-zooms the map to fit the route
+    waypoints: [
+      L.latLng(start.lat, start.lng), // Starting point
+      L.latLng(end.lat, end.lng), // Destination point
+    ],
+    routeWhileDragging: true, // Allows the user to drag and modify the route
+    fitSelectedRoutes: true, // Auto-zooms the map to fit the route
   }).addTo(map);
 
   control.on("routesfound", function (e) {
@@ -1158,9 +1239,7 @@ function showRoute(start, end) {
   });
 }
 
-function clearMarkers(){
-
-}
+function clearMarkers() {}
 
 // Update coordinates function
 function updateCoordinates() {
