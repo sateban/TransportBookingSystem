@@ -1,7 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+// import { initializeApp } from "./script/firebase-app.js";
 
 // If you enabled Analytics in your project, add the Firebase SDK for Google Analytics
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-analytics.js";
+// import { getAnalytics } from "./script/firebase-analytics.js";
 
 import {
   getDatabase,
@@ -16,6 +18,7 @@ import {
   onChildAdded,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+// } from "./script/firebase-database.js";
 
 // Add Firebase products that you want to use
 //   import { getAuth } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
@@ -30,14 +33,15 @@ import {
   GoogleAuthProvider,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+// } from "./script/firebase-auth.js";
+// import { getFirestore } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-import {
-  uploadBytes,
-  getStorage,
-  ref as fRef,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.5.0/firebase-storage.js";
+// import {
+//   uploadBytes,
+//   getStorage,
+//   ref as fRef,
+//   getDownloadURL,
+// } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-storage.js";
 // import { GoogleAuthProvider } from "firebase/auth";
 
 const provider = new GoogleAuthProvider();
@@ -88,6 +92,47 @@ onValue(connectedRef, (snapshot) => {
     console.log("not connected");
   }
 });
+
+// General Function Helper
+window.getCurrentDate = (format) => {
+  let today = new Date();
+  let day = String(today.getDate()).padStart(2, "0");
+  let month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+  let year = today.getFullYear();
+  let monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  if (format == "dmy") {
+    return `${day}/${month}/${year}`;
+  } else if (format == "ymd-") {
+    return `${year}-${month}-${day}`;
+  } else if (format == "ymd/") {
+    return `${year}/${month}/${day}`;
+  } else if (format == "mdyt") {
+    return `${monthNames[today.getMonth()]} ${day}, ${year}`;
+  }
+};
+
+window.sanitizeText = (text) => {
+  return text
+    .replaceAll(".", "_")
+    .replaceAll("#", "_")
+    .replaceAll("$", "_")
+    .replaceAll("[", "_")
+    .replaceAll("]", "_");
+};
 
 $(document).ready(() => {
   if (window.location.href.includes("index")) {
@@ -564,38 +609,6 @@ $(document).ready(() => {
       return data;
     }
 
-    // General Function Helper
-    function getCurrentDate(format) {
-      let today = new Date();
-      let day = String(today.getDate()).padStart(2, "0");
-      let month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-based
-      let year = today.getFullYear();
-      let monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
-
-      if (format == "dmy") {
-        return `${day}/${month}/${year}`;
-      } else if (format == "ymd-") {
-        return `${year}-${month}-${day}`;
-      } else if (format == "ymd/") {
-        return `${year}/${month}/${day}`;
-      } else if (format == "mdyt") {
-        return `${monthNames[today.getMonth()]} ${day}, ${year}`;
-      }
-    }
-
     $("#btn-sign-out").on("click", () => {
       iziToast.question({
         // timeout: 20000,
@@ -660,17 +673,49 @@ $(document).ready(() => {
             reject([]);
           }
         });
-
       });
     };
 
     window.getDriverReference = () => {
-      const onlineDriver = ref(database, "users/drivers/");
+      let currentDate = getCurrentDate("ymd-");
+      const onlineDriver = ref(
+        database,
+        "activity/booking/" + currentDate + "/drivers"
+      );
       return onlineDriver;
+    };
+
+    window.getUserDetails = () => {
+      return new Promise((resolve, reject) => {
+        const users = ref(database, "users/drivers");
+        get(users).then((snap) => {
+          let data = snap.val();
+
+          console.log(snap.exists());
+          if (snap.exists()) {
+            resolve(data);
+          } else {
+            reject([]);
+          }
+        });
+      });
+      // return users;
     };
 
     window.getOnValue = () => {
       return onValue;
+    };
+
+    window.getRef = () => {
+      return ref;
+    };
+
+    window.getUpdate = () => {
+      return update;
+    };
+
+    window.getDatabase = () => {
+      return database;
     };
   }
 });
