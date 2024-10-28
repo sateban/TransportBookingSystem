@@ -1,7 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+// import { initializeApp } from "./script/firebase-app.js";
 
 // If you enabled Analytics in your project, add the Firebase SDK for Google Analytics
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-analytics.js";
+// import { getAnalytics } from "./script/firebase-analytics.js";
 
 import {
   getDatabase,
@@ -16,6 +18,7 @@ import {
   onChildAdded,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+// } from "./script/firebase-database.js";
 
 // Add Firebase products that you want to use
 //   import { getAuth } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
@@ -30,14 +33,15 @@ import {
   GoogleAuthProvider,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+// } from "./script/firebase-auth.js";
+// import { getFirestore } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
 
-import {
-  uploadBytes,
-  getStorage,
-  ref as fRef,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.5.0/firebase-storage.js";
+// import {
+//   uploadBytes,
+//   getStorage,
+//   ref as fRef,
+//   getDownloadURL,
+// } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-storage.js";
 // import { GoogleAuthProvider } from "firebase/auth";
 
 const provider = new GoogleAuthProvider();
@@ -89,7 +93,49 @@ onValue(connectedRef, (snapshot) => {
   }
 });
 
+// General Function Helper
+window.getCurrentDate = (format) => {
+  let today = new Date();
+  let day = String(today.getDate()).padStart(2, "0");
+  let month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+  let year = today.getFullYear();
+  let monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  if (format == "dmy") {
+    return `${day}/${month}/${year}`;
+  } else if (format == "ymd-") {
+    return `${year}-${month}-${day}`;
+  } else if (format == "ymd/") {
+    return `${year}/${month}/${day}`;
+  } else if (format == "mdyt") {
+    return `${monthNames[today.getMonth()]} ${day}, ${year}`;
+  }
+};
+
+window.sanitizeText = (text) => {
+  return text
+    .replaceAll(".", "_")
+    .replaceAll("#", "_")
+    .replaceAll("$", "_")
+    .replaceAll("[", "_")
+    .replaceAll("]", "_");
+};
+
 $(document).ready(() => {
+  // if (window.location.href.includes("index")) {
   let lists2 = ``;
   let isAllowedToAppend = true;
 
@@ -100,12 +146,103 @@ $(document).ready(() => {
     // window.location.href = "admin.html";
   } else {
     // if(window.location.href.split("/")[3] != "index.html"){
-    if (window.location.href.includes("index.html")) {
+    if (!window.location.href.includes("index.html")) {
       window.location.href = "index.html";
     }
   }
 
   $("#date-today").text(getCurrentDate("mdyt") + " Bookings");
+
+  let bookCount = 0;
+  let overallBookCount = 0;
+  const booking = ref(database, "activity/booking");
+  onValue(booking, (snapshot) => {
+    const data = snapshot.val();
+    console.log(data);
+
+    let userData = [];
+
+    if (data) {
+      // if (isAllowedToAppend) {
+      // $("#btn-add-new").prev().remove();
+      // isAllowedToAppend = true;
+      // }
+      for (let d in data) {
+        let drivers = data[d].drivers;
+
+        for (let driverid in drivers) {
+          let ts = drivers[driverid];
+
+          for (let tsd in ts) {
+            if (!isNaN(tsd)) {
+              // console.log(formatTimestampToDate(+tsd));
+              console.log(formatTimestampToDate(+tsd), getCurrentDate("ymd-"))
+              if(formatTimestampToDate(+tsd) == getCurrentDate("ymd-")){
+                bookCount++;
+              }
+
+              overallBookCount++;
+
+              for (let email in ts[tsd]) {
+                console.log(email);
+                let v = ts[tsd][email];
+
+                userData.push({
+                  date: d,
+                  driver: driverid,
+                  rider: v.customerName,
+                  pickup_location: v.pickup_location,
+                  dropoff_location: v.dropoff_location
+                });
+              }
+            }
+          }
+        }
+      }
+
+    //   {
+    //     "date": "2024-10-26",
+    //     "driver": "JG20241016NEN1675",
+    //     "rider": "Steven Jake Fajarillo",
+    //     "pickup_location": "E. Fernandez Road, Tinigaw, Estancia, Mobo, Kalibo, Aklan, Western Visayas, 5600, Philippines",
+    //     "dropoff_location": "Kalibo International Airport, Talisay, Kalibo, Aklan, Western Visayas, 5600, Philippines"
+    // }
+      console.log(userData);
+      let dlist = ""; 
+
+      for(let d in userData){
+        let dd = userData[d];
+        dlist +=  `
+          <tr>
+            <td>${dd.date}</td>
+            <td>${dd.driver}</td>
+            <td>${dd.rider}</td>
+            <td>${dd.pickup_location}</td>
+            <td>${dd.dropoff_location}</td>
+
+          </tr>
+        `;
+      }
+
+      $("#total-bookings-data").html(dlist);
+      $("#total-booking-gen").text(bookCount + " Bookings Today");
+      $("#overall-total-booking-gen").text(overallBookCount + " Overall Bookings");
+    } else {
+      console.log("not connected");
+    }
+  });
+
+  function formatTimestampToDate(timestamp) {
+    // Create a new Date object from the timestamp
+    const date = new Date(timestamp);
+    // Extract the year, day, and month
+    const year = date.getFullYear(); // Get the full year (yyyy)
+    const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
+
+    // Return the formatted date
+    return `${year}-${month}-${day}`;
+  }
 
   const connectedRef = ref(database, "users/");
   onValue(connectedRef, (snapshot) => {
@@ -159,39 +296,60 @@ $(document).ready(() => {
         // lists2 += `</tr>`;
 
         lists2 += `
-           <tr style="align-items: center;" driverid="${d[driver].driverid.trim()}">
+           <tr style="align-items: center;" driverid="${d[
+             driver
+           ].driverid.trim()}">
             <td>
-              <input type="text" class="new-row-input" id="plate-no" placeholder="Van Plate Number" value="${d[driver].plateno}" autocomplete="off"/>
+              <input type="text" class="new-row-input" id="plate-no" placeholder="Van Plate Number" value="${
+                d[driver].plateno
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="text" class="new-row-input" id="driver-name" placeholder="Driver Name" value="${d[driver].drivername}" autocomplete="off"/>
+              <input type="text" class="new-row-input" id="driver-name" placeholder="Driver Name" value="${
+                d[driver].drivername
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="email" class="new-row-input" id="driver-email" placeholder="Email" value="${d[driver].driveremail}" autocomplete="off"/>
+              <input type="email" class="new-row-input" id="driver-email" placeholder="Email" value="${
+                d[driver].driveremail
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="password" class="new-row-input" id="driver-password" placeholder="Password" value="${d[driver].driverpassword}" autocomplete="off"/>
+              <input type="password" class="new-row-input" id="driver-password" placeholder="Password" value="${
+                d[driver].driverpassword
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="text" class="new-row-input" id="driver-age" placeholder="Driver Age" value="${d[driver].driverage}" autocomplete="off"/>
+              <input type="text" class="new-row-input" id="driver-age" placeholder="Driver Age" value="${
+                d[driver].driverage
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="text" class="new-row-input" id="driver-address" placeholder="Driver Address" value="${d[driver].driveraddress}" autocomplete="off"/>
+              <input type="text" class="new-row-input" id="driver-address" placeholder="Driver Address" value="${
+                d[driver].driveraddress
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="text" class="new-row-input" id="driver-contact" placeholder="Driver Contact No." value="${d[driver].drivercontact}" autocomplete="off"/>
+              <input type="text" class="new-row-input" id="driver-contact" placeholder="Driver Contact No." value="${
+                d[driver].drivercontact
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="text" class="new-row-input" id="van-model" placeholder="Van Model" value="${d[driver].vanmodel}" autocomplete="off"/>
+              <input type="text" class="new-row-input" id="van-model" placeholder="Van Model" value="${
+                d[driver].vanmodel
+              }" autocomplete="off"/>
             </td>
             <td>
-              <input type="date" class="new-row-input" id="date-account-registered" placeholder="Account Registered" value="${d[driver].dateaccountregistered}" disabled autocomplete="off"/>
+              <input type="date" class="new-row-input" id="date-account-registered" placeholder="Account Registered" value="${
+                d[driver].dateaccountregistered
+              }" disabled autocomplete="off"/>
             </td>
           </tr>
         `;
       }
 
       $("#list-of-drivers").html(lists);
+      console.log(lists);
       // $("#btn-add-new").prev().remove();
       // isAllowedToAppend = true;
       // }
@@ -199,6 +357,19 @@ $(document).ready(() => {
       console.log("not connected");
     }
   });
+
+  function formatTimestampToDate(timestamp) {
+    // Create a new Date object from the timestamp
+    const date = new Date(timestamp);
+
+    // Extract the year, day, and month
+    const year = date.getFullYear(); // Get the full year (yyyy)
+    const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
+
+    // Return the formatted date
+    return `${year}-${day}-${month}`;
+  }
 
   // On Total Bookings click
   $("#total-booking").on("click", () => {
@@ -247,8 +418,7 @@ $(document).ready(() => {
 
   // Change Values of Users
   $("#tbl-update-info").on("click", (e) => {
-
-    if(e.target.nodeName == "INPUT"){
+    if (e.target.nodeName == "INPUT") {
       let originalValue = $(e.target).val();
       $(e.target).attr("originalVal", originalValue);
     }
@@ -261,15 +431,15 @@ $(document).ready(() => {
     let originalValue = $(e.target).attr("originalVal");
     let blurredValue = $(e.target).val();
     originalValue = originalValue == undefined ? "" : originalValue;
-    blurredValue  = blurredValue  == undefined ? "" : blurredValue;
-    
-    if(originalValue != blurredValue){
+    blurredValue = blurredValue == undefined ? "" : blurredValue;
+
+    if (originalValue != blurredValue) {
       console.log("Need to update to database");
       let driverid = $(e.target).parent().parent().attr("driverid");
       let blurrednode = $(e.target).attr("id").replaceAll("-", "");
       // blurrednode = blurrednode == "driverpassword" ? "password" : blurrednode;
       // blurrednode = blurrednode == "driveremail"    ? "email"    : blurrednode;
-      
+
       const updates = {};
       updates[`/users/drivers/${driverid}/${blurrednode}`] = blurredValue;
       console.log(updates);
@@ -292,9 +462,9 @@ $(document).ready(() => {
             timeout: 4000,
           });
         });
-      
-        console.log(driverid, blurrednode);
-    } else {  
+
+      console.log(driverid, blurrednode);
+    } else {
       console.log("Same Value");
     }
   });
@@ -544,38 +714,6 @@ $(document).ready(() => {
     return data;
   }
 
-  // General Function Helper
-  function getCurrentDate(format) {
-    let today = new Date();
-    let day = String(today.getDate()).padStart(2, "0");
-    let month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-based
-    let year = today.getFullYear();
-    let monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
-    if (format == "dmy") {
-      return `${day}/${month}/${year}`;
-    } else if (format == "ymd-") {
-      return `${year}-${month}-${day}`;
-    } else if (format == "ymd/") {
-      return `${year}/${month}/${day}`;
-    } else if (format == "mdyt") {
-      return `${monthNames[today.getMonth()]} ${day}, ${year}`;
-    }
-  }
-
   $("#btn-sign-out").on("click", () => {
     iziToast.question({
       // timeout: 20000,
@@ -612,4 +750,79 @@ $(document).ready(() => {
       },
     });
   });
+  // } else {
+  // Dashboard
+  window.searchAvailableDrivers = () => {
+    // console.log(12);
+    return new Promise((resolve, reject) => {
+      // Simulating an asynchronous operation (e.g., a network request)
+      const onlineDriver = ref(database, "users/drivers/");
+      onValue(onlineDriver, (snapshot) => {
+        const data = snapshot.val();
+        let listOnlineDriver = [];
+
+        for (let driver in data) {
+          let detail = data[driver];
+
+          if (detail.isAvailable) {
+            listOnlineDriver.push({
+              driverName: detail.drivername,
+              driverID: detail.driverid,
+            });
+          }
+        }
+
+        if (listOnlineDriver.length > 0) {
+          resolve(listOnlineDriver);
+        } else {
+          reject([]);
+        }
+      });
+    });
+  };
+
+  window.getDriverReference = () => {
+    let currentDate = getCurrentDate("ymd-");
+    const onlineDriver = ref(
+      database,
+      "activity/booking/" + currentDate + "/drivers"
+    );
+    return onlineDriver;
+  };
+
+  window.getUserDetails = () => {
+    return new Promise((resolve, reject) => {
+      const users = ref(database, "users/drivers");
+      get(users).then((snap) => {
+        let data = snap.val();
+
+        console.log(snap.exists());
+        if (snap.exists()) {
+          console.log(data);
+
+          resolve(data);
+        } else {
+          reject([]);
+        }
+      });
+    });
+    // return users;
+  };
+
+  window.getOnValue = () => {
+    return onValue;
+  };
+
+  window.getRef = () => {
+    return ref;
+  };
+
+  window.getUpdate = () => {
+    return update;
+  };
+
+  window.getDatabase = () => {
+    return database;
+  };
+  // }
 });

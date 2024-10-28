@@ -277,7 +277,8 @@
           </div>
           <div class="modal-body">
             <h5 class="text-total-bookings" id="date-today"></h5>
-            <h6 class="text-total-bookings" id="">5 Bookings</h6>
+            <h6 class="text-total-bookings" id="total-booking-gen"></h6>
+            <h6 class="text-total-bookings" id="overall-total-booking-gen"></h6>
             <br />
             <br />
 
@@ -289,11 +290,9 @@
                   <td>Passenger</td>
                   <td>From</td>
                   <td>To</td>
-                  <td>Pickup Time</td>
-                  <td>Arrival Time</td>
                 </tr>
               </thead>
-              <tbody></tbody>
+              <tbody id="total-bookings-data"></tbody>
             </table>
             <div class="modal-footer">
               <button
@@ -498,6 +497,6 @@
     <script src="script/FullCalendar.js"></script>
     <script src="script/calendar.js"></script>
     <script type="module" src="script/app.js"></script>
-    <script src="script/script2.js"></script>
+    <script src="script/script2.js" defer></script>
   </body>
 </html>
