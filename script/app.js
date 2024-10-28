@@ -208,7 +208,7 @@ $(document).ready(() => {
     //     "dropoff_location": "Kalibo International Airport, Talisay, Kalibo, Aklan, Western Visayas, 5600, Philippines"
     // }
       console.log(userData);
-      let dlist = "";
+      let dlist = ""; 
 
       for(let d in userData){
         let dd = userData[d];
