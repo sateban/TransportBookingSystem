@@ -863,6 +863,8 @@ $("#input-pickup-location, #input-dropoff-location").autocomplete({
             value: d.display_name,
             label: d.display_name,
             id: d.osm_id,
+            lat: d.lat,
+            lng: d.lon
           });
         }
 
@@ -899,6 +901,12 @@ $("#input-pickup-location, #input-dropoff-location").autocomplete({
 
     event.preventDefault(); // Prevent the default behavior
     $(target).val(ui.item.value); // Set value to the input
+    // lng: +$("#input-pickup-location").attr("lng"),
+    // lat: +$("#input-dropoff-location").attr("lat"),
+    $(target).attr("lat", ui.item.lat);
+    $(target).attr("lng", ui.item.lng);
+
+
     console.log("Selected: ", ui.item); // Log the selected item
   },
   search: function (event, ui) {

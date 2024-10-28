@@ -135,76 +135,167 @@ window.sanitizeText = (text) => {
 };
 
 $(document).ready(() => {
-  if (window.location.href.includes("index")) {
-    let lists2 = ``;
-    let isAllowedToAppend = true;
+  // if (window.location.href.includes("index")) {
+  let lists2 = ``;
+  let isAllowedToAppend = true;
 
-    if (
-      sessionStorage.getItem("uid") != "" &&
-      sessionStorage.getItem("uid") != null
-    ) {
-      // window.location.href = "admin.html";
-    } else {
-      // if(window.location.href.split("/")[3] != "index.html"){
-      if (!window.location.href.includes("index.html")) {
-        window.location.href = "index.html";
-      }
+  if (
+    sessionStorage.getItem("uid") != "" &&
+    sessionStorage.getItem("uid") != null
+  ) {
+    // window.location.href = "admin.html";
+  } else {
+    // if(window.location.href.split("/")[3] != "index.html"){
+    if (!window.location.href.includes("index.html")) {
+      window.location.href = "index.html";
     }
+  }
 
-    $("#date-today").text(getCurrentDate("mdyt") + " Bookings");
+  $("#date-today").text(getCurrentDate("mdyt") + " Bookings");
 
-    const connectedRef = ref(database, "users/");
-    onValue(connectedRef, (snapshot) => {
-      const data = snapshot.val();
-      console.log(data);
+  let bookCount = 0;
+  let overallBookCount = 0;
+  const booking = ref(database, "activity/booking");
+  onValue(booking, (snapshot) => {
+    const data = snapshot.val();
+    console.log(data);
 
-      // Prepare list of drivers
-      let lists = ``;
-      let b = $("#list-of-drivers").html();
+    let userData = [];
 
-      // $("#list-of-drivers")
-      //   .find("tr")
-      //   .each((i, v) => {
-      //     $(v).remove();
-      //   });
+    if (data) {
+      // if (isAllowedToAppend) {
+      // $("#btn-add-new").prev().remove();
+      // isAllowedToAppend = true;
+      // }
+      for (let d in data) {
+        let drivers = data[d].drivers;
 
-      if (data) {
-        // if (isAllowedToAppend) {
-        let d = data.drivers;
-        for (let driver in d) {
-          lists += `<tr>`;
-          // lists2 += `<tr id="${d[driver].driverid.trim()}">`;
+        for (let driverid in drivers) {
+          let ts = drivers[driverid];
 
-          lists += `<td>${d[driver].plateno}</td>`;
-          // lists2 += `<td col="plateno">${d[driver].plateno}</td>`;
+          for (let tsd in ts) {
+            if (!isNaN(tsd)) {
+              // console.log(formatTimestampToDate(+tsd));
+              console.log(formatTimestampToDate(+tsd), getCurrentDate("ymd-"))
+              if(formatTimestampToDate(+tsd) == getCurrentDate("ymd-")){
+                bookCount++;
+              }
 
-          lists += `<td>${d[driver].drivername}</td>`;
-          // lists2 += `<td col="drivername">${d[driver].drivername}</td>`;
+              overallBookCount++;
 
-          lists += `<td>${d[driver].driveremail}</td>`;
-          // lists2 += `<td col="email">${d[driver].email}</td>`;
+              for (let email in ts[tsd]) {
+                console.log(email);
+                let v = ts[tsd][email];
 
-          // lists2 += `<td col="password">${d[driver].password}</td>`;
+                userData.push({
+                  date: d,
+                  driver: driverid,
+                  rider: v.customerName,
+                  pickup_location: v.pickup_location,
+                  dropoff_location: v.dropoff_location
+                });
+              }
+            }
+          }
+        }
+      }
 
-          lists += `<td>${d[driver].driverage}</td>`;
-          // lists2 += `<td col="driverage">${d[driver].driverage}</td>`;
+    //   {
+    //     "date": "2024-10-26",
+    //     "driver": "JG20241016NEN1675",
+    //     "rider": "Steven Jake Fajarillo",
+    //     "pickup_location": "E. Fernandez Road, Tinigaw, Estancia, Mobo, Kalibo, Aklan, Western Visayas, 5600, Philippines",
+    //     "dropoff_location": "Kalibo International Airport, Talisay, Kalibo, Aklan, Western Visayas, 5600, Philippines"
+    // }
+      console.log(userData);
+      let dlist = "";
 
-          lists += `<td>${d[driver].driveraddress}</td>`;
-          // lists2 += `<td col="driveraddress">${d[driver].driveraddress}</td>`;
+      for(let d in userData){
+        let dd = userData[d];
+        dlist +=  `
+          <tr>
+            <td>${dd.date}</td>
+            <td>${dd.driver}</td>
+            <td>${dd.rider}</td>
+            <td>${dd.pickup_location}</td>
+            <td>${dd.dropoff_location}</td>
 
-          lists += `<td>${d[driver].drivercontact}</td>`;
-          // lists2 += `<td col="drivercontact">${d[driver].drivercontact}</td>`;
+          </tr>
+        `;
+      }
 
-          lists += `<td>${d[driver].vanmodel}</td>`;
-          // lists2 += `<td col="vanmodel">${d[driver].vanmodel}</td>`;
+      $("#total-bookings-data").html(dlist);
+      $("#total-booking-gen").text(bookCount + " Bookings Today");
+      $("#overall-total-booking-gen").text(overallBookCount + " Overall Bookings");
+    } else {
+      console.log("not connected");
+    }
+  });
 
-          lists += `<td>${d[driver].dateaccountregistered}</td>`;
-          // lists2 += `<td col="dateaccountregistered">${d[driver].dateaccountregistered}</td>`;
+  function formatTimestampToDate(timestamp) {
+    // Create a new Date object from the timestamp
+    const date = new Date(timestamp);
+    // Extract the year, day, and month
+    const year = date.getFullYear(); // Get the full year (yyyy)
+    const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
 
-          lists += `</tr>`;
-          // lists2 += `</tr>`;
+    // Return the formatted date
+    return `${year}-${month}-${day}`;
+  }
 
-          lists2 += `
+  const connectedRef = ref(database, "users/");
+  onValue(connectedRef, (snapshot) => {
+    const data = snapshot.val();
+    console.log(data);
+
+    // Prepare list of drivers
+    let lists = ``;
+    let b = $("#list-of-drivers").html();
+
+    // $("#list-of-drivers")
+    //   .find("tr")
+    //   .each((i, v) => {
+    //     $(v).remove();
+    //   });
+
+    if (data) {
+      // if (isAllowedToAppend) {
+      let d = data.drivers;
+      for (let driver in d) {
+        lists += `<tr>`;
+        // lists2 += `<tr id="${d[driver].driverid.trim()}">`;
+
+        lists += `<td>${d[driver].plateno}</td>`;
+        // lists2 += `<td col="plateno">${d[driver].plateno}</td>`;
+
+        lists += `<td>${d[driver].drivername}</td>`;
+        // lists2 += `<td col="drivername">${d[driver].drivername}</td>`;
+
+        lists += `<td>${d[driver].driveremail}</td>`;
+        // lists2 += `<td col="email">${d[driver].email}</td>`;
+
+        // lists2 += `<td col="password">${d[driver].password}</td>`;
+
+        lists += `<td>${d[driver].driverage}</td>`;
+        // lists2 += `<td col="driverage">${d[driver].driverage}</td>`;
+
+        lists += `<td>${d[driver].driveraddress}</td>`;
+        // lists2 += `<td col="driveraddress">${d[driver].driveraddress}</td>`;
+
+        lists += `<td>${d[driver].drivercontact}</td>`;
+        // lists2 += `<td col="drivercontact">${d[driver].drivercontact}</td>`;
+
+        lists += `<td>${d[driver].vanmodel}</td>`;
+        // lists2 += `<td col="vanmodel">${d[driver].vanmodel}</td>`;
+
+        lists += `<td>${d[driver].dateaccountregistered}</td>`;
+        // lists2 += `<td col="dateaccountregistered">${d[driver].dateaccountregistered}</td>`;
+
+        lists += `</tr>`;
+        // lists2 += `</tr>`;
+
+        lists2 += `
            <tr style="align-items: center;" driverid="${d[
              driver
            ].driverid.trim()}">
@@ -255,202 +346,216 @@ $(document).ready(() => {
             </td>
           </tr>
         `;
-        }
-
-        $("#list-of-drivers").html(lists);
-        // $("#btn-add-new").prev().remove();
-        // isAllowedToAppend = true;
-        // }
-      } else {
-        console.log("not connected");
-      }
-    });
-
-    // On Total Bookings click
-    $("#total-booking").on("click", () => {
-      $("#tbl-total-bookings").DataTable({
-        searching: true,
-        responsive: true,
-        // columnDefs: [
-        //   { visible: false,
-        //     targets: [0] }
-        // ],
-        ordering: true,
-        // processing: false,
-        // serverSide: false,
-        destroy: true,
-        info: false,
-        language: {
-          emptyTable: "No entries to show",
-          infoEmpty: "No entries to show",
-        },
-      });
-    });
-
-    // On UpdateInfo click
-    $("#update-info").on("click", () => {
-      $("#tbl-tbody-update-info").html(lists2);
-
-      $("#tbl-update-info").DataTable({
-        searching: true,
-        responsive: true,
-        dom: "t",
-        // columnDefs: [
-        //   { visible: false,
-        //     targets: [0] }
-        // ],
-        ordering: false,
-        // processing: false,
-        // serverSide: false,
-        destroy: true,
-        info: false,
-        language: {
-          emptyTable: "No entries to show",
-          infoEmpty: "No entries to show",
-        },
-      });
-    });
-
-    // Change Values of Users
-    $("#tbl-update-info").on("click", (e) => {
-      if (e.target.nodeName == "INPUT") {
-        let originalValue = $(e.target).val();
-        $(e.target).attr("originalVal", originalValue);
       }
 
-      // console.log(e.target.nodeName);
+      $("#list-of-drivers").html(lists);
+      console.log(lists);
+      // $("#btn-add-new").prev().remove();
+      // isAllowedToAppend = true;
+      // }
+    } else {
+      console.log("not connected");
+    }
+  });
+
+  function formatTimestampToDate(timestamp) {
+    // Create a new Date object from the timestamp
+    const date = new Date(timestamp);
+
+    // Extract the year, day, and month
+    const year = date.getFullYear(); // Get the full year (yyyy)
+    const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
+
+    // Return the formatted date
+    return `${year}-${day}-${month}`;
+  }
+
+  // On Total Bookings click
+  $("#total-booking").on("click", () => {
+    $("#tbl-total-bookings").DataTable({
+      searching: true,
+      responsive: true,
+      // columnDefs: [
+      //   { visible: false,
+      //     targets: [0] }
+      // ],
+      ordering: true,
+      // processing: false,
+      // serverSide: false,
+      destroy: true,
+      info: false,
+      language: {
+        emptyTable: "No entries to show",
+        infoEmpty: "No entries to show",
+      },
     });
+  });
 
-    // Check if value changed
-    $(document).on("blur", "#tbl-update-info input", (e) => {
-      let originalValue = $(e.target).attr("originalVal");
-      let blurredValue = $(e.target).val();
-      originalValue = originalValue == undefined ? "" : originalValue;
-      blurredValue = blurredValue == undefined ? "" : blurredValue;
+  // On UpdateInfo click
+  $("#update-info").on("click", () => {
+    $("#tbl-tbody-update-info").html(lists2);
 
-      if (originalValue != blurredValue) {
-        console.log("Need to update to database");
-        let driverid = $(e.target).parent().parent().attr("driverid");
-        let blurrednode = $(e.target).attr("id").replaceAll("-", "");
-        // blurrednode = blurrednode == "driverpassword" ? "password" : blurrednode;
-        // blurrednode = blurrednode == "driveremail"    ? "email"    : blurrednode;
+    $("#tbl-update-info").DataTable({
+      searching: true,
+      responsive: true,
+      dom: "t",
+      // columnDefs: [
+      //   { visible: false,
+      //     targets: [0] }
+      // ],
+      ordering: false,
+      // processing: false,
+      // serverSide: false,
+      destroy: true,
+      info: false,
+      language: {
+        emptyTable: "No entries to show",
+        infoEmpty: "No entries to show",
+      },
+    });
+  });
 
-        const updates = {};
-        updates[`/users/drivers/${driverid}/${blurrednode}`] = blurredValue;
-        console.log(updates);
-        update(ref(database), updates)
-          .then(() => {
-            iziToast.success({
-              title: "Successfully Saved",
-              message: `${blurrednode.toUpperCase()} has been saved`,
-              icon: "fa fa-save",
-              position: "topRight",
-              timeout: 3000,
-            });
-          })
-          .catch((error) => {
-            iziToast.warning({
-              title: "Save Failed",
-              message: `${error}`,
-              icon: "fa fa-bell-exclamation",
-              position: "topRight",
-              timeout: 4000,
-            });
+  // Change Values of Users
+  $("#tbl-update-info").on("click", (e) => {
+    if (e.target.nodeName == "INPUT") {
+      let originalValue = $(e.target).val();
+      $(e.target).attr("originalVal", originalValue);
+    }
+
+    // console.log(e.target.nodeName);
+  });
+
+  // Check if value changed
+  $(document).on("blur", "#tbl-update-info input", (e) => {
+    let originalValue = $(e.target).attr("originalVal");
+    let blurredValue = $(e.target).val();
+    originalValue = originalValue == undefined ? "" : originalValue;
+    blurredValue = blurredValue == undefined ? "" : blurredValue;
+
+    if (originalValue != blurredValue) {
+      console.log("Need to update to database");
+      let driverid = $(e.target).parent().parent().attr("driverid");
+      let blurrednode = $(e.target).attr("id").replaceAll("-", "");
+      // blurrednode = blurrednode == "driverpassword" ? "password" : blurrednode;
+      // blurrednode = blurrednode == "driveremail"    ? "email"    : blurrednode;
+
+      const updates = {};
+      updates[`/users/drivers/${driverid}/${blurrednode}`] = blurredValue;
+      console.log(updates);
+      update(ref(database), updates)
+        .then(() => {
+          iziToast.success({
+            title: "Successfully Saved",
+            message: `${blurrednode.toUpperCase()} has been saved`,
+            icon: "fa fa-save",
+            position: "topRight",
+            timeout: 3000,
           });
-
-        console.log(driverid, blurrednode);
-      } else {
-        console.log("Same Value");
-      }
-    });
-
-    // On Total Bookings click
-    $("#total-booking").on("click", () => {
-      $("#tbl-total-bookings").DataTable({
-        searching: true,
-        responsive: true,
-        // columnDefs: [
-        //   { visible: false,
-        //     targets: [0] }
-        // ],
-        ordering: true,
-        // processing: false,
-        // serverSide: false,
-        destroy: true,
-        info: false,
-        language: {
-          emptyTable: "No entries to show",
-          infoEmpty: "No entries to show",
-        },
-      });
-    });
-
-    function loginUser(email, password) {
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          // Signed in
-          const user = userCredential.user;
-          sessionStorage.setItem("uid", user.uid);
-          window.location.href = "admin.html";
         })
         .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.log(errorMessage);
-
           iziToast.warning({
-            title: "Login Error",
-            message: errorMessage,
+            title: "Save Failed",
+            message: `${error}`,
             icon: "fa fa-bell-exclamation",
             position: "topRight",
             timeout: 4000,
           });
         });
+
+      console.log(driverid, blurrednode);
+    } else {
+      console.log("Same Value");
     }
+  });
 
-    $("#btn-login").on("click", (e) => {
-      e.preventDefault();
+  // On Total Bookings click
+  $("#total-booking").on("click", () => {
+    $("#tbl-total-bookings").DataTable({
+      searching: true,
+      responsive: true,
+      // columnDefs: [
+      //   { visible: false,
+      //     targets: [0] }
+      // ],
+      ordering: true,
+      // processing: false,
+      // serverSide: false,
+      destroy: true,
+      info: false,
+      language: {
+        emptyTable: "No entries to show",
+        infoEmpty: "No entries to show",
+      },
+    });
+  });
 
-      let email = $("#email");
-      let password = $("#password");
+  function loginUser(email, password) {
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        sessionStorage.setItem("uid", user.uid);
+        window.location.href = "admin.html";
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorMessage);
 
-      if (email.val() == "" && password.val() != "") {
-        email.focus();
         iziToast.warning({
-          // title: "Invalid Input",
-          message: `Please enter email`,
-          icon: "fad fa-mailbox",
-          position: "topRight",
-          timeout: 4000,
-        });
-      } else if (email.val() != "" && password.val() == "") {
-        password.focus();
-        iziToast.warning({
-          // title: "Invalid Input",
-          message: `Please enter password`,
-          icon: "fad fa-lock",
-          position: "topRight",
-          timeout: 4000,
-        });
-      } else if (email.val() == "" && password.val() == "") {
-        email.focus();
-        iziToast.warning({
-          // title: "Invalid Input",
-          message: `Please enter email and password`,
+          title: "Login Error",
+          message: errorMessage,
           icon: "fa fa-bell-exclamation",
           position: "topRight",
           timeout: 4000,
         });
-      } else {
-        loginUser(email.val(), password.val());
-      }
-    });
+      });
+  }
 
-    let allowNewRow = true;
+  $("#btn-login").on("click", (e) => {
+    e.preventDefault();
 
-    $("#main-box").ready(() => {
-      console.log("MainBox Ready");
-      var newRow = `
+    let email = $("#email");
+    let password = $("#password");
+
+    if (email.val() == "" && password.val() != "") {
+      email.focus();
+      iziToast.warning({
+        // title: "Invalid Input",
+        message: `Please enter email`,
+        icon: "fad fa-mailbox",
+        position: "topRight",
+        timeout: 4000,
+      });
+    } else if (email.val() != "" && password.val() == "") {
+      password.focus();
+      iziToast.warning({
+        // title: "Invalid Input",
+        message: `Please enter password`,
+        icon: "fad fa-lock",
+        position: "topRight",
+        timeout: 4000,
+      });
+    } else if (email.val() == "" && password.val() == "") {
+      email.focus();
+      iziToast.warning({
+        // title: "Invalid Input",
+        message: `Please enter email and password`,
+        icon: "fa fa-bell-exclamation",
+        position: "topRight",
+        timeout: 4000,
+      });
+    } else {
+      loginUser(email.val(), password.val());
+    }
+  });
+
+  let allowNewRow = true;
+
+  $("#main-box").ready(() => {
+    console.log("MainBox Ready");
+    var newRow = `
     <tr style="align-items: center;">
       <td>
         <input type="text" class="new-row-input" id="plate-no" placeholder="Van Plate Number" autocomplete="off"/>
@@ -482,240 +587,242 @@ $(document).ready(() => {
     </tr>
   `;
 
-      $("#btn-add-new").on("click", () => {
-        // console.log("Test");
-        // Append the new row before the row with id 'btn-add-new'
+    $("#btn-add-new").on("click", () => {
+      // console.log("Test");
+      // Append the new row before the row with id 'btn-add-new'
 
-        console.log(getCurrentDate("ymd-"));
+      console.log(getCurrentDate("ymd-"));
 
-        // Remove Add button with Check
-        if ($("#encode-add i").hasClass("fa-plus-circle")) {
-          if (allowNewRow) {
-            $("#btn-add-new").before(newRow);
-            $("#date-account-registered").val(getCurrentDate("ymd-"));
-            $("#encode-add i").removeClass("fa-plus-circle");
+      // Remove Add button with Check
+      if ($("#encode-add i").hasClass("fa-plus-circle")) {
+        if (allowNewRow) {
+          $("#btn-add-new").before(newRow);
+          $("#date-account-registered").val(getCurrentDate("ymd-"));
+          $("#encode-add i").removeClass("fa-plus-circle");
 
-            $("#encode-add i").addClass("fa-check");
-            $("#encode-add i").css("color", "#00c700");
-          } else {
-            iziToast.warning({
-              // title: "Invalid Input",
-              message: `Please complete all inputs to add new one`,
-              icon: "fa fa-bell-exclamation",
-              position: "topRight",
-              timeout: 4000,
-            });
-          }
+          $("#encode-add i").addClass("fa-check");
+          $("#encode-add i").css("color", "#00c700");
+        } else {
+          iziToast.warning({
+            // title: "Invalid Input",
+            message: `Please complete all inputs to add new one`,
+            icon: "fa fa-bell-exclamation",
+            position: "topRight",
+            timeout: 4000,
+          });
         }
-        // Remove check button with Add
-        else {
-          // Done encoding, verify content for non-empty values
-          let data = validateEncode($("#btn-add-new"));
+      }
+      // Remove check button with Add
+      else {
+        // Done encoding, verify content for non-empty values
+        let data = validateEncode($("#btn-add-new"));
 
-          if (!allowNewRow) {
-            iziToast.warning({
-              // title: "Invalid Input",
-              message: `Please complete all inputs to add new one`,
-              icon: "fa fa-bell-exclamation",
-              position: "topRight",
-              timeout: 4000,
-            });
-          } else {
-            $("#encode-add i").removeClass("fa-check");
-            $("#encode-add i").addClass("fa-plus-circle");
-            $("#encode-add i").css("color", "#212529");
+        if (!allowNewRow) {
+          iziToast.warning({
+            // title: "Invalid Input",
+            message: `Please complete all inputs to add new one`,
+            icon: "fa fa-bell-exclamation",
+            position: "topRight",
+            timeout: 4000,
+          });
+        } else {
+          $("#encode-add i").removeClass("fa-check");
+          $("#encode-add i").addClass("fa-plus-circle");
+          $("#encode-add i").css("color", "#212529");
 
-            // iziToast.success({
-            //   title: "Success",
-            //   message: `Validations complete, saving to database`,
-            //   icon: "fa fa-bell-exclamation",
-            //   position: "topRight",
-            //   timeout: 4000,
-            // });
-            isAllowedToAppend = false;
+          // iziToast.success({
+          //   title: "Success",
+          //   message: `Validations complete, saving to database`,
+          //   icon: "fa fa-bell-exclamation",
+          //   position: "topRight",
+          //   timeout: 4000,
+          // });
+          isAllowedToAppend = false;
 
-            console.log(data);
-            // Add additionla data
-            let nameAbbrevation = data["drivername"].trim().substring(0, 2);
-            let dateAbbrevation = data["dateaccountregistered"]
-              .trim()
-              .replaceAll("-", "");
-            let plateAbbrevation = data["plateno"].trim().replaceAll("-", "");
+          console.log(data);
+          // Add additionla data
+          let nameAbbrevation = data["drivername"].trim().substring(0, 2);
+          let dateAbbrevation = data["dateaccountregistered"]
+            .trim()
+            .replaceAll("-", "");
+          let plateAbbrevation = data["plateno"].trim().replaceAll("-", "");
 
-            data["driverid"] = (
-              nameAbbrevation +
-              dateAbbrevation +
-              plateAbbrevation
-            ).toUpperCase();
-            data["isAvailable"] = false;
+          data["driverid"] = (
+            nameAbbrevation +
+            dateAbbrevation +
+            plateAbbrevation
+          ).toUpperCase();
+          data["isAvailable"] = false;
 
-            // Save to database
-            const updates = {};
-            updates[`/users/drivers/${data["drivername"]}`] = data;
-            console.log(updates);
-            update(ref(database), updates)
-              .then(() => {
-                iziToast.success({
-                  title: "Successfully Saved",
-                  message: `Driver's data has been saved`,
-                  icon: "fa fa-save",
-                  position: "topRight",
-                  timeout: 4000,
-                });
-
-                // setTimeout(() => {
-                window.location.href = window.location.href;
-                // }, 1500);
-              })
-              .catch((error) => {
-                // iziToast.destroy();
-                iziToast.warning({
-                  title: "Save Failed",
-                  message: `${error}`,
-                  icon: "fa fa-bell-exclamation",
-                  position: "topRight",
-                  timeout: 4000,
-                });
-                console.error("Update failed:", error);
+          // Save to database
+          const updates = {};
+          updates[`/users/drivers/${data["drivername"]}`] = data;
+          console.log(updates);
+          update(ref(database), updates)
+            .then(() => {
+              iziToast.success({
+                title: "Successfully Saved",
+                message: `Driver's data has been saved`,
+                icon: "fa fa-save",
+                position: "topRight",
+                timeout: 4000,
               });
-          }
+
+              // setTimeout(() => {
+              window.location.href = window.location.href;
+              // }, 1500);
+            })
+            .catch((error) => {
+              // iziToast.destroy();
+              iziToast.warning({
+                title: "Save Failed",
+                message: `${error}`,
+                icon: "fa fa-bell-exclamation",
+                position: "topRight",
+                timeout: 4000,
+              });
+              console.error("Update failed:", error);
+            });
         }
-      });
+      }
+    });
+  });
+
+  function validateEncode(o) {
+    let encodeAdd = o;
+    let totalIndex = encodeAdd.parent().find("tr").length - 2; // subtracted by one to avoid selections buttons
+    let available = encodeAdd.parent().find("tr").eq(totalIndex);
+    let isCompleted = true;
+    let data = {};
+
+    // console.log(encodeAdd.parent().find("tr").eq(1));
+    available.find("td input").each((i, v) => {
+      if ($(v).val() == "") {
+        isCompleted = false;
+      } else {
+        let id = $(v).attr("id").replaceAll("-", "");
+        data[id] = $(v).val();
+      }
     });
 
-    function validateEncode(o) {
-      let encodeAdd = o;
-      let totalIndex = encodeAdd.parent().find("tr").length - 2; // subtracted by one to avoid selections buttons
-      let available = encodeAdd.parent().find("tr").eq(totalIndex);
-      let isCompleted = true;
-      let data = {};
-
-      // console.log(encodeAdd.parent().find("tr").eq(1));
-      available.find("td input").each((i, v) => {
-        if ($(v).val() == "") {
-          isCompleted = false;
-        } else {
-          let id = $(v).attr("id").replaceAll("-", "");
-          data[id] = $(v).val();
-        }
-      });
-
-      if (!isCompleted) {
-        allowNewRow = false;
-      } else {
-        allowNewRow = true;
-      }
-
-      return data;
+    if (!isCompleted) {
+      allowNewRow = false;
+    } else {
+      allowNewRow = true;
     }
 
-    $("#btn-sign-out").on("click", () => {
-      iziToast.question({
-        // timeout: 20000,
-        close: false,
-        overlay: true,
-        // displayMode: 'once',
-        id: "question",
-        zindex: 999,
-        title: "Logout",
-        message: "Are you sure you want to logout?",
-        position: "center",
-        buttons: [
-          [
-            "<button><b>YES</b></button>",
-            function (instance, toast) {
-              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
-              window.location.href = "index.html";
-              sessionStorage.setItem("uid", "");
-            },
-            true,
-          ],
-          [
-            "<button>NO</button>",
-            function (instance, toast) {
-              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
-            },
-          ],
+    return data;
+  }
+
+  $("#btn-sign-out").on("click", () => {
+    iziToast.question({
+      // timeout: 20000,
+      close: false,
+      overlay: true,
+      // displayMode: 'once',
+      id: "question",
+      zindex: 999,
+      title: "Logout",
+      message: "Are you sure you want to logout?",
+      position: "center",
+      buttons: [
+        [
+          "<button><b>YES</b></button>",
+          function (instance, toast) {
+            instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+            window.location.href = "index.html";
+            sessionStorage.setItem("uid", "");
+          },
+          true,
         ],
-        onClosing: function (instance, toast, closedBy) {
-          console.info("Closing | closedBy: " + closedBy);
-        },
-        onClosed: function (instance, toast, closedBy) {
-          console.info("Closed | closedBy: " + closedBy);
-        },
+        [
+          "<button>NO</button>",
+          function (instance, toast) {
+            instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+          },
+        ],
+      ],
+      onClosing: function (instance, toast, closedBy) {
+        console.info("Closing | closedBy: " + closedBy);
+      },
+      onClosed: function (instance, toast, closedBy) {
+        console.info("Closed | closedBy: " + closedBy);
+      },
+    });
+  });
+  // } else {
+  // Dashboard
+  window.searchAvailableDrivers = () => {
+    // console.log(12);
+    return new Promise((resolve, reject) => {
+      // Simulating an asynchronous operation (e.g., a network request)
+      const onlineDriver = ref(database, "users/drivers/");
+      onValue(onlineDriver, (snapshot) => {
+        const data = snapshot.val();
+        let listOnlineDriver = [];
+
+        for (let driver in data) {
+          let detail = data[driver];
+
+          if (detail.isAvailable) {
+            listOnlineDriver.push({
+              driverName: detail.drivername,
+              driverID: detail.driverid,
+            });
+          }
+        }
+
+        if (listOnlineDriver.length > 0) {
+          resolve(listOnlineDriver);
+        } else {
+          reject([]);
+        }
       });
     });
-  } else {
-    // Dashboard
-    window.searchAvailableDrivers = () => {
-      // console.log(12);
-      return new Promise((resolve, reject) => {
-        // Simulating an asynchronous operation (e.g., a network request)
-        const onlineDriver = ref(database, "users/drivers/");
-        onValue(onlineDriver, (snapshot) => {
-          const data = snapshot.val();
-          let listOnlineDriver = [];
+  };
 
-          for (let driver in data) {
-            let detail = data[driver];
+  window.getDriverReference = () => {
+    let currentDate = getCurrentDate("ymd-");
+    const onlineDriver = ref(
+      database,
+      "activity/booking/" + currentDate + "/drivers"
+    );
+    return onlineDriver;
+  };
 
-            if (detail.isAvailable) {
-              listOnlineDriver.push({
-                driverName: detail.drivername,
-                driverID: detail.driverid,
-              });
-            }
-          }
+  window.getUserDetails = () => {
+    return new Promise((resolve, reject) => {
+      const users = ref(database, "users/drivers");
+      get(users).then((snap) => {
+        let data = snap.val();
 
-          if (listOnlineDriver.length > 0) {
-            resolve(listOnlineDriver);
-          } else {
-            reject([]);
-          }
-        });
+        console.log(snap.exists());
+        if (snap.exists()) {
+          console.log(data);
+
+          resolve(data);
+        } else {
+          reject([]);
+        }
       });
-    };
+    });
+    // return users;
+  };
 
-    window.getDriverReference = () => {
-      let currentDate = getCurrentDate("ymd-");
-      const onlineDriver = ref(
-        database,
-        "activity/booking/" + currentDate + "/drivers"
-      );
-      return onlineDriver;
-    };
+  window.getOnValue = () => {
+    return onValue;
+  };
 
-    window.getUserDetails = () => {
-      return new Promise((resolve, reject) => {
-        const users = ref(database, "users/drivers");
-        get(users).then((snap) => {
-          let data = snap.val();
+  window.getRef = () => {
+    return ref;
+  };
 
-          console.log(snap.exists());
-          if (snap.exists()) {
-            resolve(data);
-          } else {
-            reject([]);
-          }
-        });
-      });
-      // return users;
-    };
+  window.getUpdate = () => {
+    return update;
+  };
 
-    window.getOnValue = () => {
-      return onValue;
-    };
-
-    window.getRef = () => {
-      return ref;
-    };
-
-    window.getUpdate = () => {
-      return update;
-    };
-
-    window.getDatabase = () => {
-      return database;
-    };
-  }
+  window.getDatabase = () => {
+    return database;
+  };
+  // }
 });
