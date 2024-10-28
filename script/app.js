@@ -146,7 +146,7 @@ $(document).ready(() => {
     // window.location.href = "admin.html";
   } else {
     // if(window.location.href.split("/")[3] != "index.html"){
-    if (!window.location.href.includes("index.html")) {
+    if (!window.location.href.includes("index.html") && window.location.href.includes("admin.html")) {
       window.location.href = "index.html";
     }
   }
