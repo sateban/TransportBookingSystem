@@ -1,3 +1,5 @@
+
+
 .overlay {
   /* display: none; */
   position: absolute;
@@ -86,7 +88,28 @@
   height: 100%;
 }
 
+.overlay-trip-schedule {
+  touch-action: none;
+  position: absolute;
+  background: rgba(0, 0, 0, 0.6);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  z-index: 10000;
+  font-family: monospace;
+  width: 100%;
+  height: 100%;
+} 
+
 .search-pickup-box {
+  transition: 1s;
+}
+
+
+.trip-schedule {
   transition: 1s;
 }
 
@@ -94,7 +117,14 @@
 
 .overlay-search-pickup {
   font-family: Arial, sans-serif;
-  /* background-color: #fff; */
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  height: 100vh;
+}
+
+.overlay-trip-schedule {
+  font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
   align-items: end;

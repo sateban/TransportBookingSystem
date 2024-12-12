@@ -40,7 +40,8 @@
         height: 100%;
         width: 100%;
         margin: 0;
-        overflow: hidden;
+        overflow: hidden !;
+        overflow-x: hidden;
         /* padding: 0; */
       }
 
@@ -61,6 +62,85 @@
 
       .leaflet-routing-container.leaflet-bar.leaflet-routing-collapsible.leaflet-control {
         display: none;
+      }
+
+      /* For Calendar */
+      /* Style the toolbar background and spacing */
+      .fc-header-toolbar {
+        background-color: #f8f9fa; /* Light background for toolbar */
+        padding: 10px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Adjust the title font and alignment */
+      .fc-toolbar-title {
+        font-size: 1.5em;
+        color: #333; /* Darker color for better contrast */
+        font-weight: bold;
+        margin: 0;
+      }
+
+      /* Style individual buttons */
+      .fc-button-group .fc-button {
+        background-color: #505861; /* Primary color */
+        border: none;
+        color: #fff;
+        border-radius: 5px;
+        margin: 0 3px;
+        padding: 8px 12px;
+        font-size: 0.9em;
+        transition: background-color 0.2s ease;
+      }
+
+      /* Hover and active states for buttons */
+      .fc-button-group .fc-button:hover {
+        background-color: #0056b3;
+      }
+
+      .fc-button-group .fc-button:active,
+      .fc-button-group .fc-button.fc-button-active {
+        background-color: #004085;
+      }
+
+      /* Icon size within the buttons */
+      .fc-button .fc-icon {
+        font-size: 1.2em; /* Increase icon size */
+        vertical-align: middle;
+      }
+
+      /* Style the "Today" button */
+      .fc-today-button {
+        background-color: #28a745; /* Secondary color for Today button */
+        color: #fff;
+      }
+
+      /* Add some spacing adjustments for mobile */
+      @media (max-width: 768px) {
+        .fc-toolbar-title {
+          font-size: 1.2em;
+        }
+
+        .fc-button-group .fc-button {
+          padding: 6px 10px;
+          font-size: 0.8em;
+        }
+
+        .fc-header-toolbar {
+          padding: 8px;
+          flex-direction: column;
+        }
+
+        .fc-toolbar-chunk {
+          margin-bottom: 5px;
+        }
+      }
+
+      div#calendar {
+        /* Use the actual ID or class of your calendar container */
+        /* height: calc(100vh - 400px); */
       }
     </style>
   </head>
@@ -94,16 +174,16 @@
       </h3>
     </div>
 
-    <div class="header-container" id="card">
-      <div class="header">
+    <!-- <div class="header-container" id="card"> -->
+    <!-- <div class="header">
         <h3 class="title">Pick Up Detail</h3>
         <button class="close-btn" onclick="closeCard()">
           <i class="fas fa-window-close"></i>
         </button>
       </div>
-      <hr />
-      <!-- Additional content goes here -->
-    </div>
+      <hr /> -->
+    <!-- Additional content goes here -->
+    <!-- </div> -->
 
     <div class="overlay-search-pickup">
       <div class="container search-pickup-box">
@@ -229,21 +309,62 @@
       </div>
     </div>
 
+    <div class="overlay-trip-schedule" style="overflow: unset !important; touch-action: pan-y; display: none;">
+      <div
+        class="container trip-schedule show"
+        style="overflow: unset !important"
+      >
+        <div class="drag-bar" id="drag-bar-trip">
+          <div></div>
+        </div>
+        <div class="header-container">
+          <div class="header">
+            <h3 class="title">Trip Schedules</h3>
+            <button class="close-btn schedule">
+              <i class="fas fa-window-close"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="container-fluid h-75 container-content text-center">
+          <div class="bg bg-about"></div>
+          <div class="container-fluid h-100 p-5">
+            <div id="calendar"></div>
+          </div>
+        </div>
+
+        <!-- <table id="tbl-schedules" style="width: 100%">
+          <thead>
+            <tr>
+              <td>Schedule</td>
+              <td>Plate Number</td>
+              <td>Driver</td>
+              <td>Contact</td>
+            </tr>
+          </thead>
+          <tbody id="tbl-body-schedules"></tbody>
+        </table> -->
+      </div>
+    </div>
+
     <!-- <button id="zoomOut">Zoom Out</button> -->
     <!-- <div id="error"></div> -->
-    <div id="distance">Testing123</div>
+    <!-- <div id="distance">Testing123</div> -->
 
     <!-- Leaflet JavaScript -->
     <script src="script/jquery.3.2.1.min.js"></script>
     <script src="script/jquery-ui.js"></script>
     <script src="script/leaflet.js"></script>
     <script src="script/iziToast.min.js"></script>
+    <script src="script/loader.js" defer></script>
     <!-- <script src="https://unpkg.com/leaflet.vectorgrid/dist/Leaflet.VectorGrid.bundled.js"></script> -->
     <script src="script/leaflet-routing-machine.js"></script>
     <script src="script/leaflet.draw.js"></script>
     <script src="script/Control.Geocoder.js"></script>
 
     <script type="module" src="script/app.js"></script>
+    <script src="script/index.global.js" defer></script>
     <script src="script/script.js" defer></script>
+    <script src="script/calendar.js" defer></script>
   </body>
 </html>

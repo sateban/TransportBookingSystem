@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap"
       rel="stylesheet"
     /> -->
-    <title>Dashboard</title>
+    <title>Analytics</title>
   </head>
   <body>
     <div class="loader">
@@ -43,7 +43,7 @@
           </li>
 
           <li>
-            <a href="analytics.html" class="sidebar-link">
+            <a href="" class="sidebar-link">
               <i class="fa-solid fa-pie-chart fa-fw"></i>
               <span>Analytics</span>
             </a>
@@ -51,31 +51,26 @@
 
           <!-- <li>
             <a href="" class="sidebar-link">
-              <i class="fa-regular fa-dollar-sign fa-fw"></i><span>Revenue</span>
+              <i class="fa-regular fa-dollar-sign fa-fw"></i
+              ><span>Revenue</span>
             </a>
           </li> -->
 
           <li>
             <a href="accounts.html" class="sidebar-link">
-              <i class="fa fa-users fa-fw"></i
-              ><span>Accounts</span>
+              <i class="fa fa-users fa-fw"></i><span>Accounts</span>
             </a>
           </li>
 
           <li>
-            <a href="schedule.html" class="sidebar-link">
+            <a href="schedule.html" class="sidebar-link active">
               <i class="fa-solid fa-graduation-cap fa-fw"></i
               ><span>Schedule</span>
             </a>
           </li>
 
-          <!-- <li>
-            <a href="./pages/Courses.html" class="sidebar-link">
-              <i class="fa-solid fa-graduation-cap fa-fw"></i
-              ><span>Courses</span>
-            </a>
-          </li>
-
+<!-- 
+       
           <li>
             <a href="./pages/Friends.html" class="sidebar-link">
               <i class="fa-regular fa-circle-user fa-fw"></i
@@ -87,9 +82,9 @@
             <a href="./pages/Files.html" class="sidebar-link">
               <i class="fa-regular fa-file fa-fw"></i> <span>Files</span>
             </a>
-          </li>
+          </li> -->
 
-          <li>
+          <!-- <li>
             <a href="./pages/Plans.html" class="sidebar-link">
               <i class="fa-regular fa-credit-card fa-fw"></i><span>Plans</span>
             </a>
@@ -104,7 +99,6 @@
           <i class="fa fa-sign-out" id="btn-sign-out"></i>
           <!-- </div> -->
 
-          
           <!-- <div class="profile">
             <span class="bell"><i class="fa-regular fa-bell fa-lg"></i></span>
 
@@ -113,70 +107,197 @@
         </div>
         <div class="main-content">
           <div class="title">
-            <h1>Dashboard</h1>
+            <h1>Analytics</h1>
           </div>
-          <div class="main-content-boxes" id="main-box" style="display: block !important;">
+          <div
+            class="main-content-boxes"
+            id="main-box"
+            style="display: block !important"
+          >
             <div class="box first-box" style="">
-              <div class="box-section1">
-                <div class="box-title">
-                  <h2>Welcome</h2>
-                  <p>Admin</p>
+              <div class="projects-box">
+                <!-- <div class="box-section1">
+                  <div class="box-title">
+                    <h2>Projects</h2>
+                  </div>
+                </div> -->
+                <div class="accordion accordion-flush" id="accordionExample">
+                  <!-- ACCORDION 1 -->
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                      <button
+                        class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseOne"
+                        aria-expanded="true"
+                        aria-controls="collapseOne"
+                      >
+                        Total Bookings
+                      </button>
+                    </h2>
+                    <div
+                      id="collapseOne"
+                      class="accordion-collapse collapse show"
+                      aria-labelledby="headingOne"
+                      data-bs-parent="#accordionExample"
+                    >
+                      <div class="accordion-body">
+                        <div
+                          class="projects-box-section2"
+                          style="padding: 0 !important; overflow: hidden"
+                        >
+                          <!-- <div
+                            class="box-section1"
+                            style="margin-bottom: unset !important"
+                          >
+                            <div class="box-title">
+                              <h2>Total Bookings</h2>
+                            </div>
+                          </div> -->
+                          <br />
+                          <div class="container">
+                            <div class="row">
+                              <div class="col-6">
+                                <h4
+                                  class="text-total-bookings"
+                                  id="date-today"
+                                ></h4>
+                                <div
+                                  id="myChart"
+                                  style="
+                                    width: 100%;
+                                  "
+                                ></div>
+
+                                <!-- <h6
+                          class="text-total-bookings sub"
+                          id="total-booking-gen"
+                        ></h6>
+                        <h6
+                          class="text-total-bookings sub"
+                          id="overall-total-booking-gen"
+                        ></h6> -->
+                              </div>
+                              <div class="col-6"></div>
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+
+                          <table
+                            id="tbl-total-bookings"
+                            class="table"
+                            style="width: 100%"
+                          >
+                            <thead>
+                              <tr>
+                                <td>Date</td>
+                                <td>Driver</td>
+                                <td>Passenger</td>
+                                <td>From</td>
+                                <td>To</td>
+                              </tr>
+                            </thead>
+                            <tbody id="total-bookings-data"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ACCORDION 2 -->
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                      <button
+                        class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseTwo"
+                        aria-expanded="true"
+                        aria-controls="collapseTwo"
+                      >
+                        Monetization
+                      </button>
+                    </h2>
+                    <div
+                      id="collapseTwo"
+                      class="accordion-collapse collapse"
+                      aria-labelledby="headingTwo"
+                      data-bs-parent="#accordionExample"
+                    >
+                      <div class="accordion-body">
+                        <div
+                          class="projects-box-section2"
+                          style="padding: 0 !important; overflow: hidden"
+                        >
+                          <!-- <div
+                            class="box-section1"
+                            style="margin-bottom: unset !important"
+                          >
+                            <div class="box-title">
+                              <h2>Total Bookings</h2>
+                            </div>
+                          </div> -->
+                          <br />
+                          <div class="container">
+                            <div class="row">
+                              <div class="col-12">
+                                <h4
+                                  class="text-total-bookings"
+                                  id="date-today"
+                                ></h4>
+                                <div
+                                  id="monetization-chart"
+                                  style="
+                                    width: 100%;
+                                    /* height: 100px; */
+                                  "
+                                ></div>
+
+                                <!-- <h6
+                          class="text-total-bookings sub"
+                          id="total-booking-gen"
+                        ></h6>
+                        <h6
+                          class="text-total-bookings sub"
+                          id="overall-total-booking-gen"
+                        ></h6> -->
+                              </div>
+                              <!-- <div class="col-6"></div> -->
+                            </div>
+                          </div>
+                          <br />
+                          <br />
+
+                          <table
+                            id="tbl-monetization"
+                            class="table"
+                            style="width: 100%"
+                          >
+                            <thead>
+                              <tr>
+                                <!-- <td>Date</td> -->
+                                <td>Driver</td>
+                                <!-- <td>Passenger</td> -->
+                                <td>Total Income</td> 
+                                <td>Total Bookings</td> 
+                                <!-- <td>To</td> -->
+                              </tr>
+                            </thead>
+                            <tbody id="monetized-data"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="box-image">
-                  <img src="./images/welcome.png" alt="No image" />
-                </div>
-                <img src="./images/avatar.png" alt="No image" class="avatar" />
               </div>
 
               <!-- 2nd -->
               <br />
               <br />
               <br />
-
-              <!-- <div class="box">
-                <div
-                  class="box-section1"
-                  style="margin-bottom: unset !important"
-                >
-                  <div class="box-title">
-                    <h2>Tour Setups</h2>
-                  </div>
-                </div>
-                <div class="fourth-box-section2">
-                  <div
-                    class="small-box"
-                    id="trip-history"
-                    data-toggle="modal"
-                    data-target="#modalTripHistory"
-                  >
-                    <i class="fa fa-history fa-2x mb-10"></i>
-                    <h6>Trip History</h6>
-                  </div>
-
-                  <div
-                    class="small-box"
-                    id="manage-schedule"
-                    data-toggle="modal"
-                    data-target="#modalManageSchedule"
-                  >
-                    <i
-                      class="fad fa-business-time fa-circle-check fa-2x mb-10"
-                    ></i>
-                    <h6>Manage Schedule</h6>
-                  </div>
-
-                  <div
-                    class="small-box"
-                    id="update-info"
-                    data-toggle="modal"
-                    data-target="#modalUpdateInfo"
-                  >
-                    <i class="fa fa-eraser fa-2x mb-10"></i>
-                    <h6>Update Info</h6>
-                  </div>
-                </div>
-              </div> -->
-
               <!-- <a>Profile </a> -->
             </div>
             <!-- 
@@ -434,14 +555,69 @@
       </div>
     </div>
 
+    <!-- Modal for Individual Income -->
+    <div
+    class="modal fade"
+    id="modalIndividualIncome"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="modalIndividualIncomeTitle"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Driver Income</h5>
+          <span
+            type="button"
+            class="close"
+            data-dismiss="modal"
+            aria-label="Close"
+            style="font-size: 20px"
+          >
+            <span aria-hidden="true">&times;</span>
+          </span>
+        </div>
+        <div class="modal-body">
+          <h5 class="text-total-bookings" id=""><b>Driver Name: <span id="income-driver-name"></span></b></h5>
+          <br />
+
+          <table id="tbl-individual-income" class="table" style="width: 100%">
+            <thead>
+              <tr>
+                <td>Date</td>
+                <td>Time</td>
+                <!-- <td>Driver</td> -->
+                <td>Earning</td>
+                <!-- <td>Booking</td> -->
+              </tr>
+            </thead>
+            <tbody id="individual-income"></tbody>
+          </table>
+          <!-- <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+          </div> -->
+        </div>
+      </div>
+    </div>
+  </div>
     <script src="script/jquery.3.2.1.min.js"></script>
     <script src="assets/bootstrap/js/popper.js"></script>
     <script src="assets/datatable/datatables.min.js"></script>
-    <script src="assets/bootstrap/js/bootstrap.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- <script src="assets/bootstrap/js/bootstrap.min.js"></script> -->
     <script src="script/jquery-ui.js"></script>
     <script src="script/iziToast.min.js"></script>
     <script src="script/FullCalendar.js"></script>
+    <script src="script/loader.js" defer></script>
     <script src="script/calendar.js"></script>
+    <!-- <script type="module" src="script/analytics.js"></script> -->
     <script type="module" src="script/app.js"></script>
     <script src="script/script2.js" defer></script>
   </body>

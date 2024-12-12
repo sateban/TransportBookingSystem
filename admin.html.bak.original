@@ -43,17 +43,17 @@
           </li>
 
           <li>
-            <a href="analytics.html" class="sidebar-link">
+            <a href="" class="sidebar-link">
               <i class="fa-solid fa-pie-chart fa-fw"></i>
               <span>Analytics</span>
             </a>
           </li>
 
-          <!-- <li>
+          <li>
             <a href="" class="sidebar-link">
               <i class="fa-regular fa-dollar-sign fa-fw"></i><span>Revenue</span>
             </a>
-          </li> -->
+          </li>
 
           <li>
             <a href="accounts.html" class="sidebar-link">
@@ -63,13 +63,6 @@
           </li>
 
           <li>
-            <a href="schedule.html" class="sidebar-link">
-              <i class="fa-solid fa-graduation-cap fa-fw"></i
-              ><span>Schedule</span>
-            </a>
-          </li>
-
-          <!-- <li>
             <a href="./pages/Courses.html" class="sidebar-link">
               <i class="fa-solid fa-graduation-cap fa-fw"></i
               ><span>Courses</span>
@@ -89,6 +82,7 @@
             </a>
           </li>
 
+       <!-- 
           <li>
             <a href="./pages/Plans.html" class="sidebar-link">
               <i class="fa-regular fa-credit-card fa-fw"></i><span>Plans</span>
@@ -115,8 +109,8 @@
           <div class="title">
             <h1>Dashboard</h1>
           </div>
-          <div class="main-content-boxes" id="main-box" style="display: block !important;">
-            <div class="box first-box" style="">
+          <div class="main-content-boxes" id="main-box">
+            <div class="box first-box" style="width: max-content;">
               <div class="box-section1">
                 <div class="box-title">
                   <h2>Welcome</h2>
@@ -127,13 +121,72 @@
                 </div>
                 <img src="./images/avatar.png" alt="No image" class="avatar" />
               </div>
+              <div class="projects-box">
+                <!-- <div class="box-section1">
+                  <div class="box-title">
+                    <h2>Projects</h2>
+                  </div>
+                </div> -->
+                <div
+                  class="projects-box-section2"
+                  style="padding: 0 !important"
+                >
+                  <div
+                    class="box-section1"
+                    style="margin-bottom: unset !important"
+                  >
+                    <div class="box-title">
+                      <h2>Driver</h2>
+                    </div>
+                  </div>
+                  <table style="width: 100%">
+                    <thead> 
+                      <tr>
+                        <td>Plate Number</td>
+                        <td>Driver</td>
+                        <td>Email</td>
+                        <!-- <td>Password</td> -->
+                        <td>Age</td>
+                        <td>Address</td>
+                        <td>Contact</td>
+                        <td>Van Model</td>
+                        <td>Date Registered</td>
+                      </tr>
+                    </thead>
+                    <tbody id="list-of-drivers">
+                      <!-- <tr id="btn-add-new" style="cursor: pointer">
+                        <td
+                          colspan="8"
+                          id="encode-add"
+                          style="text-align: center; font-size: 30px"
+                        >
+                          <i class="fa fa-plus-circle"></i>
+                        </td>
+                      </tr> -->
+                    </tbody>
+                  </table>
+                  <table style="width: 100%">
+                    <tbody id="">
+                      <tr id="btn-add-new" style="cursor: pointer">
+                        <td
+                          colspan="8"
+                          id="encode-add"
+                          style="text-align: center; font-size: 30px"
+                        >
+                          <i class="fa fa-plus-circle"></i>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
               <!-- 2nd -->
               <br />
               <br />
               <br />
 
-              <!-- <div class="box">
+              <div class="box">
                 <div
                   class="box-section1"
                   style="margin-bottom: unset !important"
@@ -143,6 +196,17 @@
                   </div>
                 </div>
                 <div class="fourth-box-section2">
+                  <div
+                    class="small-box"
+                    id="total-booking"
+                    data-toggle="modal"
+                    data-target="#modalTotalBookings"
+                  >
+                    <i class="fa-regular fa-rectangle-list fa-2x mb-10"></i>
+                    <h6>Total Bookings (Today)</h6>
+                    <!-- <h6></h6> -->
+                  </div>
+
                   <div
                     class="small-box"
                     id="trip-history"
@@ -175,7 +239,7 @@
                     <h6>Update Info</h6>
                   </div>
                 </div>
-              </div> -->
+              </div>
 
               <!-- <a>Profile </a> -->
             </div>

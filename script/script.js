@@ -2,6 +2,11 @@ let isListeningForLocation = false;
 let isPickupListeningForLocation = false;
 let isDropListeningForLocation = false;
 let allowReadingCoordinates = false;
+let isPickingSchedule = false;
+let isReservation = false;
+let pickingSchedule = "";
+let pickingDriverID = "";
+let pickingDriverName = "";
 let isManualPickup = false;
 let locationDetails = {
   coordinates: {
@@ -234,6 +239,423 @@ function setUserData(email, name, uid, userType) {
   //   timeout: 4000,
   // });
 }
+
+function showReservation() {
+  // sessionStorage.setItem("userEmail", email);
+  // sessionStorage.setItem("userName", name);
+  // sessionStorage.setItem("userUID", uid);
+  // sessionStorage.setItem("userType", userType);
+
+  console.log("showReservation", "Command received");
+  hideChooseDestination();
+  hideCenterMarker();
+  hideReturnToHailing();
+  hideHailingOverlay();
+
+  showTripSchedule();
+  isReservation = true;
+
+  // // $("#calendar").ready(() => {
+  // setTimeout(() => {
+  //   let calendarEl = document.getElementById("calendar");
+  //   let today = new Date();
+
+  //   let calendar = new FullCalendar.Calendar(calendarEl, {
+  //     selectable: true,
+  //     headerToolbar: {
+  //       left: "prevYear,prev,next,nextYear today",
+  //       center: "title",
+  //       right: "dayGridMonth,dayGridWeek,dayGridDay",
+  //     },
+  //     select: function (startDate, endDate, jsEvent, view) {},
+  //     dateClick: function (info) {},
+  //     validRange: {
+  //       start: new Date().toISOString().split("T")[0], // Disable dates before today
+  //     },
+  //     // Custom double-click handling
+  //     // height: "calc(100vh - 200px)",
+  //     // height: "500px",
+  //     height: "auto",
+  //     contentHeight: "auto",
+  //     aspectRatio: 1.35,
+  //     width: "100%",
+  //     initialDate: today, //'2023-01-12',
+  //     navLinks: true, // can click day/week names to navigate views
+  //     editable: true,
+  //     dayMaxEvents: true, // allow "more" link when too many events
+  //     // events: events,
+  //     themeSystem: "lumen",
+  //   });
+
+  //   calendar.render();
+  // }, 1000);
+}
+
+$(document).ready(() => {
+  setTimeout(() => {
+    let calendarEl = document.getElementById("calendar");
+    let today = new Date();
+
+    console.log("Test");
+
+    // let onValue = getOnValue();
+    // let ref = getRef();
+    // let update = getUpdate();
+    // let database = getDatabase();
+    // let totalDistance = sessionStorage.getItem("totalDistance");
+    // let dbDriverName = "";
+
+    getUserDetails().then((d) => {
+      console.log(d);
+      let events = [];
+
+      //     title: "My repeating event2",
+      //     daysOfWeek: ["3", "5"], // these recurrent events move separately
+      //     startTime: "09:00:00",
+      //     endTime: "12:30:00",
+      //     color: "green",
+
+      Object.entries(d).forEach(([id, value]) => {
+        Object.entries(value).forEach(([value2, data]) => {
+          if (value2 == "schedule") {
+            let days = data.day_available.toUpperCase();
+            days = days.replaceAll("M", "1");
+            days = days.replaceAll("SAT", "6");
+            days = days.replaceAll("TH", "4");
+            days = days.replaceAll("T", "2");
+            days = days.replaceAll("W", "3");
+            days = days.replaceAll("F", "5");
+            days = days.replaceAll("SUN", "0");
+            let splitDays = days.split(",");
+            console.log(days);
+
+            events.push({
+              title: "Schedule: " + value.drivername,
+              // title: "Schedule: " + value.drivername +  ` (${id})`,
+              daysOfWeek: splitDays,
+              startTime: data.start,
+              endTime: data.end,
+              color: "green",
+              extendedProps: {
+                driverid: id,
+                drivername: value.drivername,
+              },
+            });
+          }
+        });
+      });
+
+      let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridDay", // Options: 'timeGridDay' or 'dayGridDay'
+        selectable: true,
+        headerToolbar: {
+          left: "prevYear,prev,next,nextYear today",
+          center: "title",
+          right: "dayGridMonth,dayGridWeek,dayGridDay",
+        },
+        select: function (startDate, endDate, jsEvent, view) {
+          console.log(startDate, endDate, jsEvent, view);
+          // Check if any event exists on the selected date
+        },
+        dateClick: function (info) {
+          // handleDoubleClick(info);
+          console.log(info);
+
+          let dateSelected = info.start;
+          let eventsOnDate = calendar.getEvents().filter((event) => {
+            return event.start <= dateSelected && dateSelected < event.end;
+          });
+
+          console.log(eventsOnDate);
+
+          if (eventsOnDate.length > 0) {
+            // Show event details for the first event found
+            displayEventDetails(eventsOnDate[0]);
+          } else {
+            // No events, display a message
+            // document.getElementById("eventDetails").innerHTML =
+            //   "No events on this date.";
+            // document.getElementById("eventDetails").style.display = "block";
+          }
+        },
+        eventClick: function (info) {
+          console.log("Event Click", info);
+
+          // Stop Trip Schedule overlay from being shown
+          isReservation = false;
+
+          info.jsEvent.preventDefault();
+
+          // Log the event details to the console
+          // console.log('Event clicked:', info.event);
+          console.log("Title:", info.event.title);
+          console.log("Start:", info.event.start.toISOString());
+          console.log("Time:", info.event.start);
+          console.log("driverid:", info.event.extendedProps.driverid);
+
+          let startTime = new Date(info.event.start);
+          let today = new Date();
+
+          if (today.getTime() < startTime.getTime()) {
+            pickingSchedule = formatTimestampToDateAll(startTime.getTime());
+            pickingDriverID = info.event.extendedProps.driverid;
+            pickingDriverName = info.event.extendedProps.drivername;
+
+            iziToast.question({
+              timeout: false,
+              close: false,
+              overlay: true,
+              displayMode: "once",
+              id: "question",
+              zindex: 10999,
+              title: "Schedule Selection",
+              message: "Would you like to set this schedule for this driver?",
+              position: "center",
+              buttons: [
+                [
+                  "<button><b>YES</b></button>",
+                  function (instance, toast) {
+                    instance.hide(
+                      { transitionOut: "fadeOut" },
+                      toast,
+                      "button"
+                    );
+
+                    hideTripSchedule();
+                    showHailingOverlay();
+                    isPickingSchedule = true;
+
+                    iziToast.info({
+                      timeout: false,
+                      title: "Location Setup",
+                      message: `Please set Pickup and Drop-off points for the van reservation`,
+                      icon: "fa fa-map-pin",
+                      position: "topCenter",
+                      timeout: 4000,
+                    });
+
+                    $(".overlay-search-pickup .title").text(
+                      $(".overlay-search-pickup .title").text() +
+                        " (Reservation)"
+                    );
+                  },
+                  true,
+                ],
+                [
+                  "<button>NO</button>",
+                  function (instance, toast) {
+                    instance.hide(
+                      { transitionOut: "fadeOut" },
+                      toast,
+                      "button"
+                    );
+                  },
+                ],
+              ],
+              onClosing: function (instance, toast, closedBy) {
+                console.info("Closing | closedBy: " + closedBy);
+              },
+              onClosed: function (instance, toast, closedBy) {
+                console.info("Closed | closedBy: " + closedBy);
+              },
+            });
+          } else {
+            iziToast.warning({
+              timeout: false,
+              // close: false,
+              overlay: true,
+              // displayMode: "once",
+              title: "Unable to set schedule",
+              message: `You selection has been denied due to outside of valid reservation time`,
+              icon: "fa fa-map-pin",
+              position: "center",
+              timeout: 4000,
+            });
+          }
+        },
+        validRange: {
+          start: new Date().toISOString().split("T")[0], // Disable dates before today
+        },
+        // Custom double-click handling
+        // height: "calc(100vh - 200px)",
+        // height: "500px",
+        // height: "auto",
+        // contentHeight: "auto",
+        contentHeight: 500,
+        // aspectRatio: 1.35,
+        width: "100%",
+        initialDate: today, //'2023-01-12',
+        navLinks: true, // can click day/week names to navigate views
+        editable: true,
+        dayMaxEvents: true, // allow "more" link when too many events
+        // plugins: [ 'rrule' ], // Include the RRule plugin
+        // events: events,
+        events: events,
+        // [
+        //   {
+        //     // title: "My repeating event",
+        //     // start: "10:00", // a start time (10am in this example)
+        //     // end: "14:00", // an end time (2pm in this example)
+        //     // dow: [1, 4], // Repeat monday and thursday
+        //   },
+        //   {
+        //     title: "My repeating event",
+        //     daysOfWeek: ["3", "5"], // these recurrent events move separately
+        //     startTime: "11:00:00",
+        //     endTime: "11:30:00",
+        //     color: "red",
+        //   },
+        //   {
+        //     title: "My repeating event2",
+        //     daysOfWeek: ["3", "5"], // these recurrent events move separately
+        //     startTime: "09:00:00",
+        //     endTime: "12:30:00",
+        //     color: "green",
+        //   },
+        // ],
+        themeSystem: "lumen",
+      });
+
+      calendar.render();
+
+      var lastClickTime = 0;
+      function handleDoubleClick(info) {
+        var now = new Date().getTime();
+        var timeSince = now - lastClickTime;
+
+        if (timeSince < 300 && timeSince > 0) {
+          // console.log("Day double-clicked: " + info.dateStr);
+          // AddEvent(info.dateStr);
+        } else {
+          console.log("Single Click");
+        }
+
+        lastClickTime = now;
+      }
+
+      function AddEvent(date) {
+        console.log("Add Event");
+
+        let html = `
+      <form>
+        <div class="form-group row">
+          <label for="events-count" class="col-sm-3 col-form-label"
+            >Event Name</label>
+          <div class="col-sm-9">
+            <input
+              type="text"
+              id="swal-name-input"
+              class="form-control"
+              placeholder="Enter Event Name"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+        <!--<div class="form-group row">
+          <label for="events-count" class="col-sm-3 col-form-label"
+            >Event Date</label>
+          <div class="col-sm-9">
+            <input
+              type="date"
+              class="form-control"
+              id="swal-date-input"
+              placeholder="Select Date"
+              autocomplete="off"
+            />
+          </div>
+          </div>
+          -->
+      <form>
+      `;
+
+        // Swal.fire({
+        //   title: "Add Event",
+        //   icon: "info",
+        //   html: html,
+        //   confirmButtonText: "Add",
+        //   timerProgressBar: true,
+        //   didOpen: () => {},
+        //   willClose: (e) => {},
+        //   confirmButtonColor: "#5995fd",
+        //   showCancelButton: false,
+        //   width: "60%",
+        // }).then((result) => {
+        //   if (result.isConfirmed) {
+        //     let selectedDate = date;
+        //     let enteredName = $("#swal-name-input").val();
+        //     let isEventExisting = false;
+
+        //     for (let item in data) {
+        //       if (data[item].title == enteredName) {
+        //         isEventExisting = true;
+        //         break;
+        //       }
+        //     }
+
+        //     if (enteredName == "") {
+        //       iziToast.warning({
+        //         title: "Input is empty",
+        //         message: `Please enter event name`,
+        //         icon: "fa fa-exclamation",
+        //       });
+        //     } else if (isEventExisting) {
+        //       iziToast.warning({
+        //         title: "Event already exist",
+        //         message: `Please try other event name`,
+        //         icon: "fa fa-exclamation",
+        //       });
+        //     } else {
+        //       data[`${GetDate(0)}_${GetDate(2)}`] = {
+        //         start: selectedDate,
+        //         title: enteredName,
+        //       };
+
+        //       calendar.addEvent({
+        //         title: enteredName,
+        //         start: selectedDate,
+        //       });
+
+        //       const eventsResult = _ref("events");
+        //       update(eventsResult, data);
+
+        //       iziToast.success({
+        //         title: "Success",
+        //         message: `Event "${enteredName}" successfully added`,
+        //         icon: "fa fa-check",
+        //       });
+
+        //       calendar.render();
+
+        //       // RenderMainCalendar(data, data);
+        //     }
+        //   }
+        // });
+
+        // $(".swal2-html-container").css("overflow", "hidden");
+      }
+      // onValue(onlineDriver, (snapshot) => {
+      //   const data = snapshot.val();
+      //   let listOnlineDriver = [];
+      //   console.log(data);
+
+      //   // for (let driver in data) {
+      //   //   let detail = data[driver];
+
+      //   //   if (detail.isAvailable) {
+      //   //     let isConfirmed =
+      //   //       detail.status == undefined ? "" : detail.status;
+      //   //     listOnlineDriver.push({
+      //   //       // driverName: detail.drivername,
+      //   //       driverID: driver,
+      //   //       status: isConfirmed,
+      //   //     });
+      //   //   }
+      //   // }
+
+      // });
+    });
+  }, 1000);
+});
 
 function receiveLocation2(latitude, longitude, inBrowserCall = false) {
   // document.getElementById("error").innerHTML =
@@ -528,6 +950,24 @@ function sendData(jsonData) {
   window.Android.sendDataToAndroid(JSON.stringify(jsonData));
 }
 
+function showTripSchedule() {
+  let searchPickupContainer = $(".trip-schedule");
+  let overlaySearchPickup = $(".overlay-trip-schedule");
+
+  searchPickupContainer.removeClass("hide");
+  searchPickupContainer.addClass("show");
+  overlaySearchPickup.delay(500).fadeIn(500);
+}
+
+function hideTripSchedule() {
+  let searchPickupContainer = $(".trip-schedule");
+  let overlaySearchPickup = $(".overlay-trip-schedule");
+
+  searchPickupContainer.removeClass("show");
+  searchPickupContainer.addClass("hide");
+  overlaySearchPickup.delay(200).fadeOut(500);
+}
+
 function hideHailingOverlay() {
   let searchPickupContainer = $(".search-pickup-box");
   let overlaySearchPickup = $(".overlay-search-pickup");
@@ -537,12 +977,21 @@ function hideHailingOverlay() {
 }
 
 function showHailingOverlay() {
-  // window.showHailingOverlay = () => {
-  let searchPickupContainer = $(".search-pickup-box");
-  let overlaySearchPickup = $(".overlay-search-pickup");
-  searchPickupContainer.removeClass("hide");
-  searchPickupContainer.addClass("show");
-  overlaySearchPickup.delay(200).fadeIn(500);
+  if (!isReservation) {
+    // window.showHailingOverlay = () => {
+    let searchPickupContainer = $(".search-pickup-box");
+    let overlaySearchPickup = $(".overlay-search-pickup");
+    searchPickupContainer.removeClass("hide");
+    searchPickupContainer.addClass("show");
+    overlaySearchPickup.delay(200).fadeIn(500);
+  } else {
+    // Allow trip schedule overlay to be shown again when picking dates
+    let searchPickupContainer = $(".trip-schedule");
+    let overlaySearchPickup = $(".overlay-trip-schedule");
+    searchPickupContainer.removeClass("hide");
+    searchPickupContainer.addClass("show");
+    overlaySearchPickup.delay(200).fadeIn(500);
+  }
 }
 
 function showReturnToHailing() {
@@ -804,6 +1253,11 @@ $(".close-btn").on("click", () => {
   // card.classList.add("hide");
 });
 
+$(".close-btn.schedule").on("click", () => {
+  hideTripSchedule();
+  // card.classList.add("hide");
+});
+
 function hideSearchLocation() {
   $(".location-box").css("display", "none");
   // $(".location-box.input").css("display", "block");
@@ -864,7 +1318,7 @@ $("#input-pickup-location, #input-dropoff-location").autocomplete({
             label: d.display_name,
             id: d.osm_id,
             lat: d.lat,
-            lng: d.lon
+            lng: d.lon,
           });
         }
 
@@ -905,7 +1359,6 @@ $("#input-pickup-location, #input-dropoff-location").autocomplete({
     // lat: +$("#input-dropoff-location").attr("lat"),
     $(target).attr("lat", ui.item.lat);
     $(target).attr("lng", ui.item.lng);
-
 
     console.log("Selected: ", ui.item); // Log the selected item
   },
@@ -1129,321 +1582,512 @@ $("#btn-done").on("click", (e) => {
     hideHailingOverlay();
 
     setTimeout(() => {
-      iziToast.question({
-        timeout: false,
-        close: false,
-        overlay: true,
-        displayMode: "once",
-        id: "question",
-        zindex: 999,
-        title: "Route Selection",
-        message: "Select this destination?",
-        position: "center",
-        buttons: [
-          [
-            "<button><b>YES</b></button>",
-            function (instance, toast) {
-              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+      console.log({ isPickingSchedule });
 
-              $("#find-location").fadeOut();
+      if (!isPickingSchedule) {
+        iziToast.question({
+          timeout: false,
+          close: false,
+          overlay: true,
+          displayMode: "once",
+          id: "question",
+          zindex: 999,
+          title: "Route Selection",
+          message: "Select this destination?",
+          position: "center",
+          buttons: [
+            [
+              "<button><b>YES</b></button>",
+              function (instance, toast) {
+                instance.hide({ transitionOut: "fadeOut" }, toast, "button");
 
-              iziToast.success({
-                title: "Route Selected",
-                message: `Searching for nearby drivers, please wait...`,
-                icon: "fa fa-check",
-                position: "topRight",
-                timeout: false,
-              });
+                $("#find-location").fadeOut();
 
-              // let json = { search_driver: true };
-              // sendData(json);
+                iziToast.success({
+                  title: "Route Selected",
+                  message: `Searching for nearby drivers, please wait...`,
+                  icon: "fa fa-check",
+                  position: "topRight",
+                  timeout: false,
+                });
 
-              // searchAvailableDrivers()
-              //   .then((data) => {
-              //     console.log(data); // Output: "Data fetched!"
-              //     return "Processing data...";
-              //   })
-              //   .then((processedData) => {
-              //     console.log(processedData); // Output: "Processing data..."
-              //   })
-              //   .catch((error) => {
-              //     console.error("Error:", error);
-              //   });
+                // let json = { search_driver: true };
+                // sendData(json);
 
-              let onlineDriver = getDriverReference();
-              let onValue = getOnValue();
-              let ref = getRef();
-              let update = getUpdate();
-              let database = getDatabase();
-              let totalDistance = sessionStorage.getItem("totalDistance");
-              let dbDriverName = "";
+                // searchAvailableDrivers()
+                //   .then((data) => {
+                //     console.log(data); // Output: "Data fetched!"
+                //     return "Processing data...";
+                //   })
+                //   .then((processedData) => {
+                //     console.log(processedData); // Output: "Processing data..."
+                //   })
+                //   .catch((error) => {
+                //     console.error("Error:", error);
+                //   });
 
-              getUserDetails().then((d) => {
-                onValue(onlineDriver, (snapshot) => {
-                  const data = snapshot.val();
-                  let listOnlineDriver = [];
-                  console.log(data);
+                let onlineDriver = getDriverReference();
+                let onValue = getOnValue();
+                let ref = getRef();
+                let update = getUpdate();
+                let database = getDatabase();
+                let totalDistance = sessionStorage.getItem("totalDistance");
+                let dbDriverName = "";
 
-                  // for (let driver in data) {
-                  //   let detail = data[driver];
+                getUserDetails().then((d) => {
+                  onValue(onlineDriver, (snapshot) => {
+                    const data = snapshot.val();
+                    let listOnlineDriver = [];
+                    console.log(data);
 
-                  //   if (detail.isAvailable) {
-                  //     let isConfirmed =
-                  //       detail.status == undefined ? "" : detail.status;
-                  //     listOnlineDriver.push({
-                  //       // driverName: detail.drivername,
-                  //       driverID: driver,
-                  //       status: isConfirmed,
-                  //     });
-                  //   }
-                  // }
+                    // for (let driver in data) {
+                    //   let detail = data[driver];
 
-                  for (let driver in data) {
-                    let detail = data[driver];
+                    //   if (detail.isAvailable) {
+                    //     let isConfirmed =
+                    //       detail.status == undefined ? "" : detail.status;
+                    //     listOnlineDriver.push({
+                    //       // driverName: detail.drivername,
+                    //       driverID: driver,
+                    //       status: isConfirmed,
+                    //     });
+                    //   }
+                    // }
 
-                    if (detail.isAvailable) {
-                      let fStatus = "";
+                    for (let driver in data) {
+                      let detail = data[driver];
 
-                      for (let data in detail) {
-                        let key = Object.keys(detail[data])[0];
-                        let status = "";
+                      if (detail.isAvailable) {
+                        let fStatus = "";
 
-                        try {
-                          status =
-                            detail[data][key]["status"] == undefined
-                              ? ""
-                              : detail[data][key]["status"];
-                        } catch {
-                          status = "";
+                        for (let data in detail) {
+                          let key = Object.keys(detail[data])[0];
+                          let status = "";
+
+                          try {
+                            status =
+                              detail[data][key]["status"] == undefined
+                                ? ""
+                                : detail[data][key]["status"];
+                          } catch {
+                            status = "";
+                          }
+
+                          if (status != "") {
+                            fStatus = status;
+                          }
                         }
 
-                        if (status != "") {
-                          fStatus = status;
+                        for (let drvr in d) {
+                          if (driver == drvr) {
+                            // console.log(d[drvr].drivername);
+                            dbDriverName = d[drvr].drivername;
+                            break;
+                          }
                         }
+
+                        listOnlineDriver.push({
+                          // driverName: detail.drivername,
+                          driverID: driver,
+                          status: fStatus,
+                          driverName: dbDriverName,
+                        });
                       }
-
-                      for (let drvr in d) {
-                        if(driver == drvr){
-                          // console.log(d[drvr].drivername);
-                          dbDriverName = d[drvr].drivername;
-                          break;
-                        }
-                      }
-
-                      listOnlineDriver.push({
-                        // driverName: detail.drivername,
-                        driverID: driver,
-                        status: fStatus,
-                        driverName: dbDriverName
-                      });
                     }
-                  }
 
-                  if (listOnlineDriver.length > 0) {
-                    iziToast.destroy();
+                    if (listOnlineDriver.length > 0) {
+                      iziToast.destroy();
 
-                    if (listOnlineDriver.length > 1) {
-                      iziToast.success({
-                        title: `Found ${listOnlineDriver.length} available Drivers`,
-                        message: `Selecting nearest and available driver`,
-                        icon: "fa fa-check",
-                        position: "topRight",
-                        timeout: false,
-                      });
-                    } else {
-                      // 🔰🔰🔰🔰🔰🔰🔰🔰🔰
-                      // One driver found
-                      iziToast.success({
-                        title: `Found ${listOnlineDriver.length} available Driver`,
-                        message: `Waiting for the driver to confirm, please wait`,
-                        icon: "fa fa-check",
-                        position: "topRight",
-                        timeout: false,
-                      });
-
-                      let driverStatus = listOnlineDriver[0].status;
-                      console.log("status", driverStatus);
-
-                      if (driverStatus == "confirmed") {
-                        iziToast.destroy();
+                      if (listOnlineDriver.length > 1) {
                         iziToast.success({
-                          title: `Driver Found`,
-                          message: `${listOnlineDriver[0].driverID} is your driver`,
+                          title: `Found ${listOnlineDriver.length} available Drivers`,
+                          message: `Selecting nearest and available driver`,
+                          icon: "fa fa-check",
+                          position: "topRight",
+                          timeout: false,
+                        });
+                      } else {
+                        // 🔰🔰🔰🔰🔰🔰🔰🔰🔰
+                        // One driver found
+                        iziToast.success({
+                          title: `Found ${listOnlineDriver.length} available Driver`,
+                          message: `Waiting for the driver to confirm, please wait`,
                           icon: "fa fa-check",
                           position: "topRight",
                           timeout: false,
                         });
 
-                        if (allowOnce2) {
-                          allowOnce2 = false;
+                        let driverStatus = listOnlineDriver[0].status;
+                        console.log("status", driverStatus);
 
-                          // Create new chat
-                          let dateNow = Date.now();
-                          // let data2 = {
-                          //   created_by: email,
-                          //   participants: listOnlineDriver[0].driverID,
-                          // };
+                        if (driverStatus == "confirmed") {
+                          iziToast.destroy();
+                          iziToast.success({
+                            title: `Driver Found`,
+                            message: `${listOnlineDriver[0].driverID} is your driver`,
+                            icon: "fa fa-check",
+                            position: "topRight",
+                            timeout: false,
+                          });
 
-                          let data3 = {
-                            id: listOnlineDriver[0].driverID,
-                            message:
-                              "Your Van booking is now in-line please wait for the driver to arrive (This is an automated message)",
-                            time_read: "",
-                            user_type: "driver",
+                          if (allowOnce2) {
+                            allowOnce2 = false;
+
+                            // Create new chat
+                            let dateNow = Date.now();
+                            // let data2 = {
+                            //   created_by: email,
+                            //   participants: listOnlineDriver[0].driverID,
+                            // };
+
+                            let data3 = {
+                              id: listOnlineDriver[0].driverID,
+                              message:
+                                "Your Van booking is now in-line please wait for the driver to arrive (This is an automated message)",
+                              time_read: "",
+                              user_type: "driver",
+                            };
+
+                            let sanitizedCreatedBy = sanitizeText(
+                              `chats/users/${email}/${listOnlineDriver[0].driverID}/created_by`
+                            );
+
+                            let sanitizedDriverName = sanitizeText(
+                              `chats/users/${email}/${listOnlineDriver[0].driverID}/driverName`
+                            );
+
+                            let sanitizedParticipants = sanitizeText(
+                              `chats/users/${email}/${listOnlineDriver[0].driverID}/participants`
+                            );
+
+                            let sanitizedPath2 = sanitizeText(
+                              `chats/users/${email}/${listOnlineDriver[0].driverID}/messages/${dateNow}`
+                            );
+
+                            let sanitizedDriver = sanitizeText(
+                              `chats/users/${email}/${listOnlineDriver[0].driverID}/rider_seen`
+                            );
+
+                            let sanitizedRider = sanitizeText(
+                              `chats/users/${email}/${listOnlineDriver[0].driverID}/driver_seen`
+                            );
+
+                            const updates1 = {};
+                            updates1[sanitizedCreatedBy] = email;
+
+                            const updates2 = {};
+                            updates2[sanitizedParticipants] =
+                              listOnlineDriver[0].driverID;
+
+                            const updates3 = {};
+                            updates3[sanitizedPath2] = data3;
+
+                            const updates4 = {};
+                            updates4[sanitizedDriverName] =
+                              listOnlineDriver[0].driverName;
+
+                            const updates5 = {};
+                            updates5[sanitizedDriver] = false;
+
+                            const updates6 = {};
+                            updates6[sanitizedRider] = false;
+
+                            update(ref(database), updates1);
+                            update(ref(database), updates2);
+                            update(ref(database), updates4);
+                            update(ref(database), updates5);
+                            update(ref(database), updates6);
+
+                            update(ref(database), updates3)
+                              .then(() => {
+                                console.log("Chat initialized");
+
+                                setTimeout(() => {
+                                  let json = { open_chat: true };
+                                  sendData(json);
+                                }, 2000);
+                              })
+                              .catch((error) => {
+                                console.log("Unable to Initialize chat");
+                              });
+                          }
+                        } else if (driverStatus == "declined") {
+                          iziToast.destroy();
+                          iziToast.info({
+                            title: `Driver Declined Request`,
+                            message: `Please select another`,
+                            icon: "fa fa-check",
+                            position: "topRight",
+                            timeout: false,
+                          });
+                        }
+
+                        if (allowOnce) {
+                          counter++;
+                          allowOnce = false;
+                          console.log(
+                            "allowOnce",
+                            allowOnce,
+                            " counter",
+                            counter
+                          );
+                          let picklat = +$("#input-pickup-location").attr(
+                            "lat"
+                          );
+                          let picklng = +$("#input-pickup-location").attr(
+                            "lng"
+                          );
+                          let pickname = $("#input-pickup-location").val();
+
+                          let droplat = +$("#input-dropoff-location").attr(
+                            "lat"
+                          );
+                          let droplng = +$("#input-dropoff-location").attr(
+                            "lng"
+                          );
+                          let dropname = $("#input-dropoff-location").val();
+
+                          const updates = {};
+                          let data = {
+                            arrival: "",
+                            customerID: email,
+                            customerName: name,
+                            dropoff_coordinates_lat: droplat,
+                            dropoff_coordinates_lng: droplng,
+                            dropoff_location: dropname,
+                            for_pickup: "",
+                            ongoing_trip: "",
+                            picked_up: "",
+                            pickup_coordinates_lat: picklat,
+                            pickup_coordinates_lng: picklng,
+                            pickup_location: pickname,
+                            totalDistance: totalDistance,
                           };
 
-                          let sanitizedCreatedBy = sanitizeText(
-                            `chats/users/${email}/${listOnlineDriver[0].driverID}/created_by`
+                          console.log("totalDistance", totalDistance);
+
+                          console.log(listOnlineDriver);
+                          let sanitizedPath = sanitizeText(
+                            `activity/booking/${currentDate}/drivers/${
+                              listOnlineDriver[0].driverID
+                            }/${Date.now()}/${email}/`
                           );
-                          
-                          let sanitizedDriverName = sanitizeText(
-                            `chats/users/${email}/${listOnlineDriver[0].driverID}/driverName`
-                          );
+                          updates[sanitizedPath] = data;
 
-                          let sanitizedParticipants = sanitizeText(
-                            `chats/users/${email}/${listOnlineDriver[0].driverID}/participants`
-                          );
+                          console.log(updates);
 
-                          let sanitizedPath2 = sanitizeText(
-                            `chats/users/${email}/${listOnlineDriver[0].driverID}/messages/${dateNow}`
-                          );
-                          const updates1 = {};
-                          updates1[sanitizedCreatedBy] = email;
-
-                          const updates2 = {};
-                          updates2[sanitizedParticipants] =
-                            listOnlineDriver[0].driverID;
-
-                          const updates3 = {};
-                          updates3[sanitizedPath2] = data3;
-
-                          const updates4 = {};
-                          updates4[sanitizedDriverName] =
-                            listOnlineDriver[0].driverName;
-
-                          update(ref(database), updates1);
-                          update(ref(database), updates2);
-                          update(ref(database), updates4);
-
-                          update(ref(database), updates3)
+                          // Update hail for the rider to check if rider's can be picked up
+                          update(ref(database), updates)
                             .then(() => {
-                              console.log("Chat initialized");
-
-                              setTimeout(() => {
-                                let json = { open_chat: true };
-                                sendData(json);
-                              }, 2000);
+                              console.log("Rider pinged");
                             })
                             .catch((error) => {
-                              console.log("Unable to Initialize chat");
+                              console.log("Error pinging the rider");
+                              // iziToast.warning({
+                              //   title: "Save Failed",
+                              //   message: `${error}`,
+                              //   icon: "fa fa-bell-exclamation",
+                              //   position: "topRight",
+                              //   timeout: 4000,
+                              // });
                             });
                         }
-                      } else if (driverStatus == "declined") {
-                        iziToast.destroy();
-                        iziToast.info({
-                          title: `Driver Declined Request`,
-                          message: `Please select another`,
-                          icon: "fa fa-check",
-                          position: "topRight",
-                          timeout: false,
-                        });
                       }
+                    } else {
+                      iziToast.destroy();
 
-                      if (allowOnce) {
-                        counter++;
-                        allowOnce = false;
-                        console.log(
-                          "allowOnce",
-                          allowOnce,
-                          " counter",
-                          counter
-                        );
-                        let picklat = +$("#input-pickup-location").attr("lat");
-                        let picklng = +$("#input-pickup-location").attr("lng");
-                        let pickname = $("#input-pickup-location").val();
-
-                        let droplat = +$("#input-dropoff-location").attr("lat");
-                        let droplng = +$("#input-dropoff-location").attr("lng");
-                        let dropname = $("#input-dropoff-location").val();
-
-                        const updates = {};
-                        let data = {
-                          arrival: "",
-                          customerID: email,
-                          customerName: name,
-                          dropoff_coordinates_lat: droplat,
-                          dropoff_coordinates_lng: droplng,
-                          dropoff_location: dropname,
-                          for_pickup: "",
-                          ongoing_trip: "",
-                          picked_up: "",
-                          pickup_coordinates_lat: picklat,
-                          pickup_coordinates_lng: picklng,
-                          pickup_location: pickname,
-                          totalDistance: totalDistance,
-                        };
-
-                        console.log("totalDistance", totalDistance);
-
-                        console.log(listOnlineDriver);
-                        let sanitizedPath = sanitizeText(
-                          `activity/booking/${currentDate}/drivers/${
-                            listOnlineDriver[0].driverID
-                          }/${Date.now()}/${email}/`
-                        );
-                        updates[sanitizedPath] = data;
-
-                        console.log(updates);
-
-                        // Update hail for the rider to check if rider's can be picked up
-                        update(ref(database), updates)
-                          .then(() => {
-                            console.log("Rider pinged");
-                          })
-                          .catch((error) => {
-                            console.log("Error pinging the rider");
-                            // iziToast.warning({
-                            //   title: "Save Failed",
-                            //   message: `${error}`,
-                            //   icon: "fa fa-bell-exclamation",
-                            //   position: "topRight",
-                            //   timeout: 4000,
-                            // });
-                          });
-                      }
+                      iziToast.info({
+                        title: "No Available Driver",
+                        message: `Please wait, still searching...`,
+                        icon: "fa fa-exclamation-circle",
+                        position: "topRight",
+                        timeout: false,
+                      });
                     }
-                  } else {
-                    iziToast.destroy();
-
-                    iziToast.info({
-                      title: "No Available Driver",
-                      message: `Please wait, still searching...`,
-                      icon: "fa fa-exclamation-circle",
-                      position: "topRight",
-                      timeout: false,
-                    });
-                  }
+                  });
                 });
-              });
-            },
-            true,
-          ],
-          [
-            "<button>NO</button>",
-            function (instance, toast) {
-              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+              },
+              true,
+            ],
+            [
+              "<button>NO</button>",
+              function (instance, toast) {
+                instance.hide({ transitionOut: "fadeOut" }, toast, "button");
 
-              showHailingOverlay();
-            },
+                showHailingOverlay();
+              },
+            ],
           ],
-        ],
-        onClosing: function (instance, toast, closedBy) {
-          console.info("Closing | closedBy: " + closedBy);
-        },
-        onClosed: function (instance, toast, closedBy) {
-          console.info("Closed | closedBy: " + closedBy);
-        },
-      });
+          onClosing: function (instance, toast, closedBy) {
+            console.info("Closing | closedBy: " + closedBy);
+          },
+          onClosed: function (instance, toast, closedBy) {
+            console.info("Closed | closedBy: " + closedBy);
+          },
+        });
+      } else {
+        // For Reservation
+        iziToast.success({
+          timeout: false,
+          // close: false,
+          overlay: true,
+          // displayMode: "once",
+          title: "Schedule has been sent to the driver, waiting for response",
+          message: `When accepted, please be ready within this date and time: ${pickingSchedule}`,
+          icon: "fa fa-map-pin",
+          position: "center",
+          timeout: false,
+          onClosed: function (instance, toast, closedBy) {
+            console.info("Closed | closedBy: " + closedBy);
+            location.reload();
+          },
+          buttons: [
+            // ['<button>Ok</button>', function (instance, toast) {
+            //     alert("Hello world!");
+            // }, true], // true to focus
+            [
+              "<button>Open Chat</button>",
+              function (instance, toast) {
+                instance.hide(
+                  {
+                    transitionOut: "fadeOutUp",
+                    onClosing: function (instance, toast, closedBy) {
+                      console.info("closedBy: " + closedBy); // The return will be: 'closedBy: buttonName'
+                    },
+                  },
+                  toast,
+                  "buttonName"
+                );
+
+                let json = { open_chat: true };
+                sendData(json);
+              },
+            ],
+          ],
+        });
+
+        let picklat = +$("#input-pickup-location").attr("lat");
+        let picklng = +$("#input-pickup-location").attr("lng");
+        let pickname = $("#input-pickup-location").val();
+
+        let droplat = +$("#input-dropoff-location").attr("lat");
+        let droplng = +$("#input-dropoff-location").attr("lng");
+        let dropname = $("#input-dropoff-location").val();
+
+        let totalDistance = sessionStorage.getItem("totalDistance");
+
+        const updates = {};
+        let data = {
+          arrival: "",
+          customerID: email,
+          customerName: name,
+          dropoff_coordinates_lat: droplat,
+          dropoff_coordinates_lng: droplng,
+          dropoff_location: dropname,
+          for_pickup: "",
+          ongoing_trip: "",
+          picked_up: "",
+          pickup_coordinates_lat: picklat,
+          pickup_coordinates_lng: picklng,
+          pickup_location: pickname,
+          totalDistance: totalDistance,
+          isScheduled: true,
+          scheduledDate: pickingSchedule,
+        };
+
+        // console.log(listOnlineDriver);
+        let sanitizedPath = sanitizeText(
+          `activity/booking/${currentDate}/drivers/${pickingDriverID}/${Date.now()}/${email}/`
+        );
+        updates[sanitizedPath] = data;
+
+        console.log(updates);
+        let ref = getRef();
+        let update = getUpdate();
+        let database = getDatabase();
+        // Update hail for the rider to check if rider's can be picked up
+        update(ref(database), updates)
+          .then(() => {
+            console.log("Rider pinged");
+          })
+          .catch((error) => {
+            console.log("Error pinging the rider");
+          });
+
+        // Initialize Chat request to Driver
+        let sanitizedCreatedBy = sanitizeText(
+          `chats/users/${email}/${pickingDriverID}/created_by`
+        );
+
+        let sanitizedDriverName = sanitizeText(
+          `chats/users/${email}/${pickingDriverID}/driverName`
+        );
+
+        let sanitizedParticipants = sanitizeText(
+          `chats/users/${email}/${pickingDriverID}/participants`
+        );
+
+        let sanitizedPath2 = sanitizeText(
+          `chats/users/${email}/${pickingDriverID}/messages/${Date.now()}`
+        );
+
+        let sanitizedDriver = sanitizeText(
+          `chats/users/${email}/${pickingDriverID}/rider_seen`
+        );
+
+        let sanitizedRider = sanitizeText(
+          `chats/users/${email}/${pickingDriverID}/driver_seen`
+        );
+
+        let data3 = {
+          id: pickingDriverID,
+          message: `Your Van booking is pending to accept, please wait for the driver (${pickingDriverID}) to respond (This is an automated message)`,
+          time_read: "",
+          user_type: "driver",
+          isScheduled: true,
+        };
+
+        const updates1 = {};
+        updates1[sanitizedCreatedBy] = email;
+
+        const updates2 = {};
+        updates2[sanitizedParticipants] = pickingDriverID;
+
+        const updates3 = {};
+        updates3[sanitizedPath2] = data3;
+
+        const updates4 = {};
+        updates4[sanitizedDriverName] = pickingDriverName;
+
+        const updates5 = {};
+        updates5[sanitizedDriver] = false;
+
+        const updates6 = {};
+        updates6[sanitizedRider] = false;
+
+        update(ref(database), updates1);
+        update(ref(database), updates2);
+        update(ref(database), updates4);
+        update(ref(database), updates5);
+        update(ref(database), updates6);
+        update(ref(database), updates3)
+          .then(() => {
+            console.log("Chat initialized");
+
+            // setTimeout(() => {
+            //   let json = { open_chat: true };
+            //   sendData(json);
+            // }, 2000);
+          })
+          .catch((error) => {
+            console.log("Unable to Initialize chat");
+          });
+
+        // Open Chat in Rider's App
+        // let json = { request_current_location: true };
+        // sendData(json);
+        // isPickupListeningForLocation = true;
+      }
     }, 1800);
   }
 });
