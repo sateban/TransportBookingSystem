@@ -9,12 +9,18 @@
     <link rel="stylesheet" href="styles/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="styles/leaflet.draw.css" />
     <link rel="stylesheet" href="styles/Control.Geocoder.css" />
+    <!-- <link href="assets/bootstrap/css/bootstrap.css" rel="stylesheet" /> -->
+
     <!-- <link rel="stylesheet" href="styles/font-awesome.min.css" /> -->
     <!-- <link rel="stylesheet" href="styles/fontawesome-free-5.15.4-web/css/all.css" /> -->
     <link rel="stylesheet" href="styles/all.css" />
     <link rel="stylesheet" href="styles/iziToast.css" />
     <link rel="stylesheet" href="styles/jquery-ui.css" />
     <link rel="stylesheet" href="styles/style.css" />
+    <!-- <link
+      rel="stylesheet"
+      href="assets/datatable/dataTables.bootstrap.min.css"
+    /> -->
 
     <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" /> -->
 
@@ -309,7 +315,10 @@
       </div>
     </div>
 
-    <div class="overlay-trip-schedule" style="overflow: unset !important; touch-action: pan-y; display: none;">
+    <div
+      class="overlay-trip-schedule"
+      style="overflow: unset !important; touch-action: pan-y; display: none"
+    >
       <div
         class="container trip-schedule show"
         style="overflow: unset !important"
@@ -347,6 +356,57 @@
       </div>
     </div>
 
+    <!-- For Navigation -->
+    <div
+      class="overlay-trip-navigation"
+      
+      style="overflow-y: hidden !important; touch-action: pan-y; display: none"
+    >
+      <div class="container trip-start show" style="overflow: unset !important; width: 90%; height: 90%;">
+      <!-- <div class="container trip-start show" style="overflow-y: hidden !important"> -->
+        <div class="drag-bar" id="">
+          <div></div>
+        </div>
+        <div class="header-container">
+          <div class="header">
+            <h3 class="title">Confirmed Navigation</h3>
+            <button class="close-btn navigation">
+              <i class="fas fa-window-close"></i>
+            </button>
+          </div>
+        </div>
+
+        
+        <div class="container-fluid h-75 container-content text-center">
+          <div class="bg bg-about"></div>
+          <div class="container-fluid h-100">
+            <div id="data-navigation" style="overflow-y: auto; max-height: 100%;">
+              <div>Loading...</div>
+              <!-- <table class="table table-striped" id="tbl-navigation" style="width: 100%;">
+                <thead class="thead-dark">
+                  <tr>
+                    <td>Customer Name</td>
+                    <td>Pickup</td>
+                    <td>Destination</td>
+                    <td>Total Distance</td>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table> -->
+              
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="container-fluid h-75 container-content text-center">
+          <div class="bg bg-about"></div>
+          <div class="container-fluid h-100 p-5">
+            <div id="calendar"></div>
+          </div>
+        </div> -->
+      </div>
+    </div>
+
     <!-- <button id="zoomOut">Zoom Out</button> -->
     <!-- <div id="error"></div> -->
     <!-- <div id="distance">Testing123</div> -->
@@ -354,6 +414,8 @@
     <!-- Leaflet JavaScript -->
     <script src="script/jquery.3.2.1.min.js"></script>
     <script src="script/jquery-ui.js"></script>
+    <script src="assets/datatable/datatables.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.js"></script>
     <script src="script/leaflet.js"></script>
     <script src="script/iziToast.min.js"></script>
     <script src="script/loader.js" defer></script>

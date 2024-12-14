@@ -400,11 +400,24 @@ $(document).ready(() => {
         Object.entries(driverTotals).forEach(([id, value]) => {
           // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
           // chartData.push([id, `P${+amount.toFixed(2)}`]);
+          let totalBooking = 0;
+
+          Object.entries(data.income).forEach(([date, dateData]) => {
+            // Loop through drivers on the given date
+            Object.entries(dateData.drivers).forEach(([driverId, driverData]) => {
+              if(value.id == driverId){
+                console.log("Sample", driverId, Object.keys(driverData).length);
+                totalBooking += Object.keys(driverData).length;
+
+              }
+            });
+          });
+
           dlist += `
-          <tr>
-            <td driverid="${value.id}">${id}</td>
+          <tr driverid="${value.id}">
+            <td id="driver-name">${id}</td>
             <td>P${value.amount.toFixed(2)}</td>
-            <td>nth</td>
+            <td>${totalBooking}</td>
           </tr>
         `;
         });
@@ -610,8 +623,10 @@ Napat Tours Admin`
   });
 
   $("#monetized-data").on("dblclick", "tr", (e) => {
-    let name = $(e.target).eq(0).text();
-    let id = $(e.target).eq(0).attr("driverid").trim();
+    let name = $(e.target).parent().find("#driver-name").text();
+    // console.log($(e.target).parent().find("#driver-name"));
+
+    let id = $(e.target).eq(0).parent().attr("driverid").trim();
     $("#income-driver-name").text(name);
     $("#modalIndividualIncome").modal("show");
 

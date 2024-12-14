@@ -4,6 +4,7 @@ let isDropListeningForLocation = false;
 let allowReadingCoordinates = false;
 let isPickingSchedule = false;
 let isReservation = false;
+let isStartNavigation = false;
 let pickingSchedule = "";
 let pickingDriverID = "";
 let pickingDriverName = "";
@@ -14,6 +15,8 @@ let locationDetails = {
     lng: 0.0,
   },
 };
+
+let navigationData = [];
 
 let inputFocus = {
   currentFocused: "",
@@ -50,6 +53,7 @@ function initializeMap() {
     maxBoundsViscosity: 1.0, // Optional: Makes the bounds more restrictive (0 to 1)
     zoomControl: true,
     maxNativeZoom: 28,
+    closePopupOnClick: false,
     // zoom: 19,
     // rotate: true,
   });
@@ -63,13 +67,13 @@ function initializeMap() {
 
   console.log(waypoints);
 
-  var control = L.Routing.control({
-    waypoints: waypoints,
-    routeWhileDragging: false,
-    // zoom: {
-    //   position: 'bottomleft'
-    // }
-  }).addTo(map);
+  // var control = L.Routing.control({
+  //   waypoints: waypoints,
+  //   routeWhileDragging: false,
+  //   // zoom: {
+  //   //   position: 'bottomleft'
+  //   // }
+  // }).addTo(map);
 
   // map.zoomControl.setPosition('bottomright');
   map.zoomControl.setPosition("topright");
@@ -289,6 +293,257 @@ function showReservation() {
 
   //   calendar.render();
   // }, 1000);
+}
+
+function startNavigation() {
+  console.log("startNavigation", "Command received");
+  hideChooseDestination();
+  hideCenterMarker();
+  hideReturnToHailing();
+  hideHailingOverlay();
+
+  hideTripSchedule();
+  showStartNavigation();
+  isStartNavigation = true;
+
+  // Load passenger data
+  // $("#tbl-navigation")
+  let driverEmail = sessionStorage.getItem("userEmail");
+  let driverUsername = sessionStorage.getItem("userName");
+  let driverUID = sessionStorage.getItem("userUID");
+  let driverUserType = sessionStorage.getItem("userType");
+
+  let onlineDriver = getDriverReference();
+  let onValue = getOnValue();
+  let ref = getRef();
+  let update = getUpdate();
+  let database = getDatabase();
+
+  let dlist = `<div>`;
+
+  onValue(onlineDriver, (snapshot) => {
+    let data = snapshot.val();
+    let inList = [];
+
+    console.log(JSON.stringify(data));
+
+    if (!data) {
+      $("#data-navigation").html(`
+        <div>No current bookings</div><br>
+        <div>
+        <button class="btn-start" disabled style='background: gray'>
+          Start
+        </button>
+        </div>
+          `);
+    }
+
+    Object.entries(data).forEach(([uid, d]) => {
+      if (driverUID == uid) {
+        console.log("data2", uid, inList.includes(uid));
+        let maxTs = 0;
+        let strMaxTs = "";
+        // Object.entries(d).forEach(([ts, tsData]) => {
+        //   if (!isNaN(parseInt(ts))) {
+        //     if (parseInt(ts) > maxTs) {
+        //       maxTs = parseInt(ts);
+        //       strMaxTs = ts;
+        //     }
+        //   }
+        // // });
+        // let processedData = {};
+        // // let processedData = [];
+
+        // Object.keys(d).forEach((timestamp) => {
+        //   const key = Object.keys(d[timestamp])[0];
+
+        //   if (key != undefined) {
+        //     const email = key;
+        //     const customerData = d[timestamp][key];
+        //     console.log("CustomerData", email, timestamp);
+
+        //     // if (processedData[email] != email) {
+        //       // processedData[email] = [];
+        //       processedData[email] = {
+        //         timestamp: Number(timestamp),
+        //         details: customerData,
+        //       };
+
+        //       // console.log("processedData", email);
+        //     // }
+
+        //     // Add the timestamp and details to the email's group
+        //     // processedData .push({
+        //     //   timestamp: Number(timestamp),
+        //     //   details: customerData,
+        //     // });
+
+        //   }
+        // });
+
+        // console.log("processedData:", Object.keys(processedData).length);
+
+        // Object.keys(processedData).forEach(email => {
+        //   // Find the maximum timestamp for the email
+        //   const maxTimestamp = Math.max(...Object.entries(processedData[email]).map((entry) => {
+        //     console.log("entry.timestamp", entry);
+        //     return entry.timestamp
+        //     }
+        //   ));
+        //   // maxTimestamps[email] = maxTimestamp;
+
+        //   console.log("email", email, maxTimestamp);
+        // });
+
+        // // Step 2: Find the email with the largest timestamp
+        // const emailWithLargestTimestamp = Object.keys(processedData).reduce((acc, email) => {
+        //   const maxTimestamp = Math.max(...processedData[email].map(entry => entry.timestamp));
+        //   return maxTimestamp > acc.largestTimestamp ? { email, largestTimestamp: maxTimestamp } : acc;
+        // }, { email: null, largestTimestamp: -Infinity });
+
+        // console.log("Processed Data by Email:", processedData);
+        // console.log("Email with Largest Timestamp:", emailWithLargestTimestamp);
+
+        const maxTimestamps = Object.values(data).reduce(
+          (result, timestamps) => {
+            Object.entries(timestamps).forEach(([timestamp, emailData]) => {
+              const email = Object.keys(emailData)[0]; // Get the email key
+              const numericTimestamp = Number(timestamp);
+              if (!result[email] || numericTimestamp > result[email]) {
+                result[email] = numericTimestamp;
+              }
+            });
+            return result;
+          },
+          {}
+        );
+
+        // console.log("maxTimestamp", maxTimestamps[sanitizeText(userData.customerID)]);
+
+        // for (let d in maxTimestamps) {
+        //   console.log("maxTimestamps[d]", maxTimestamps[d]);
+        // }
+
+        Object.entries(d).forEach(([ts, tsData]) => {
+          // if (!isNaN(parseInt(ts)) && ts == strMaxTs) {
+          if (!isNaN(parseInt(ts))) {
+            Object.entries(tsData).forEach(([user, userData]) => {
+              console.log("data---", userData.customerID, ts, user);
+
+              for (let d in maxTimestamps) {
+                if (!isNaN(parseInt(maxTimestamps[d]))) {
+                  if (parseInt(ts) == parseInt(maxTimestamps[d])) {
+                    // dlist.push({
+                    //   customerName: userData.customerName,
+                    //   pickup: userData.pickup_location,
+                    //   destination: userData.dropoff_location,
+                    //   distance: userData.totalDistance
+                    // });
+                    let status = userData?.status ?? "";
+                    console.log(
+                      "@@maxTimestamps[d]",
+                      maxTimestamps[d],
+                      " status:",
+                      status
+                    );
+
+                    // if (!inList.includes(uid) && status == "confirmed") {
+                    if (status == "confirmed") {
+                      inList.push(uid);
+
+                      navigationData.push({
+                        timestamp: ts,
+                        customerName: userData.customerName,
+                        customerID: userData.customerID,
+                        pickup: userData.pickup_location,
+                        destination: userData.dropoff_location,
+                        distance: userData.totalDistance,
+                        dropoff_coordinates_lat:
+                          userData.dropoff_coordinates_lat,
+                        dropoff_coordinates_lng:
+                          userData.dropoff_coordinates_lng,
+                        pickup_coordinates_lat: userData.pickup_coordinates_lat,
+                        pickup_coordinates_lng: userData.pickup_coordinates_lng,
+                      });
+
+                      dlist += `
+                <div class="col-12" style="text-align: left; border-left: solid 3px gray; padding-left: 5px">
+                  <div>
+                    <b>Customer Name:</b> ${userData.customerName}
+                  </div>
+
+                  <div>
+                    <b>Pickup:</b> ${userData.pickup_location}
+                  </div>
+
+                  <div>
+                    <b>Destination:</b> ${userData.dropoff_location}
+                  </div>
+
+                  <div>
+                    <b>Distance:</b> ${userData.totalDistance}km
+                  </div>
+                </div>
+                <br>
+              `;
+                    }
+                  }
+                }
+              }
+            });
+          }
+        });
+      }
+    });
+
+    if (inList.length == 0) {
+      dlist += `
+        <div>No current bookings</div><br>
+      `;
+    }
+
+    dlist += `
+    <div>
+      <button class="btn-start" ${
+        inList.length > 0 ? "" : "disabled style='background: gray'"
+      }>
+        Start
+      </button>
+    </div>
+    </div>`;
+
+    $("#data-navigation").html(dlist);
+    dlist = "";
+    inList = [];
+
+    // $("#tbl-navigation").DataTable({
+    //   data: dlist,
+    //   columns: [
+    //     { data: "customerName" },
+    //     { data: "pickup" },
+    //     { data: "destination" },
+    //     { data: "distance" },
+    //   ],
+    //   // searching: true,
+    //   responsive: true,
+    //   // rowReorder: {
+    //   //   selector: 'td:nth-child(2)'
+    //   // },
+    //   // columnDefs: [
+    //   //   { visible: false,
+    //   //     targets: [0] }
+    //   // ],
+    //   ordering: true,
+    //   // processing: false,
+    //   // serverSide: false,
+    //   destroy: true,
+    //   info: false,
+    //   language: {
+    //     emptyTable: "No entries to show",
+    //     infoEmpty: "No entries to show",
+    //   },
+    // });
+  });
 }
 
 $(document).ready(() => {
@@ -655,7 +910,102 @@ $(document).ready(() => {
       // });
     });
   }, 1000);
+
+  // Start engines
+  $(document).on("click", ".btn-start", (e) => {
+    console.log("Start Button clicked");
+
+    hideStartNavigation();
+
+    let lat = sessionStorage.getItem("lat");
+    let lng = sessionStorage.getItem("lon");
+
+    // let json = { request_current_location: true };
+    let json = { start_navigation: true };
+    sendData(json);
+
+    // const marker = L.marker([lat, lng]).addTo(map);
+
+    // // Bind a popup to the marker
+    // marker.bindPopup(
+    //   "<b><span style='font-size: 20px'>🚗</span> You are here</b>"
+    // );
+
+    // // Optionally, open the popup immediately
+    // marker.openPopup();
+
+    //
+    console.log("navigationData", navigationData);
+
+    // const startPoint = {
+    //   lat: +$("#input-pickup-location").attr("lat"),
+    //   lng: +$("#input-pickup-location").attr("lng"),
+    // };
+    // const endPoint = {
+    //   lat: +$("#input-dropoff-location").attr("lat"),
+    //   lng: +$("#input-dropoff-location").attr("lng"),
+    // };
+
+    // let wp = [];
+    // let wp = [
+    //   L.latlng(11.74191596046379, 122.27159854764896),
+    //   L.latlng(11.52065294621054, 122.45846738609085)
+    // ];
+
+    // dropoff_coordinates_lat: userData.dropoff_coordinates_lat,
+    // dropoff_coordinates_lng: userData.dropoff_coordinates_lng,
+    // pickup_coordinates_lat: userData.pickup_coordinates_lat,
+    // pickup_coordinates_lng: userData.pickup_coordinates_lng
+
+    // // Origin of driver
+    // wp.push(
+    //   L.latLng(lat, lng)
+    // );
+
+    // for(let d in navigationData){
+    //   // console.log(navigationData[d].customerName);
+    //   wp.push(
+    //     L.latLng(navigationData[d].dropoff_coordinates_lat, navigationData[d].dropoff_coordinates_lng)
+    //   );
+
+    //   wp.push(
+    //     L.latLng(navigationData[d].pickup_coordinates_lat, navigationData[d].pickup_coordinates_lng)
+    //   );
+    // }
+
+    // console.log("Testing ABC", JSON.stringify( wp.push(
+    //   L.latLng(lat, lng)
+    // )));
+
+    // let allowOnce = true;
+    // let allowOnce2 = true;
+    // let counter = 0;
+
+    // let loc = [
+    //   { lat: 11.709711088653284, lng: 122.30137612016853 },
+    //   { lat: 11.706254444767735, lng: 122.3087008912548 },
+    //   { lat: 11.70573340100923, lng: 122.32917074057924 },
+    //   { lat: 11.714724048375777, lng: 122.35247720076161 },
+    //   { lat: 11.710837825352822, lng: 122.36196983724764 },
+    // ];
+
+    // let t = setInterval(() => {
+    // showMultRoute(loc[counter].lat, loc[counter].lng);
+
+    //   if (loc.length == counter - 1) {
+    //     clearInterval(t);
+    //   }
+
+    //   counter++;
+    // }, 1000);
+    // showRoute(11.74191596046379, 122.27159854764896);
+  });
 });
+
+function setIntervalLocation(latitude, longitude) {
+  console.log("setIntervalLocation()");
+  showMultRoute(+latitude, +longitude);
+}
 
 function receiveLocation2(latitude, longitude, inBrowserCall = false) {
   // document.getElementById("error").innerHTML =
@@ -956,7 +1306,26 @@ function showTripSchedule() {
 
   searchPickupContainer.removeClass("hide");
   searchPickupContainer.addClass("show");
-  overlaySearchPickup.delay(500).fadeIn(500);
+  overlaySearchPickup.fadeIn(500);
+}
+
+function showStartNavigation() {
+  let searchPickupContainer = $(".trip-start");
+  let overlaySearchPickup = $(".overlay-trip-navigation");
+
+  searchPickupContainer.removeClass("hide");
+  searchPickupContainer.addClass("show");
+  // overlaySearchPickup.delay(500).fadeIn(500);
+  overlaySearchPickup.fadeIn(500);
+}
+
+function hideStartNavigation() {
+  let searchPickupContainer = $(".trip-start");
+  let overlaySearchPickup = $(".overlay-trip-navigation");
+
+  searchPickupContainer.removeClass("show");
+  searchPickupContainer.addClass("hide");
+  overlaySearchPickup.fadeOut(500);
 }
 
 function hideTripSchedule() {
@@ -1258,6 +1627,11 @@ $(".close-btn.schedule").on("click", () => {
   // card.classList.add("hide");
 });
 
+$(".close-btn.navigation").on("click", () => {
+  hideStartNavigation();
+  // card.classList.add("hide");
+});
+
 function hideSearchLocation() {
   $(".location-box").css("display", "none");
   // $(".location-box.input").css("display", "block");
@@ -1482,11 +1856,17 @@ $("#drop-pin-location").on("click", (e) => {
 
 // Return button
 $(".hailing-overlay").on("click", () => {
-  showHailingOverlay();
-  hideReturnToHailing();
-  allowReadingCoordinates = false;
-  hideCenterMarker();
-  hideChooseDestination();
+  console.log("isStartNavigation", isStartNavigation);
+
+  if (isStartNavigation) {
+    showStartNavigation();
+  } else {
+    showHailingOverlay();
+    hideReturnToHailing();
+    allowReadingCoordinates = false;
+    hideCenterMarker();
+    hideChooseDestination();
+  }
 });
 
 // Choose Destination Button
@@ -2121,6 +2501,386 @@ function showRoute(start, end) {
       .setLatLng(routes[0].waypoints[0].latLng) // Display near the starting point
       .setContent(`Total Distance: ${(totalDistance / 1000).toFixed(2)} km`)
       .openOn(map);
+  });
+}
+
+// Declare a global variable to store the control instance
+let controlMult;
+let distanceThreshold = 5.0; // km
+let arrivedDistance = 0.2; // km
+
+function showMultRoute(lat, lng) {
+  let wp = [];
+
+  // Origin of driver
+  wp.push(L.latLng(lat, lng));
+  // wp.push(L.latLng(11.74191596046379, 122.27159854764896));
+
+  for (let d in navigationData) {
+    // console.log(navigationData[d].customerName);
+    wp.push(
+      L.latLng(
+        navigationData[d].dropoff_coordinates_lat,
+        navigationData[d].dropoff_coordinates_lng
+      )
+    );
+
+    wp.push(
+      L.latLng(
+        navigationData[d].pickup_coordinates_lat,
+        navigationData[d].pickup_coordinates_lng
+      )
+    );
+  }
+
+  // Remove all layers from the map
+  map.eachLayer((layer) => {
+    if (layer instanceof L.Marker || layer instanceof L.Popup) {
+      map.removeLayer(layer);
+    }
+  });
+
+  if (controlMult) {
+    map.removeControl(controlMult); // Remove the routing control from the map
+    controlMult = null; // Reset the control variable
+  }
+
+  console.log("Waypoints", wp.length);
+
+  // Add routing control
+  controlMult = L.Routing.control({
+    waypoints: wp,
+    // waypoints: [
+    //   L.latLng(11.74191596046379, 122.27159854764896), // Starting point
+    //   L.latLng(11.52065294621054, 122.45846738609085), // Destination point
+    // ],
+    routeWhileDragging: false, // Allows the user to drag and modify the route
+    fitSelectedRoutes: false, // Auto-zooms the map to fit the route
+    showAlternatives: true, // Enables alternative routes
+    // altLineOptions: {
+    //   styles: [
+    //     { color: "blue", opacity: 0.7, weight: 4 }, // Primary route style
+    //     { color: "green", opacity: 0.7, weight: 4 }, // Alternative route style
+    //   ],
+    // },
+    router: L.Routing.osrmv1({
+      serviceUrl: "https://router.project-osrm.org/route/v1", // OSRM Service URL
+    }),
+  })
+    .on("routingerror", function (e) {
+      console.error("Routing Error:", e.error.message);
+      console.error("Routing Error:", e.error.url);
+    })
+    .addTo(map);
+
+  let onlineDriver = getDriverReference();
+  let onValue = getOnValue();
+  let ref = getRef();
+  let update = getUpdate();
+  let database = getDatabase();
+
+  controlMult.on("routesfound", function (e) {
+    const routes = e.routes;
+    // console.log("routes", JSON.stringify(routes[0].coordinates));
+    // console.log("routes", routes[0].coordinates.length);
+
+    routes.forEach((route, index) => {
+      const totalDistance = route.summary.totalDistance; // Distance in meters
+      const totalTime = route.summary.totalTime; // Time in seconds
+
+      console.log(`Route ${index + 1}:`);
+      console.log(`- Distance: ${(totalDistance / 1000).toFixed(2)} km`);
+      console.log(`- Time: ${(totalTime / 60).toFixed(2)} minutes`);
+
+      // Optionally, display route information in a popup or UI element
+      // if (index === 0) {
+      L.popup()
+        .setLatLng(route.waypoints[0].latLng) // Display near the starting point
+        .setContent(
+          `<b><span style='font-size: 20px'>🚗</span> You are here</b><br>Total Distance: ${(
+            totalDistance / 1000
+          ).toFixed(2)} km`
+          // , ${(
+          //   totalTime / 60
+          // ).toFixed(2)} minutes`
+        )
+        .addTo(map);
+
+      // .openOn(map);
+      // } else {
+      const popups = [];
+      for (let d in wp) {
+        console.log("dddd", d);
+
+        if (+d != 0) {
+          for (let n in navigationData) {
+            // if (
+            //   sessionStorage.getItem(navigationData[n].timestamp) !=
+            //   navigationData[n].timestamp
+            // ) {
+            // DROP-OFF
+            if (
+              wp[d].lat == navigationData[n].dropoff_coordinates_lat &&
+              wp[d].lng == navigationData[n].dropoff_coordinates_lng
+            ) {
+              let controlWp = [];
+
+              // Origin of driver
+              controlWp.push(L.latLng(lat, lng)); // Current location
+              controlWp.push(L.latLng(wp[d].lat, wp[d].lng)); // User's Dropoff point
+
+              let dropControl = L.Routing.control({
+                waypoints: controlWp,
+                routeWhileDragging: true, // Keeps the ability to drag waypoints
+                fitSelectedRoutes: false, // Prevents auto-zoom to the route
+                showAlternatives: false, // Disables alternative routes
+                createMarker: function () {
+                  return null; // Hides the markers
+                },
+                lineOptions: {
+                  // styles: [{ color: "transparent", weight: 0 }], // Makes the route line invisible
+                },
+              }).addTo(map);
+
+              dropControl.on("routesfound", function (e) {
+                const r = e.routes;
+                const td = r[0].summary.totalDistance; // Distance in meters
+                console.log(`Invididual Total Distance: ${td / 1000} meters`);
+                console.log(`Invididual Curr Points ${lat}, ${lng}`);
+                console.log(
+                  `Invididual Dest Points ${wp[d].lat}, ${wp[d].lng}`
+                );
+
+                // Arrived
+                if (td / 1000 < arrivedDistance) {
+                  let sanitized2 = sanitizeText(
+                    "activity/booking/" +
+                      getCurrentDate("ymd-") +
+                      "/drivers/" +
+                      sessionStorage.getItem("userUID") +
+                      "/" +
+                      navigationData[n].timestamp +
+                      "/" +
+                      navigationData[n].customerID
+                  );
+
+                  const updates1 = {};
+                  // updates1[`${sanitized}/id`] = sessionStorage.getItem("userUID");
+                  // updates1[`${sanitized}/isScheduled`] = false;
+                  // updates1[
+                  //   `${sanitized}/message`
+                  // ] = `Hi ${navigationData[n].customerName}, \nYour Van has arrived. (This is an automated messaged)`;
+                  // updates1[`${sanitized}/user_type`] = "driver";
+
+                  if (!sessionStorage.getItem(navigationData[n].timestamp)) {
+                    iziToast.info({
+                      timeout: false,
+                      close: false,
+                      overlay: true,
+                      displayMode: "once",
+                      // id: "question",
+                      zindex: 10999,
+                      title: "Arriving",
+                      message: `You have arrived at ${navigationData[n].customerName}'s drop-off point, please click ARRIVED button to confirm arrival.`,
+                      position: "center",
+                      buttons: [
+                        [
+                          "<button><b>ARRIVED</b></button>",
+                          function (instance, toast) {
+                            instance.hide(
+                              { transitionOut: "fadeOut" },
+                              toast,
+                              "button"
+                            );
+
+                            // updates1[`${sanitized2}/arrived`] = true;
+                            updates1[`${sanitized2}/status`] = "arrived";
+                            update(ref(database), updates1);
+                            sessionStorage.setItem(
+                              navigationData[n].timestamp,
+                              "done"
+                            );
+                            sessionStorage.setItem(
+                              "done",
+                              sessionStorage.getItem("done") +
+                                ";" +
+                                navigationData[n].customerName
+                            );
+                          },
+                          true,
+                        ],
+                        // [
+                        //   "<button>NO</button>",
+                        //   function (instance, toast) {
+                        //     instance.hide(
+                        //       { transitionOut: "fadeOut" },
+                        //       toast,
+                        //       "button"
+                        //     );
+                        //   },
+                        // ],
+                      ],
+                      onClosing: function (instance, toast, closedBy) {
+                        console.info("Closing | closedBy: " + closedBy);
+                      },
+                      onClosed: function (instance, toast, closedBy) {
+                        console.info("Closed | closedBy: " + closedBy);
+                      },
+                    });
+                  }
+
+                  update(ref(database), updates1);
+                }
+              });
+
+              console.log(
+                "sessionStorage.getItem(done)",
+                sessionStorage.getItem("done")
+              );
+
+              let done = sessionStorage?.getItem("done") ?? "";
+
+              if (!done.includes(navigationData[n].customerName)) {
+                let latlng = L.latLng(wp[d].lat, wp[d].lng);
+                const popup = L.popup()
+                  .setLatLng(latlng) // Display near the starting point
+                  .setContent(
+                    `<b>Drop-off:</b> ${navigationData[n].customerName}`
+                  )
+                  .addTo(map);
+              }
+
+              // Nearby in destination
+              if (totalDistance / 1000 < distanceThreshold) {
+                //   console.log("driver is nearby", driverUID);
+
+                let sanitized = sanitizeText(
+                  "activity/booking/" +
+                    getCurrentDate("ymd-") +
+                    "/drivers/" +
+                    sessionStorage.getItem("userUID") +
+                    "/" +
+                    navigationData[n].timestamp +
+                    "/" +
+                    navigationData[n].customerID +
+                    "/nearby"
+                );
+
+                const updates1 = {};
+                updates1[sanitized] = (totalDistance / 1000).toFixed(2);
+
+                update(ref(database), updates1);
+              }
+
+              console.log("arrivedDistance: ", totalDistance / 1000);
+            }
+            // PICKUP
+            else if (
+              wp[d].lat == navigationData[n].pickup_coordinates_lat &&
+              wp[d].lng == navigationData[n].pickup_coordinates_lng
+            ) {
+              let done = sessionStorage?.getItem("done") ?? "";
+
+              if (!done.includes(navigationData[n].customerName)) {
+                let latlng = L.latLng(wp[d].lat, wp[d].lng);
+                const popup = L.popup()
+                  .setLatLng(latlng) // Display near the starting point
+                  .setContent(
+                    `<b>Pickup:</b> ${navigationData[n].customerName}`
+                    // , ${(
+                    //   totalTime / 60
+                    // ).toFixed(2)} minutes`
+                  )
+                  .addTo(map);
+              }
+
+              // Nearby in Pickup
+              if (totalDistance / 1000 < distanceThreshold) {
+                //   console.log("driver is nearby", driverUID);
+
+                let sanitized = sanitizeText(
+                  "chats/users/" +
+                    navigationData[n].customerID +
+                    "/" +
+                    sessionStorage.getItem("userUID") +
+                    "/messages/" +
+                    Date.now()
+                );
+
+                let sanitized2 = sanitizeText(
+                  "chats/users/" +
+                    navigationData[n].customerID +
+                    "/" +
+                    sessionStorage.getItem("userUID")
+                );
+
+                const updates1 = {};
+                updates1[`${sanitized}/id`] = sessionStorage.getItem("userUID");
+                updates1[`${sanitized}/isScheduled`] = false;
+                updates1[
+                  `${sanitized}/message`
+                ] = `Hi ${navigationData[n].customerName}, \nYour driver is coming right up at the pickup point, please be ready.\nThank you! (This is an automated messaged)`;
+                updates1[`${sanitized}/user_type`] = "driver";
+                updates1[`${sanitized2}/nearby`] = true;
+
+                update(ref(database), updates1);
+              }
+
+              if (totalDistance / 1000 < arrivedDistance) {
+                let sanitized = sanitizeText(
+                  "chats/users/" +
+                    navigationData[n].customerID +
+                    "/" +
+                    sessionStorage.getItem("userUID") +
+                    "/messages/" +
+                    Date.now()
+                );
+
+                let sanitized2 = sanitizeText(
+                  "chats/users/" +
+                    navigationData[n].customerID +
+                    "/" +
+                    sessionStorage.getItem("userUID")
+                );
+
+                const updates1 = {};
+                updates1[`${sanitized}/id`] = sessionStorage.getItem("userUID");
+                updates1[`${sanitized}/isScheduled`] = false;
+                updates1[
+                  `${sanitized}/message`
+                ] = `Hi ${navigationData[n].customerName}, \nYour Van has arrived. (This is an automated messaged)`;
+                updates1[`${sanitized}/user_type`] = "driver";
+                updates1[`${sanitized2}/arrived`] = true;
+
+                update(ref(database), updates1);
+              }
+            }
+            // }
+          }
+          // .openOn(map);
+        }
+      }
+      // popups.push(popup); // Keep track of all popups
+
+      // }
+    });
+
+    // const routes = e.routes;
+    // const totalDistance = routes[0].summary.totalDistance; // Distance in meters
+    // console.log(`Total Distance: ${totalDistance} meters`);
+
+    // console.log(`Route ${index + 1}:`);
+    // console.log(`- Distance: ${(totalDistance / 1000).toFixed(2)} km`);
+    // console.log(`- Time: ${(totalTime / 60).toFixed(2)} minutes`);
+
+    // // $("#distance").text(`Total Distance: ${totalDistance} meters`);
+    // // sessionStorage.setItem("totalDistance", (totalDistance / 1000).toFixed(2));
+
+    // // Optionally, display the distance on the map or in a popup
+    // L.popup()
+    //   .setLatLng(routes[0].waypoints[0].latLng) // Display near the starting point
+    //   .setContent(`Total Distance: ${(totalDistance / 1000).toFixed(2)} km`)
+    //   .openOn(map);
   });
 }
 

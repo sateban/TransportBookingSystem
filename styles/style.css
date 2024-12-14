@@ -1,5 +1,3 @@
-
-
 .overlay {
   /* display: none; */
   position: absolute;
@@ -88,7 +86,7 @@
   height: 100%;
 }
 
-.overlay-trip-schedule {
+.overlay-trip-schedule, .overlay-trip-navigation {
   touch-action: none;
   position: absolute;
   background: rgba(0, 0, 0, 0.6);
@@ -109,7 +107,7 @@
 }
 
 
-.trip-schedule {
+.trip-schedule, .trip-start {
   transition: 1s;
 }
 
@@ -123,7 +121,7 @@
   height: 100vh;
 }
 
-.overlay-trip-schedule {
+.overlay-trip-schedule, .overlay-trip-navigation {
   font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
@@ -131,6 +129,10 @@
   height: 100vh;
 }
 
+
+.overlay-trip-navigation .container {
+  height: 100%;
+}
 .container {
   /* width: 350px; */
   width: 100%;
@@ -399,4 +401,14 @@ button.btn-done {
   margin-top: -24px; /* Half of the marker's height */
   z-index: 1000;
   display: none;
+}
+
+.btn-start {
+  background: green;
+  border: none;
+  padding: 10px 90px;
+  border-radius: 20px;
+  color: white;
+  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-weight: bold;
 }
