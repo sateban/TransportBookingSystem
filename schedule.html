@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="styles/jquery-ui.css" />
     <link rel="stylesheet" href="styles/iziToast.css" />
     <link rel="stylesheet" href="styles/all.css" />
-    <link rel="stylesheet" href="styles/select2.min.css" />
+    <!-- <link rel="stylesheet" href="styles/select2.min.css" /> -->
     <link
       rel="stylesheet"
       href="assets/datatable/dataTables.bootstrap.min.css"
@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap"
       rel="stylesheet"
     /> -->
-    <title>Dashboard</title>
+    <title>Schedule</title>
   </head>
   <body>
     <div class="loader">
@@ -63,136 +63,81 @@
           </li>
 
           <li>
-            <a href="schedule.html" class="sidebar-link">
+            <a href="schedule.html" class="sidebar-link active">
               <i class="fa-solid fa-graduation-cap fa-fw"></i
               ><span>Schedule</span>
-            </a>
+            </a> 
           </li>
-
-          <!-- <li>
-            <a href="./pages/Courses.html" class="sidebar-link">
-              <i class="fa-solid fa-graduation-cap fa-fw"></i
-              ><span>Courses</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="./pages/Friends.html" class="sidebar-link">
-              <i class="fa-regular fa-circle-user fa-fw"></i
-              ><span>Friends</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="./pages/Files.html" class="sidebar-link">
-              <i class="fa-regular fa-file fa-fw"></i> <span>Files</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="./pages/Plans.html" class="sidebar-link">
-              <i class="fa-regular fa-credit-card fa-fw"></i><span>Plans</span>
-            </a>
-          </li> -->
         </ul>
       </div>
       <main>
         <div class="header">
           <i class="fa-solid fa-bars bar-item"></i>
-          <!-- <div class="search"> -->
-          <!-- <input type="search" placeholder="Type A Keyword" /> -->
           <i class="fa fa-sign-out" id="btn-sign-out"></i>
-          <!-- </div> -->
-
-          
-          <!-- <div class="profile">
-            <span class="bell"><i class="fa-regular fa-bell fa-lg"></i></span>
-
-            <img src="./images/avatar.png" alt="No Image" />
-          </div> -->
         </div>
         <div class="main-content">
           <div class="title">
-            <h1>Dashboard</h1>
+            <h1>Schedule</h1>
           </div>
-          <div class="main-content-boxes" id="main-box" style="display: block !important;">
-            <div class="box first-box" style="">
-              <div class="box-section1">
-                <div class="box-title">
-                  <h2>Welcome</h2>
-                  <p>Admin</p>
+          <div class="main-content-boxes" id="main-box">
+            <div class="box first-box" style="width: max-content;">
+
+              <div class="projects-box">
+                <div class="container">
+                <div
+                  class="projects-box-section2"
+                  style="padding: 0 !important"
+                >
+                  <table style="width: 80%; max-width: unset;">
+                    <thead> 
+                      <tr>
+                        <td>Driver</td>
+                        <td>Day</td>
+                        <td>Start Time</td>
+                        <td>End Time</td>
+                      </tr>
+                    </thead>
+                    <tbody id="list-of-schedule">
+                      <!-- <tr id="btn-add-new" style="cursor: pointer">
+                        <td
+                          colspan="8"
+                          id="encode-add"
+                          style="text-align: center; font-size: 30px"
+                        >
+                          <i class="fa fa-plus-circle"></i>
+                        </td>
+                      </tr> -->
+                    </tbody>
+                  </table>
+                  <div>
+                    <br>
+                    <code>
+                      Info: Please enter only the abbreviations for Days separated with a comma ',' e.g. (M,T,W)
+                    </code>
+                  </div>
+                  <!-- <table style="width: 80vw">
+                    <tbody id="">
+                      <tr id="btn-add-schedule" style="cursor: pointer">
+                        <td
+                          colspan="8"
+                          id="encode-add"
+                          style="text-align: center; font-size: 30px"
+                        >
+                          <i class="fa fa-plus-circle"></i>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table> -->
                 </div>
-                <div class="box-image">
-                  <img src="./images/welcome.png" alt="No image" />
-                </div>
-                <img src="./images/avatar.png" alt="No image" class="avatar" />
+              </div>
               </div>
 
               <!-- 2nd -->
               <br />
               <br />
               <br />
-
-              <!-- <div class="box">
-                <div
-                  class="box-section1"
-                  style="margin-bottom: unset !important"
-                >
-                  <div class="box-title">
-                    <h2>Tour Setups</h2>
-                  </div>
-                </div>
-                <div class="fourth-box-section2">
-                  <div
-                    class="small-box"
-                    id="trip-history"
-                    data-toggle="modal"
-                    data-target="#modalTripHistory"
-                  >
-                    <i class="fa fa-history fa-2x mb-10"></i>
-                    <h6>Trip History</h6>
-                  </div>
-
-                  <div
-                    class="small-box"
-                    id="manage-schedule"
-                    data-toggle="modal"
-                    data-target="#modalManageSchedule"
-                  >
-                    <i
-                      class="fad fa-business-time fa-circle-check fa-2x mb-10"
-                    ></i>
-                    <h6>Manage Schedule</h6>
-                  </div>
-
-                  <div
-                    class="small-box"
-                    id="update-info"
-                    data-toggle="modal"
-                    data-target="#modalUpdateInfo"
-                  >
-                    <i class="fa fa-eraser fa-2x mb-10"></i>
-                    <h6>Update Info</h6>
-                  </div>
-                </div>
-              </div> -->
-
               <!-- <a>Profile </a> -->
             </div>
-            <!-- 
-            <div class="box">
-              <div class="box-section1">
-                <div class="box-title">
-                  <h2>Quick Draft</h2>
-                  <p>Write A Draft For Your Ideas</p>
-                </div>
-              </div>
-              <form>
-                <input type="text" placeholder="Title" />
-                <textarea placeholder="Your Thoughts"></textarea>
-                <button type="submit">save</button>
-              </form>
-            </div> -->
           </div>
         </div>
       </main>
@@ -365,6 +310,7 @@
       </div>
     </div>
 
+    
     <!-- Modal For Update Info -->
     <div
       class="modal fade"
@@ -434,13 +380,76 @@
       </div>
     </div>
 
+    <!-- Modal For Driver Email -->
+    <div
+      class="modal fade"
+      id="modalEmailDriver"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalEmailDriverTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="margin: 0 auto; width: 50%;">
+          <div class="modal-header">
+            <h5 class="modal-title">Email Driver</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <h5>Set Password:</h5>
+            <div class="mb-3 row">
+              <label for="driver-password" class="col-3 col-form-label">Change Password</label>
+              <div class="col-7">
+                <input type="password" placeholder="Password" class="form-control new-row-input" id="driver-password" value="" autocomplete="off">
+              </div>
+
+              <input type="button" class="btn col-2 btn-primary" id="change-driver-password" value="Change">
+            </div>
+
+            <!-- <br /> -->
+            <hr>
+            <h5>Send Email to Driver:</h5>
+            <textarea class="form-control" id="email-driver-name" disabled style="height: 100px;">
+
+            </textarea>
+       
+            <div class="col-12 p-3" style="text-align: right;">
+              <input type="button" class="btn btn-secondary" id="btn-send-email" value="Send Email" disabled>
+            </div>
+
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="script/jquery.3.2.1.min.js"></script>
     <script src="assets/bootstrap/js/popper.js"></script>
     <script src="assets/datatable/datatables.min.js"></script>
     <script src="assets/bootstrap/js/bootstrap.js"></script>
     <script src="script/jquery-ui.js"></script>
+    <script src="script/multi-select.js"></script>
     <script src="script/iziToast.min.js"></script>
+    <!-- <script src="script/select2.min.js"></script> -->
     <script src="script/FullCalendar.js"></script>
+    <script src="script/loader.js" defer></script>
     <script src="script/calendar.js"></script>
     <script type="module" src="script/app.js"></script>
     <script src="script/script2.js" defer></script>

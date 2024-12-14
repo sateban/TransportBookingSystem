@@ -69,6 +69,10 @@ const firebaseConfig = {
   measurementId: "G-8JY53JQ3TT",
 };
 
+// For
+let isPageSchedule = window.location.href.includes("schedule");
+let isPageAnalytics = window.location.href.includes("analytics");
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -134,7 +138,126 @@ window.sanitizeText = (text) => {
     .replaceAll("]", "_");
 };
 
+function drawBookingChart(today, overall) {
+  // Set Data
+  const data = google.visualization.arrayToDataTable([
+    ["Contry", "Mhl"],
+    [`${today} Bookings Today`, today],
+    [`${overall} Overall Bookings`, overall],
+  ]);
+
+  // Set Options
+  const options = {
+    title: "",
+    is3D: true,
+  };
+
+  // Draw
+  const chart = new google.visualization.PieChart(
+    document.getElementById("myChart")
+  );
+  chart.draw(data, options);
+}
+
+function drawMonetizationChart(d) {
+  console.log(d);
+
+  const chartData = [["Driver ID", "Amount"]]; // Header row
+  const driverTotals = {};
+
+  Object.entries(d.income).forEach(([date, dateData]) => {
+    console.log(`Date: ${date}`);
+
+    // Loop through drivers on the given date
+    Object.entries(dateData.drivers).forEach(([driverId, driverData]) => {
+      // console.log(`  Driver ID: ${driverId}`);
+      // console.log(`  Amount: ${driverData.amount}`);
+      // console.log(`  Passenger Name: ${driverData.passenger_name}`);
+      // console.log(`  Total Distance: ${driverData.total_distance}`);
+      // console.log('  ---');
+      let driverName = d["users"]["drivers"][driverId]["drivername"];
+
+      Object.entries(driverData).forEach(([time, data]) => {
+        // console.log("Test", time, data);
+
+        if (!driverTotals[driverName]) {
+          driverTotals[driverName] = {
+            amount: 0,
+            id: driverId,
+          }; // Initialize if not already present
+        }
+
+        driverTotals[driverName].amount += data.amount; // Add the amount
+      });
+
+      // chartData.push([driverId, driverData.amount]);
+    });
+
+    console.log("---");
+  });
+
+  // console.log(driverTotals);
+
+  Object.entries(driverTotals).forEach(([id, amount]) => {
+    // console.log(id, amount.amount);
+    chartData.push([`P${amount.amount.toFixed(2)} - ${id}`, amount.amount]);
+    // chartData.push([id, `P${+amount.toFixed(2)}`]);
+  });
+
+  // Set Data
+  // const data = google.visualization.arrayToDataTable([
+  //   ["Contry", "Mhl"],
+  //   // [`${today} Bookings Today`, today],
+  //   // [`${overall} Overall Bookings`, overall],
+  // ]);
+  const data = google.visualization.arrayToDataTable(chartData);
+
+  // Set Options
+  const options = {
+    title: "Total Income",
+    // is3D: true,
+    // width: 800,
+    // height: "100%",
+    // hAxis: { title: "Date" },
+    // vAxis: { title: "Amount" },
+    is3D: true,
+    // bubble: { textStyle: { fontSize: 11 } },
+    slices: {
+      0: { offset: 0.05 },
+      1: { offset: 0.05 },
+      2: { offset: 0.05 },
+      3: { offset: 0.05 },
+    },
+    pieSliceText: "percentage", // Display percentage inside slices
+    pieStartAngle: 90,
+  };
+
+  // Draw
+  const chart = new google.visualization.PieChart(
+    document.getElementById("monetization-chart")
+  );
+  chart.draw(data, options);
+
+  return driverTotals;
+}
+
 $(document).ready(() => {
+  // $(function () {
+  //   $('[data-toggle="popover"]').popover();
+  // });
+
+  // $(".sd-CustomSelect").multipleSelect({
+  //   selectAll: false,
+  //   onOptgroupClick: function (view) {
+  //     $(view).parents("label").addClass("selected-optgroup");
+  //   },
+  // });
+
+  if (isPageSchedule || isPageAnalytics) {
+    google.charts.load("current", { packages: ["corechart"] });
+    google.charts.setOnLoadCallback(drawBookingChart);
+  }
+
   // if (window.location.href.includes("index")) {
   let lists2 = ``;
   let isAllowedToAppend = true;
@@ -146,7 +269,10 @@ $(document).ready(() => {
     // window.location.href = "admin.html";
   } else {
     // if(window.location.href.split("/")[3] != "index.html"){
-    if (!window.location.href.includes("index.html") && window.location.href.includes("admin.html")) {
+    if (
+      !window.location.href.includes("index.html") &&
+      window.location.href.includes("admin.html")
+    ) {
       window.location.href = "index.html";
     }
   }
@@ -155,64 +281,67 @@ $(document).ready(() => {
 
   let bookCount = 0;
   let overallBookCount = 0;
-  const booking = ref(database, "activity/booking");
-  onValue(booking, (snapshot) => {
-    const data = snapshot.val();
-    console.log(data);
 
-    let userData = [];
+  if (isPageAnalytics) {
+    const booking = ref(database, "activity/booking");
+    onValue(booking, (snapshot) => {
+      const data = snapshot.val();
+      console.log(data);
 
-    if (data) {
-      // if (isAllowedToAppend) {
-      // $("#btn-add-new").prev().remove();
-      // isAllowedToAppend = true;
-      // }
-      for (let d in data) {
-        let drivers = data[d].drivers;
+      let userData = [];
 
-        for (let driverid in drivers) {
-          let ts = drivers[driverid];
+      if (data) {
+        // if (isAllowedToAppend) {
+        // $("#btn-add-new").prev().remove();
+        // isAllowedToAppend = true;
+        // }
+        for (let d in data) {
+          let drivers = data[d].drivers;
+          // console.log("%c ddd" + d, "color: red");
 
-          for (let tsd in ts) {
-            if (!isNaN(tsd)) {
-              // console.log(formatTimestampToDate(+tsd));
-              console.log(formatTimestampToDate(+tsd), getCurrentDate("ymd-"))
-              if(formatTimestampToDate(+tsd) == getCurrentDate("ymd-")){
-                bookCount++;
-              }
+          for (let driverid in drivers) {
+            let ts = drivers[driverid];
 
-              overallBookCount++;
+            for (let tsd in ts) {
+              if (!isNaN(tsd)) {
+                // console.log(formatTimestampToDate(+tsd));
+                // console.log(formatTimestampToDate(+tsd), getCurrentDate("ymd-"));
+                if (formatTimestampToDate(+tsd) == getCurrentDate("ymd-")) {
+                  bookCount++;
+                }
 
-              for (let email in ts[tsd]) {
-                console.log(email);
-                let v = ts[tsd][email];
+                overallBookCount++;
 
-                userData.push({
-                  date: d,
-                  driver: driverid,
-                  rider: v.customerName,
-                  pickup_location: v.pickup_location,
-                  dropoff_location: v.dropoff_location
-                });
+                for (let email in ts[tsd]) {
+                  console.log(email);
+                  let v = ts[tsd][email];
+
+                  userData.push({
+                    date: d,
+                    driver: driverid,
+                    rider: v.customerName,
+                    pickup_location: v.pickup_location,
+                    dropoff_location: v.dropoff_location,
+                  });
+                }
               }
             }
           }
         }
-      }
 
-    //   {
-    //     "date": "2024-10-26",
-    //     "driver": "JG20241016NEN1675",
-    //     "rider": "Steven Jake Fajarillo",
-    //     "pickup_location": "E. Fernandez Road, Tinigaw, Estancia, Mobo, Kalibo, Aklan, Western Visayas, 5600, Philippines",
-    //     "dropoff_location": "Kalibo International Airport, Talisay, Kalibo, Aklan, Western Visayas, 5600, Philippines"
-    // }
-      console.log(userData);
-      let dlist = ""; 
+        //   {
+        //     "date": "2024-10-26",
+        //     "driver": "JG20241016NEN1675",
+        //     "rider": "Steven Jake Fajarillo",
+        //     "pickup_location": "E. Fernandez Road, Tinigaw, Estancia, Mobo, Kalibo, Aklan, Western Visayas, 5600, Philippines",
+        //     "dropoff_location": "Kalibo International Airport, Talisay, Kalibo, Aklan, Western Visayas, 5600, Philippines"
+        // }
+        console.log(userData);
+        let dlist = "";
 
-      for(let d in userData){
-        let dd = userData[d];
-        dlist +=  `
+        for (let d in userData) {
+          let dd = userData[d];
+          dlist += `
           <tr>
             <td>${dd.date}</td>
             <td>${dd.driver}</td>
@@ -222,14 +351,355 @@ $(document).ready(() => {
 
           </tr>
         `;
-      }
+        }
 
-      $("#total-bookings-data").html(dlist);
-      $("#total-booking-gen").text(bookCount + " Bookings Today");
-      $("#overall-total-booking-gen").text(overallBookCount + " Overall Bookings");
-    } else {
-      console.log("not connected");
+        $("#total-bookings-data").html(dlist);
+        $("#total-booking-gen").text(bookCount + " Bookings Today");
+        $("#overall-total-booking-gen").text(
+          overallBookCount + " Overall Bookings"
+        );
+
+        drawBookingChart(bookCount, overallBookCount);
+
+        $("#tbl-total-bookings").DataTable({
+          searching: true,
+          responsive: true,
+          // columnDefs: [
+          //   { visible: false,
+          //     targets: [0] }
+          // ],
+          ordering: true,
+          // processing: false,
+          // serverSide: false,
+          destroy: true,
+          info: false,
+          language: {
+            emptyTable: "No entries to show",
+            infoEmpty: "No entries to show",
+          },
+        });
+      } else {
+        console.log("not connected");
+      }
+    });
+  }
+
+  if (isPageAnalytics) {
+    const monetization = ref(database, "/");
+    onValue(monetization, (snapshot) => {
+      const data = snapshot.val();
+
+      let userData = [];
+
+      if (data) {
+        let driverTotals = drawMonetizationChart(data);
+        // console.log("HERE!!", driverTotals);
+
+        let dlist = "";
+
+        Object.entries(driverTotals).forEach(([id, value]) => {
+          // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
+          // chartData.push([id, `P${+amount.toFixed(2)}`]);
+          let totalBooking = 0;
+
+          Object.entries(data.income).forEach(([date, dateData]) => {
+            // Loop through drivers on the given date
+            Object.entries(dateData.drivers).forEach(([driverId, driverData]) => {
+              if(value.id == driverId){
+                console.log("Sample", driverId, Object.keys(driverData).length);
+                totalBooking += Object.keys(driverData).length;
+
+              }
+            });
+          });
+
+          dlist += `
+          <tr driverid="${value.id}">
+            <td id="driver-name">${id}</td>
+            <td>P${value.amount.toFixed(2)}</td>
+            <td>${totalBooking}</td>
+          </tr>
+        `;
+        });
+
+        $("#monetized-data").html(dlist);
+
+        $("#tbl-monetization").DataTable({
+          searching: true,
+          responsive: true,
+          // columnDefs: [
+          //   { visible: false,
+          //     targets: [0] }
+          // ],
+          ordering: true,
+          // processing: false,
+          // serverSide: false,
+          destroy: true,
+          info: false,
+          language: {
+            emptyTable: "No entries to show",
+            infoEmpty: "No entries to show",
+          },
+        });
+      } else {
+        console.log("not connected");
+      }
+    });
+  }
+
+  function validatePassword(password) {
+    /**
+     * Validates a password based on the following rules:
+     * - At least 8 characters long.
+     * - Contains at least one uppercase letter.
+     * - Contains at least one lowercase letter.
+     * - Contains at least one digit.
+     * - Contains at least one special character.
+     *
+     * @param {string} password - The password to validate.
+     * @returns {Object} - An object with isValid (boolean) and message (string).
+     */
+
+    const rules = [
+      {
+        regex: /.{8,}/,
+        message: "Password must be at least 8 characters long.",
+      },
+      {
+        regex: /[A-Z]/,
+        message: "Password must contain at least one uppercase letter.",
+      },
+      {
+        regex: /[a-z]/,
+        message: "Password must contain at least one lowercase letter.",
+      },
+      {
+        regex: /\d/,
+        message: "Password must contain at least one digit.",
+      },
+      // {
+      //   regex: /[!@#$%^&*(),.?":{}|<>]/,
+      //   message: "Password must contain at least one special character.",
+      // },
+      {
+        regex: /^[^.#$[\]/]*$/,
+        message:
+          "Password cannot contain invalid Firebase characters (., #, $, [, ], /).",
+      },
+    ];
+
+    for (let rule of rules) {
+      if (!rule.regex.test(password)) {
+        return { isValid: false, message: rule.message };
+      }
     }
+
+    return { isValid: true, message: "Password is valid." };
+  }
+
+  $("#change-driver-password").on("click", () => {
+    let password = $("#driver-password").val();
+
+    const result = validatePassword(password);
+    // console.log(result.message);
+
+    if (result.isValid) {
+      iziToast.info({
+        title: "Password Valid",
+        message: `Please prepare email to Driver`,
+        icon: "fa fa-check",
+        position: "topRight",
+        timeout: 3000,
+      });
+
+      $("#email-driver-name").attr("disabled", false);
+      $("#btn-send-email").attr("disabled", false);
+
+      let email = $("#email-driver-name").attr("email");
+      let driverid = $("#email-driver-name").attr("driverid");
+
+      $("#email-driver-name").text(
+        `Hi ${email},
+  Your new password is: ${$("#driver-password").val()}
+        
+Regards,
+Napat Tours Admin`
+      );
+
+      // Modify Firebase password
+      const updates = {};
+      updates[`/users/drivers/${driverid}/driverpassword`] = password;
+      console.log(updates);
+      update(ref(database), updates)
+        .then(() => {
+          // iziToast.success({
+          //   title: "Successfully Saved",
+          //   message: `${blurrednode.toUpperCase()} has been saved`,
+          //   icon: "fa fa-save",
+          //   position: "topRight",
+          //   timeout: 3000,
+          // });
+        })
+        .catch((error) => {
+          // iziToast.warning({
+          //   title: "Save Failed",
+          //   message: `${error}`,
+          //   icon: "fa fa-bell-exclamation",
+          //   position: "topRight",
+          //   timeout: 4000,
+          // });
+        });
+    } else {
+      iziToast.warning({
+        title: "Incorrect Password Format",
+        message: `${result.message}`,
+        icon: "fa fa-info",
+        position: "topRight",
+        timeout: 3000,
+      });
+
+      $("#email-driver-name").attr("disabled", true);
+      $("#btn-send-email").attr("disabled", true);
+      $("#email-driver-name").text("");
+    }
+  });
+
+  $("#list-of-drivers").on("dblclick", ".message-driver", (e) => {
+    let email = $(e.target).text();
+    let driverid = $(e.target).attr("driverid");
+    console.log(email, driverid);
+
+    $("#email-driver-name").attr("email", email);
+    $("#email-driver-name").attr("driverid", driverid);
+    $("#driver-password").val("");
+
+    $("#modalEmailDriver").modal("show");
+  });
+
+  $("#btn-send-email").on("click", (e) => {
+    iziToast.destroy();
+    iziToast.info({
+      title: "Sending Email",
+      message: `Please wait...`,
+    });
+
+    var formData = new FormData();
+    formData.append("email", $("#email-driver-name").attr("email"));
+    formData.append("subject", "Password Changed");
+
+    formData.append(
+      "message",
+      $("#email-driver-name").val().replaceAll("\n", "<br>")
+    );
+
+    $.ajax({
+      // url: "https://656697eb-cfef-4289-a1dd-7690085a678e-00-sw9o9mqxrpk3.pike.replit.dev/send_email",
+      url: "https://9000-idx-napattours-1733320678728.cluster-e3wv6awer5h7kvayyfoein2u4a.cloudworkstations.dev/send_email",
+      method: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      xhrFields: {
+        // responseType: "blob",
+      },
+      success: function (data, textStatus, jqXHR) {
+        iziToast.destroy();
+        iziToast.success({
+          title: "Success",
+          message: `Email successfully sent to ${$("#email-driver-name").attr(
+            "email"
+          )}`,
+        });
+      },
+      error: (e) => {
+        iziToast.destroy();
+        iziToast.warning({
+          title: "Email Not Sent",
+          message: `Please try again later (${e})`,
+        });
+      },
+      done: () => {},
+    });
+  });
+
+  $("#monetized-data").on("dblclick", "tr", (e) => {
+    let name = $(e.target).parent().find("#driver-name").text();
+    // console.log($(e.target).parent().find("#driver-name"));
+
+    let id = $(e.target).eq(0).parent().attr("driverid").trim();
+    $("#income-driver-name").text(name);
+    $("#modalIndividualIncome").modal("show");
+
+    const indMonetization = ref(database, "income/");
+    onValue(indMonetization, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        console.log("INCOME", id, data);
+        // let dlist = "";
+        let dlist = [];
+
+        Object.entries(data).forEach(([date, driver]) => {
+          // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
+          // chartData.push([id, `P${+amount.toFixed(2)}`]);
+          Object.entries(driver).forEach(([d, drivers]) => {
+            // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
+            // chartData.push([id, `P${+amount.toFixed(2)}`]);
+
+            Object.entries(drivers).forEach(([driverid, driverdata]) => {
+              if (driverid == id) {
+                Object.entries(driverdata).forEach(([time, timedata]) => {
+                  // console.log(time, timedata);
+
+                  // dlist += `
+                  //   <tr>
+                  //     <td>${date}</td>
+                  //     <td>${time.replaceAll("-", ":")}</td>
+                  //     <td>P${timedata.amount.toFixed(2)}</td>
+                  //   </tr>
+                  // `;
+                  dlist.push({
+                    date: date,
+                    time: time.replaceAll("-", ":"),
+                    earning: "P" + timedata.amount.toFixed(2),
+                  });
+                });
+              }
+            });
+          });
+        });
+
+        // $("#individual-income").html(dlist);
+        // console.log("writing HTML", dlist);
+
+        $("#tbl-individual-income").DataTable({
+          data: dlist,
+          columns: [
+            { data: "date" }, // Column for Date
+            { data: "time" }, // Column for Time
+            { data: "earning" }, // Column for Earning
+          ],
+          searching: true,
+          responsive: true,
+          // columnDefs: [
+          //   { visible: false,
+          //     targets: [0] }
+          // ],
+          ordering: true,
+          // processing: false,
+          // serverSide: false,
+          destroy: true,
+          info: false,
+          language: {
+            emptyTable: "No entries to show",
+            infoEmpty: "No entries to show",
+          },
+        });
+
+        dlist = "";
+      } else {
+        console.log("not connected");
+      }
+    });
   });
 
   function formatTimestampToDate(timestamp) {
@@ -243,6 +713,22 @@ $(document).ready(() => {
     // Return the formatted date
     return `${year}-${month}-${day}`;
   }
+
+  window.formatTimestampToDateAll = (timestamp) => {
+    const date = new Date(timestamp);
+
+    const year = date.getFullYear(); // Get the full year (yyyy)
+    const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
+
+    // Extract hours, minutes, and seconds
+    const hours = String(date.getHours()).padStart(2, "0"); // Get the hour (hh) and ensure it is two digits
+    const minutes = String(date.getMinutes()).padStart(2, "0"); // Get the minutes (mm) and ensure it is two digits
+    const seconds = String(date.getSeconds()).padStart(2, "0"); // Get the seconds (ss) and ensure it is two digits
+
+    // Return the formatted date and time
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
 
   const connectedRef = ref(database, "users/");
   onValue(connectedRef, (snapshot) => {
@@ -272,7 +758,7 @@ $(document).ready(() => {
         lists += `<td>${d[driver].drivername}</td>`;
         // lists2 += `<td col="drivername">${d[driver].drivername}</td>`;
 
-        lists += `<td>${d[driver].driveremail}</td>`;
+        lists += `<td driverid="${driver}" class="message-driver" title="Double click to send message to driver">${d[driver].driveremail}</td>`;
         // lists2 += `<td col="email">${d[driver].email}</td>`;
 
         // lists2 += `<td col="password">${d[driver].password}</td>`;
@@ -349,7 +835,7 @@ $(document).ready(() => {
       }
 
       $("#list-of-drivers").html(lists);
-      console.log(lists);
+      // console.log(lists);
       // $("#btn-add-new").prev().remove();
       // isAllowedToAppend = true;
       // }
@@ -372,25 +858,9 @@ $(document).ready(() => {
   }
 
   // On Total Bookings click
-  $("#total-booking").on("click", () => {
-    $("#tbl-total-bookings").DataTable({
-      searching: true,
-      responsive: true,
-      // columnDefs: [
-      //   { visible: false,
-      //     targets: [0] }
-      // ],
-      ordering: true,
-      // processing: false,
-      // serverSide: false,
-      destroy: true,
-      info: false,
-      language: {
-        emptyTable: "No entries to show",
-        infoEmpty: "No entries to show",
-      },
-    });
-  });
+  // $("#total-booking").on("click", () => {
+
+  // });
 
   // On UpdateInfo click
   $("#update-info").on("click", () => {
@@ -587,6 +1057,20 @@ $(document).ready(() => {
     </tr>
   `;
 
+    var newScheduleRow = `
+  <tr style="align-items: center;">
+    <td>
+      <input type="text" class="new-row-input" id="day-schedule" placeholder="Enter Schedule Day (M,T,W,Th,F,Sat,Sun)" autocomplete="off"/>
+    </td>
+    <td>
+      <input type="time" class="new-row-input" id="start-time" placeholder="Start Time" autocomplete="off"/>
+    </td>
+    <td>
+      <input type="time" class="new-row-input" id="start-end" placeholder="End Time" autocomplete="off"/>
+    </td>
+  </tr>
+`;
+
     $("#btn-add-new").on("click", () => {
       // console.log("Test");
       // Append the new row before the row with id 'btn-add-new'
@@ -686,6 +1170,301 @@ $(document).ready(() => {
         }
       }
     });
+
+    if (isPageSchedule) {
+      //
+      const connectedRef = ref(database, "users/");
+      onValue(connectedRef, (snapshot) => {
+        const data = snapshot.val();
+        console.log(data);
+
+        // Prepare list of drivers
+        let lists = ``;
+        let b = $("#list-of-drivers").html();
+
+        // $("#list-of-drivers")
+        //   .find("tr")
+        //   .each((i, v) => {
+        //     $(v).remove();
+        //   });
+
+        if (data) {
+          // if (isAllowedToAppend) {
+          let d = data.drivers;
+          for (let driver in d) {
+            lists += `<tr driverid="${driver}">`;
+
+            lists += `<td>${d[driver].drivername}</td>`;
+
+            lists += `<td>${d[driver].schedule.day_available}</td>`;
+
+            lists += `<td>${d[driver].schedule.start}</td>`;
+
+            lists += `<td>${d[driver].schedule.end}</td>`;
+
+            lists += `</tr>`;
+          }
+
+          $("#list-of-schedule").html(lists);
+          // console.log(lists);
+          // $("#btn-add-new").prev().remove();
+          // isAllowedToAppend = true;
+          // }
+        } else {
+          console.log("not connected");
+        }
+      });
+
+      // add schedule
+      // $("#btn-add-schedule").on("click", () => {
+      //   // console.log("Test");
+      //   // Append the new row before the row with id 'btn-add-new'
+
+      //   console.log(getCurrentDate("ymd-"));
+
+      //   // Remove Add button with Check
+      //   if ($("#encode-add i").hasClass("fa-plus-circle")) {
+      //     if (allowNewRow) {
+      //       $("#btn-add-schedule").before(newScheduleRow);
+      //       $("#date-account-registered").val(getCurrentDate("ymd-"));
+      //       $("#encode-add i").removeClass("fa-plus-circle");
+
+      //       $("#encode-add i").addClass("fa-check");
+      //       $("#encode-add i").css("color", "#00c700");
+      //     } else {
+      //       iziToast.warning({
+      //         // title: "Invalid Input",
+      //         message: `Please complete all inputs to add new one`,
+      //         icon: "fa fa-bell-exclamation",
+      //         position: "topRight",
+      //         timeout: 4000,
+      //       });
+      //     }
+      //   }
+      //   // Remove check button with Add
+      //   else {
+      //     // Done encoding, verify content for non-empty values
+      //     let data = validateEncode($("#btn-add-schedule"));
+
+      //     if (!allowNewRow) {
+      //       iziToast.warning({
+      //         // title: "Invalid Input",
+      //         message: `Please complete all inputs to add new one`,
+      //         icon: "fa fa-bell-exclamation",
+      //         position: "topRight",
+      //         timeout: 4000,
+      //       });
+      //     } else {
+      //       $("#encode-add i").removeClass("fa-check");
+      //       $("#encode-add i").addClass("fa-plus-circle");
+      //       $("#encode-add i").css("color", "#212529");
+
+      //       // iziToast.success({
+      //       //   title: "Success",
+      //       //   message: `Validations complete, saving to database`,
+      //       //   icon: "fa fa-bell-exclamation",
+      //       //   position: "topRight",
+      //       //   timeout: 4000,
+      //       // });
+      //       isAllowedToAppend = false;
+
+      //       // Save to database
+      //       // const updates = {};
+      //       // updates[`/users/drivers/${data["drivername"]}`] = data;
+      //       // console.log(updates);
+      //       // update(ref(database), updates)
+      //       //   .then(() => {
+      //       //     iziToast.success({
+      //       //       title: "Successfully Saved",
+      //       //       message: `Driver's data has been saved`,
+      //       //       icon: "fa fa-save",
+      //       //       position: "topRight",
+      //       //       timeout: 4000,
+      //       //     });
+
+      //       //     // setTimeout(() => {
+      //       //     window.location.href = window.location.href;
+      //       //     // }, 1500);
+      //       //   })
+      //       //   .catch((error) => {
+      //       //     // iziToast.destroy();
+      //       //     iziToast.warning({
+      //       //       title: "Save Failed",
+      //       //       message: `${error}`,
+      //       //       icon: "fa fa-bell-exclamation",
+      //       //       position: "topRight",
+      //       //       timeout: 4000,
+      //       //     });
+      //       //     console.error("Update failed:", error);
+      //       //   });
+      //     }
+      //   }
+      // });
+
+      //
+      $("#list-of-schedule").on("dblclick", "td", (e) => {
+        let i = $(e.target).index();
+
+        // e.target can be INPUT, on dblclick multiple inputs are being rendered
+        // added this line to make sure whenever TD is activated only will it render the input
+        if (e.target.nodeName == "TD") {
+          if (i == 1) {
+            let day = $(e.target).text();
+            $(e.target).html(
+              `<input type="text" value="${day}"> <i class="fa fa-check save-day-schedule" style="color: green; cursor: pointer" title="Save"></i>`
+            );
+          } else if (i == 2) {
+            $(e.target).html(
+              `<input type="time"> <i class="fa fa-check save-start-schedule" step="1800" style="color: green; cursor: pointer" title="Save"></i>`
+            );
+          } else if (i == 3) {
+            $(e.target).html(
+              `<input type="time"> <i class="fa fa-check save-end-schedule" step="1800" style="color: green; cursor: pointer" title="Save"></i>`
+            );
+          }
+        }
+      });
+
+      $("#list-of-schedule").on("blur", "td", (e) => {
+        let day = $(e.target).val();
+        $(e.target).html(`<td>${day}</td>`);
+        console.log("Blurred");
+      });
+
+      // List of Schedule - Day
+      $("#list-of-schedule").on("click", ".save-day-schedule", (e) => {
+        let day = $(e.target).parent().find("input").val().toUpperCase();
+        let driverid = $(e.target).parent().parent().attr("driverid");
+        console.log(driverid);
+
+        let splitDay = day.split(",");
+        let dayList = ["M", "T", "W", "TH", "F", "SAT", "SUN"];
+
+        let notFoundDays = splitDay.filter((value) => !dayList.includes(value));
+
+        if (notFoundDays.length > 0) {
+          iziToast.warning({
+            title: "Invalid input Days",
+            message: `"${notFoundDays.join(", ")}" not found`,
+            icon: "fa fa-check",
+            position: "topRight",
+            timeout: 3000,
+          });
+        } else {
+          // iziToast.info({
+          //   title: "Saving",
+          //   message: `"Please wait...`,
+          //   icon: "fa fa-info",
+          //   position: "topRight",
+          //   timeout: 3000,
+          // });
+
+          // Modify Firebase password
+          const updates = {};
+          updates[`/users/drivers/${driverid}/schedule/day_available`] = day;
+          console.log(updates);
+          update(ref(database), updates)
+            .then(() => {
+              iziToast.success({
+                title: "Successfully Saved",
+                // message: `${blurrednode.toUpperCase()} has been saved`,
+                icon: "fa fa-save",
+                position: "topRight",
+                timeout: 3000,
+              });
+            })
+            .catch((error) => {
+              iziToast.warning({
+                title: "Save Failed",
+                message: `${error}`,
+                icon: "fa fa-bell-exclamation",
+                position: "topRight",
+                timeout: 4000,
+              });
+            });
+        }
+      });
+
+      // List of Schedule - Time Start
+      $("#list-of-schedule").on("click", ".save-start-schedule", (e) => {
+        let time = $(e.target).parent().find("input").val().trim();
+        let driverid = $(e.target).parent().parent().attr("driverid");
+        console.log(driverid);
+
+        if (time == "") {
+          iziToast.warning({
+            title: "Please enter Start Time",
+            icon: "fa fa-check",
+            position: "topRight",
+            timeout: 3000,
+          });
+        } else {
+          // Modify Firebase password
+          const updates = {};
+          updates[`/users/drivers/${driverid}/schedule/start`] = time;
+          console.log(updates);
+          update(ref(database), updates)
+            .then(() => {
+              iziToast.success({
+                title: "Successfully Saved",
+                // message: `${blurrednode.toUpperCase()} has been saved`,
+                icon: "fa fa-save",
+                position: "topRight",
+                timeout: 3000,
+              });
+            })
+            .catch((error) => {
+              iziToast.warning({
+                title: "Save Failed",
+                message: `${error}`,
+                icon: "fa fa-bell-exclamation",
+                position: "topRight",
+                timeout: 4000,
+              });
+            });
+        }
+      });
+
+      // List of Schedule - Time End
+      $("#list-of-schedule").on("click", ".save-end-schedule", (e) => {
+        let time = $(e.target).parent().find("input").val().trim();
+        let driverid = $(e.target).parent().parent().attr("driverid");
+        console.log(driverid);
+
+        if (time == "") {
+          iziToast.warning({
+            title: "Please enter End Time",
+            icon: "fa fa-check",
+            position: "topRight",
+            timeout: 3000,
+          });
+        } else {
+          // Modify Firebase password
+          const updates = {};
+          updates[`/users/drivers/${driverid}/schedule/end`] = time;
+          console.log(updates);
+          update(ref(database), updates)
+            .then(() => {
+              iziToast.success({
+                title: "Successfully Saved",
+                // message: `${blurrednode.toUpperCase()} has been saved`,
+                icon: "fa fa-save",
+                position: "topRight",
+                timeout: 3000,
+              });
+            })
+            .catch((error) => {
+              iziToast.warning({
+                title: "Save Failed",
+                message: `${error}`,
+                icon: "fa fa-bell-exclamation",
+                position: "topRight",
+                timeout: 4000,
+              });
+            });
+        }
+      });
+    }
   });
 
   function validateEncode(o) {
@@ -794,6 +1573,24 @@ $(document).ready(() => {
     return new Promise((resolve, reject) => {
       const users = ref(database, "users/drivers");
       get(users).then((snap) => {
+        let data = snap.val();
+
+        console.log(snap.exists());
+        if (snap.exists()) {
+          // console.log(data);
+          resolve(data);
+        } else {
+          reject([]);
+        }
+      });
+    });
+    // return users;
+  };
+
+  window.getDriverSchedule = () => {
+    return new Promise((resolve, reject) => {
+      const schedule = ref(database, "users/drivers/");
+      get(schedule).then((snap) => {
         let data = snap.val();
 
         console.log(snap.exists());
