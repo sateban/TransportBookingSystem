@@ -2242,6 +2242,7 @@ $("#btn-done").on("click", (e) => {
                             pickup_coordinates_lng: picklng,
                             pickup_location: pickname,
                             totalDistance: totalDistance,
+                            scheduledDate: pickingSchedule,
                           };
 
                           console.log("totalDistance", totalDistance);
