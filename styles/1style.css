@@ -102,11 +102,11 @@ a {
 .left {
   background-color: var(--ccc-color);
 }
-.left::before {
+/* .left::before {
   content: "\f00d";
   color: var(--ccc-color);
   right: 43px;
-}
+} */
 div.loader {
   height: 100vh;
   width: 100%;
@@ -2620,4 +2620,16 @@ main .projects-box .projects-box-section2 table tr td a.rejected {
 }
 .main-content .plans-boxes .plan-box ul li:last-child p {
   color: var(--third-color);
+}
+
+
+/* #option-year, #option-revenue {
+} */
+
+.btn-delete-user:hover {
+  color: rgb(255, 57, 57);
+}
+
+.btn-update-user:hover {
+  color: rgb(0, 136, 255);
 }
