@@ -71,7 +71,9 @@ const firebaseConfig = {
 
 // For
 let isPageSchedule = window.location.href.includes("schedule");
-let isPageAnalytics = window.location.href.includes("analytics");
+let isPageAnalytics =
+  window.location.href.includes("analytics") ||
+  window.location.href.includes("reports");
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -96,6 +98,77 @@ onValue(connectedRef, (snapshot) => {
     console.log("not connected");
   }
 });
+
+function formatTimestampToDate(timestamp) {
+  // Create a new Date object from the timestamp
+  const date = new Date(timestamp);
+  // Extract the year, day, and month
+  const year = date.getFullYear(); // Get the full year (yyyy)
+  const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
+
+  // Return the formatted date
+  return `${year}-${month}-${day}`;
+}
+
+function convertToTimestamp(dateString) {
+  // Parse the date string into a JavaScript Date object
+  const date = new Date(dateString);
+
+  // Check if the Date object is valid
+  if (isNaN(date.getTime())) {
+    throw new Error("Invalid date format. Please use YYYY-MM-DD.");
+  }
+
+  // Return the Unix timestamp (in seconds)
+  // return Math.floor(date.getTime() / 1000);
+  return date.getTime();
+}
+
+function formatMonthName(value) {
+  // Create a new Date object from the timestamp
+  let monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+    "Total",
+  ];
+
+  return monthNames[value];
+}
+
+function formatTimestampToYear(timestamp) {
+  // Create a new Date object from the timestamp
+  const date = new Date(timestamp);
+  const year = date.getFullYear(); // Get the full year (yyyy)
+
+  return year;
+}
+
+function formatTimestampToMonth(timestamp) {
+  // Create a new Date object from the timestamp
+  const date = new Date(timestamp);
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
+
+  return month;
+}
+
+function formatTimestampToDay(timestamp) {
+  // Create a new Date object from the timestamp
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
+
+  return day;
+}
 
 // General Function Helper
 window.getCurrentDate = (format) => {
@@ -126,6 +199,14 @@ window.getCurrentDate = (format) => {
     return `${year}/${month}/${day}`;
   } else if (format == "mdyt") {
     return `${monthNames[today.getMonth()]} ${day}, ${year}`;
+  } else if (format == "m") {
+    return `${monthNames[today.getMonth()]}`;
+  } else if (format == "mn") {
+    // month name
+    return today.getMonth + 1;
+  } else if (format == "y") {
+    // month name
+    return year;
   }
 };
 
@@ -152,6 +233,8 @@ function drawBookingChart(today, overall) {
     is3D: true,
   };
 
+  $("#text-overall-booking").text(overall);
+
   // Draw
   const chart = new google.visualization.PieChart(
     document.getElementById("myChart")
@@ -164,9 +247,14 @@ function drawMonetizationChart(d) {
 
   const chartData = [["Driver ID", "Amount"]]; // Header row
   const driverTotals = {};
+  let driverIncomeInd = {};
 
   Object.entries(d.income).forEach(([date, dateData]) => {
-    console.log(`Date: ${date}`);
+    let tsDate = convertToTimestamp(date);
+    let fYear = +formatTimestampToYear(tsDate);
+    let fMonth = formatTimestampToMonth(tsDate);
+
+    console.log(`Date: ${date}, tsDate: ${formatTimestampToMonth(tsDate)}`);
 
     // Loop through drivers on the given date
     Object.entries(dateData.drivers).forEach(([driverId, driverData]) => {
@@ -180,6 +268,21 @@ function drawMonetizationChart(d) {
       Object.entries(driverData).forEach(([time, data]) => {
         // console.log("Test", time, data);
 
+        if (!driverIncomeInd[driverId]) {
+          driverIncomeInd[driverId] = {};
+          // console.log("Initialized driverIncomeInd");
+        }
+
+        if (!driverIncomeInd[driverId][fYear]) {
+          driverIncomeInd[driverId][fYear] = {};
+          // console.log("Initialized driverIncomeInd");
+        }
+
+        if (!driverIncomeInd[driverId][fYear][fMonth]) {
+          driverIncomeInd[driverId][fYear][fMonth] = {};
+          // console.log("Initialized driverIncomeInd");
+        }
+
         if (!driverTotals[driverName]) {
           driverTotals[driverName] = {
             amount: 0,
@@ -188,6 +291,18 @@ function drawMonetizationChart(d) {
         }
 
         driverTotals[driverName].amount += data.amount; // Add the amount
+
+        // console.log(`driverIncomeInd: driverId: ${driverId}, date: ${date}, fYear: ${fYear}, fMonth: ${fMonth}`);
+        // let vYear = fYear;
+        let incomeMonth =
+          driverIncomeInd[driverId][fYear][fMonth]["income"] || 0;
+        let bookingMonth =
+          driverIncomeInd[driverId][fYear][fMonth]["booking"] || 0;
+
+        // console.log("data.amount", incomeMonth);
+        driverIncomeInd[driverId][fYear][fMonth]["income"] =
+          incomeMonth + data.amount;
+        driverIncomeInd[driverId][fYear][fMonth]["booking"] = bookingMonth + 1;
       });
 
       // chartData.push([driverId, driverData.amount]);
@@ -195,6 +310,8 @@ function drawMonetizationChart(d) {
 
     console.log("---");
   });
+
+  // console.log("driverIncomeInd", driverIncomeInd);
 
   // console.log(driverTotals);
 
@@ -238,12 +355,12 @@ function drawMonetizationChart(d) {
   );
   chart.draw(data, options);
 
-  return driverTotals;
+  return { driverTotals, driverIncomeInd };
 }
 
 $(document).ready(() => {
   // $(function () {
-  //   $('[data-toggle="popover"]').popover();
+  $('[data-toggle="popover"]').popover();
   // });
 
   // $(".sd-CustomSelect").multipleSelect({
@@ -255,7 +372,7 @@ $(document).ready(() => {
 
   if (isPageSchedule || isPageAnalytics) {
     google.charts.load("current", { packages: ["corechart"] });
-    google.charts.setOnLoadCallback(drawBookingChart);
+    // google.charts.setOnLoadCallback(drawBookingChart);
   }
 
   // if (window.location.href.includes("index")) {
@@ -277,10 +394,75 @@ $(document).ready(() => {
     }
   }
 
-  $("#date-today").text(getCurrentDate("mdyt") + " Bookings");
+  // $("#date-today").text(getCurrentDate("mdyt") + " Bookings");
+
+  // let selOption = "";
+  // selOption += `
+
+  // `;
+  $("#option-year, #option-revenue").append(
+    new Option(getCurrentDate("y") - 1, getCurrentDate("y") - 1)
+  );
+  $("#option-year, #option-revenue").append(
+    new Option(getCurrentDate("y"), getCurrentDate("y"))
+  );
+  $("#option-year, #option-revenue").append(
+    new Option(getCurrentDate("y") + 1, getCurrentDate("y") + 1)
+  );
+
+  $("#option-year, #option-revenue").val(getCurrentDate("y"));
+
+  $("#option-revenue-month").append(new Option("Overall", 0));
+
+  for (let i = 1; i <= 12; i++) {
+    $("#option-revenue-month").append(new Option(formatMonthName(i - 1), i));
+  }
+
+  // $("#option-revenue-month").val(new Date().getMonth());
+  $("#option-revenue-month").val(0);
+
+  // $("#option-year").append(new Option("2025", 2025));
+
+  // $("#option-year").append(
+  //   new Option("getCurrentDate", "hahaha")
+  // );
+  // $("#Bookings").append(getCurrentDate("y"));
 
   let bookCount = 0;
   let overallBookCount = 0;
+
+  let monthColor = [
+    "#4a8dff",
+    "#f84964",
+    "#f84998",
+    "#bd49f8",
+    "#26b1dc",
+    "#46a455",
+    "#a6a992",
+    "#e9e54f",
+    "#ffa62c",
+    "#ffa9a9",
+    "#484848",
+    "#93c739",
+    "#00855d", // Total
+  ];
+
+  $("#calendar").datepicker({
+    inline: true,
+    firstDay: 1,
+    showOtherMonths: true,
+    dayNamesMin: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  });
+
+  // Set current date
+  $("#calendar").datepicker("setDate", new Date());
+
+  // $('#calendar-test').datepicker({
+  //   inline:true,
+  //   firstDay: 1,
+  //   showOtherMonths:true,
+  //   dayNamesMin:['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  // });
 
   if (isPageAnalytics) {
     const booking = ref(database, "activity/booking");
@@ -289,6 +471,7 @@ $(document).ready(() => {
       console.log(data);
 
       let userData = [];
+      let dateData = {};
 
       if (data) {
         // if (isAllowedToAppend) {
@@ -310,10 +493,45 @@ $(document).ready(() => {
                   bookCount++;
                 }
 
+                // console.log("formatTimestampToYear", formatTimestampToMonth(+tsd));
+
+                // if(!dateData[yearKey]){
+                let count = 0;
+                let dayCount = 0;
+                let yearKey = +formatTimestampToYear(+tsd);
+                let monthKey = +formatTimestampToMonth(+tsd);
+                let dayKey = +formatTimestampToDay(+tsd);
+
+                // console.log("dayKey", dayKey);
+
+                // Ensure `dateData[yearKey]` exists
+                if (!dateData[yearKey]) {
+                  dateData[yearKey] = {};
+                }
+
+                // Ensure `dateData[yearKey][monthKey]` exists
+                if (!dateData[yearKey][monthKey]) {
+                  dateData[yearKey][monthKey] = {};
+                }
+
+                // Ensure count is set correctly
+                count = dateData[yearKey][monthKey].monthCount || 0;
+                dayCount = dateData[yearKey][monthKey][dayKey] || 0;
+
+                // Update `dateData` with the new structure
+                dateData[yearKey] = {
+                  ...dateData[yearKey],
+                  [monthKey]: {
+                    ...dateData[yearKey][monthKey],
+                    [dayKey]: dayCount + 1,
+                    monthCount: count + 1,
+                  },
+                };
+
                 overallBookCount++;
 
                 for (let email in ts[tsd]) {
-                  console.log(email);
+                  // console.log(email);
                   let v = ts[tsd][email];
 
                   userData.push({
@@ -327,6 +545,496 @@ $(document).ready(() => {
               }
             }
           }
+        }
+
+        console.log("dateData", dateData);
+
+        let pageList = `<div class='row' style='text-align: center; font-weight: bold; margin-bottom: 15px;'>
+            <div class='col-2'>Month</div>
+            <div class='col-4'>Overall Booking</div>
+            <div class='col-6'>Calendar</div>
+          </div>
+          
+          <div class='row'>
+              <div class="col-6">
+          
+          `;
+        let pageList2 = pageList;
+        let selectedYear = $("#option-year").val();
+
+        displayBookingData(selectedYear);
+
+        $("#option-year")
+          .off("change")
+          .on("change", (e) => {
+            selectedYear = $(e.target).val();
+            displayBookingData($(e.target).val());
+            // renderCal(1);
+            progressClick();
+          });
+
+        progressClick();
+        function progressClick() {
+          $(".progress-add")
+            .off("click")
+            .on("click", (e) => {
+              let monthName = $(e.target).attr("month");
+              let monthIndex = +$(e.target).attr("monthIndex");
+              let totalMonthCount = +$(e.target).attr("totalMonthCount");
+
+              if (monthName != "Total") {
+                // let dayCalendar = $(e.target)
+                //   .parent()
+                //   .parent()
+                //   .parent()
+                //   .find(".day-calendar");
+                // console.log(dayCalendar);
+
+                // $(".day-calendar").each((i, d) => {
+                //   if ($(d).css("display") == "block") {
+                //     $(d).css("display", "none");
+                //   }
+                // });
+
+                // dayCalendar.css()
+                // let calendarPage = `
+                //   <div id="calendar-${monthName.toLowerCase()}"
+                //     style="
+                //       /*width: 50%;
+                //       max-width: 100px;
+                //       height: 100px;
+                //       overflow: hidden;*/
+                //       border: 1px solid #ddd;
+                //     "
+                //     class="day-calendar-month"
+                //   >${monthName}</div>
+                // `;
+                // dayCalendar.css()
+                let calendarPage = `
+              <div class="group header">
+                <!--<p class="left pointer minusmonth">&laquo;</p>-->
+                <p " class="left monthname center pointer" style="background: white"></p>
+                <!--<p class="right pointer addmonth">&raquo;</p>-->
+              </div>
+              <ul class="group" style="padding: 2px">
+                <li>Mo</li>
+                <li>Tu</li>
+                <li>We</li>
+                <li>Th</li>
+                <li>Fr</li>
+                <li>Sa</li>
+                <li>Su</li>
+              </ul>
+            `;
+
+                // $(`#day-calendar`).html(calendarPage);
+                // dayCalendar.fadeIn();
+
+                // let calendarEl = document.getElementById(
+                //   `calendar-${monthName.toLowerCase()}`
+                // );
+                // console.log(calendarEl);
+
+                // var calendar = new FullCalendar.Calendar(calendarEl, {
+                //   initialView: "dayGridMonth", // or your desired view
+                //   height: "auto",
+                //   aspectRatio: 1.5, // Adjust ratio
+                //   windowResize: function () {
+                //     calendar.updateSize(); // Recalculate on resize
+                //   },
+                // });
+
+                // calendar.render();
+
+                // let calendar = new FullCalendar.Calendar(calendarEl, {
+                //   initialView: "dayGridDay", // Options: 'timeGridDay' or 'dayGridDay'
+                //   selectable: true,
+                //   headerToolbar: {
+                //     left: "prevYear,prev,next,nextYear today",
+                //     center: "title",
+                //     right: "dayGridMonth,dayGridWeek,dayGridDay",
+                //   },
+                //   select: function (startDate, endDate, jsEvent, view) {
+                //     console.log(startDate, endDate, jsEvent, view);
+                //     // Check if any event exists on the selected date
+                //   },
+                //   // validRange: {
+                //   //   start: new Date().toISOString().split("T")[0], // Disable dates before today
+                //   // },
+                //   height: 400,                // Explicit height in pixels
+                //   contentHeight: 'auto',
+                //   // contentHeight: 500,
+                //   // width: "50%",
+                //   initialDate: '2023-01-12',
+                //   // navLinks: true, // can click day/week names to navigate views
+                //   // editable: true,
+                //   // dayMaxEvents: true, // allow "more" link when too many events
+                //   // plugins: [ 'rrule' ], // Include the RRule plugin
+                //   // events: events,
+                //   windowResize: function(view) {
+                //     if (window.innerWidth < 600) {
+                //       calendar.changeView('listMonth'); // Switch to a list view for small screens
+                //     } else {
+                //       calendar.changeView('dayGridMonth'); // Default view for larger screens
+                //     }
+                //   },
+                //   // events: //events,
+                //   // [
+                //   //   {
+                //   //     // title: "My repeating event",
+                //   //     // start: "10:00", // a start time (10am in this example)
+                //   //     // end: "14:00", // an end time (2pm in this example)
+                //   //     // dow: [1, 4], // Repeat monday and thursday
+                //   //   },
+                //   //   {
+                //   //     title: "My repeating event",
+                //   //     daysOfWeek: ["3", "5"], // these recurrent events move separately
+                //   //     startTime: "11:00:00",
+                //   //     endTime: "11:30:00",
+                //   //     color: "red",
+                //   //   },
+                //   //   {
+                //   //     title: "My repeating event2",
+                //   //     daysOfWeek: ["3", "5"], // these recurrent events move separately
+                //   //     startTime: "09:00:00",
+                //   //     endTime: "12:30:00",
+                //   //     color: "green",
+                //   //   },
+                //   // ],
+                //   // themeSystem: "lumen",
+                // });
+
+                // calendar.render();
+
+                renderCal(monthIndex + 1, false);
+                $("#total-records").html(
+                  `<div style="font-size: 15px; color: #555555; font-weight: bold">Total: ${totalMonthCount} Bookings</div>`
+                );
+              }
+
+              // $("#calendar-month-name").
+
+              // $(".day-calendar-month").css("max-width", "unset !important");
+              // $(".day-calendar-month").css("width", "unset !important");
+            });
+        }
+
+        function displayBookingData(value) {
+          let selectedYear = value;
+
+          let maxMonthCount = 0;
+          let totalMonthCount = 0;
+          let totalMonthCount2 = 0;
+
+          let totalYearCount = 0;
+          let maxMonth = null; // Store the month with the max monthCount
+          let isEmpty = true;
+
+          for (let month in dateData[selectedYear]) {
+            if (dateData[selectedYear][month].monthCount > maxMonthCount) {
+              maxMonthCount = dateData[selectedYear][month].monthCount;
+              maxMonth = month;
+            }
+
+            totalMonthCount += maxMonthCount; //dateData[selectedYear][month].monthCount;
+
+            if (selectedYear == new Date().getFullYear()) {
+              totalYearCount += dateData[selectedYear][month].monthCount;
+            }
+          }
+
+          totalMonthCount2 = maxMonthCount;
+
+          console.log(
+            "totalMonthCount ",
+            totalMonthCount,
+            dateData[selectedYear]
+          );
+
+          for (let year in dateData) {
+            if (year == selectedYear) {
+              isEmpty = false;
+
+              // for(let month in dateData[year]){
+              for (let month in monthColor) {
+                let monthName = formatMonthName(month);
+
+                // console.log("monthName", dateData[year], month + 1);
+                // if(dateData[year][+month + 1]){
+                let monthCount = dateData[year][+month + 1]?.monthCount ?? 0;
+                let valNow = Math.round((monthCount / totalMonthCount) * 100);
+                console.log("valNow", monthCount);
+                console.log("valNow", monthName, monthColor.length - 1);
+
+                if (month != monthColor.length - 1) {
+                  pageList += `                
+                        <div class="row">    
+                          <div class="col-3" style="text-align: center">${monthName}</div>
+                          <div class="col-9">
+                            <div class="progress" style="width: unset; height: 15px; cursor: pointer">
+                              <div class="progress-bar progress-add progress-bar-striped progress-bar-animated" 
+                                role="progressbar" 
+                                month="${monthName}"
+                                monthIndex=${month}
+                                totalMonthCount=${monthCount}
+                                aria-valuenow="${valNow}"
+                                aria-valuemin="0" 
+                                aria-valuemax="100" 
+                                title="${monthCount} Bookings"
+                                style="width: ${valNow}%; background-color: ${
+                    monthColor[+month]
+                  }; transition: 1s">
+                                ${valNow}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    
+                    `;
+                } else {
+                  pageList += `          
+                  <hr/>      
+                  <div class="row">    
+                    <div class="col-3" style="text-align: center">${monthName}</div>
+                    <div class="col-9">
+                      <div class="progress" style="width: unset; height: 15px; cursor: pointer">
+                        <div class="progress-bar progress-add progress-bar-striped progress-bar-animated" 
+                          role="progressbar" 
+                          month="${monthName}"
+                          monthIndex=${month}
+                          aria-valuenow="100"
+                          aria-valuemin="0" 
+                          aria-valuemax="100" 
+                          style="width: 100%; background-color: ${
+                            monthColor[+month]
+                          }; transition: 1s">
+                          ${totalYearCount} Total Bookings for Year ${selectedYear}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              
+              `;
+                }
+                // }
+              }
+            }
+          }
+
+          console.log({ isEmpty });
+
+          if (isEmpty) {
+            for (let month in monthColor) {
+              let monthName = formatMonthName(month);
+
+              // console.log("monthName", dateData[year], month + 1);
+              // if(dateData[year][+month + 1]){
+              let monthCount = 0;
+              let valNow = 0;
+
+              if (month != monthColor.length - 1) {
+                pageList += `                
+                        <div class="row">    
+                          <div class="col-3" style="text-align: center">${monthName}</div>
+                          <div class="col-9">
+                            <div class="progress" style="width: unset; height: 15px; cursor: pointer">
+                              <div class="progress-bar progress-add progress-bar-striped progress-bar-animated" 
+                                role="progressbar" 
+                                month="${monthName}"
+                                monthIndex=${month}
+                                totalMonthCount=${monthCount}
+                                aria-valuenow="${valNow}"
+                                aria-valuemin="0" 
+                                aria-valuemax="100" 
+                                title="${monthCount} Bookings"
+                                style="width: ${valNow}%; background-color: ${
+                  monthColor[+month]
+                }; transition: 1s">
+                                ${valNow}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    
+                  `;
+              } else {
+                pageList += `          
+                  <hr/>      
+                  <div class="row">    
+                    <div class="col-3" style="text-align: center">${monthName}</div>
+                    <div class="col-9">
+                      <div class="progress" style="width: unset; height: 15px; cursor: pointer">
+                        <div class="progress-bar progress-add progress-bar-striped progress-bar-animated" 
+                          role="progressbar" 
+                          month="${monthName}"
+                          monthIndex=${month}
+                          aria-valuenow="100"
+                          aria-valuemin="0" 
+                          aria-valuemax="100" 
+                          style="width: 100%; background-color: ${
+                            monthColor[+month]
+                          }; transition: 1s">
+                          ${totalYearCount} Total Bookings for Year ${selectedYear}
+                        </div>
+                      </div>
+                    </div>
+                  </div>`;
+              }
+              // }
+            }
+          }
+
+          pageList += `
+             </div>
+              <div class="col-6">
+                <div style="" id="day-calendar">
+                  <!--<div id="calendar-test"></div>-->
+
+                  <div class="calendar">
+                    <div class="group header1">
+                      <!--<p class="left pointer minusmonth">&laquo;</p>-->
+                      <p id="calendar-month-name" class="left monthname center pointer" style="background: white"></p>
+                      <p class="center pointer" id="total-records"></p>
+                    </div>
+                    <ul class="group" style="padding: 2px">
+                      <li>Mo</li>
+                      <li>Tu</li>
+                      <li>We</li>
+                      <li>Th</li>
+                      <li>Fr</li>
+                      <li>Sa</li>
+                      <li>Su</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          `;
+
+          //   <div style="display: none" class="day-calendar">
+          //   <div id="day-calendar-${monthName}" class="col-12" style="/* display: flex; */justify-content: center;align-items: center;height: 100px;    max-width: unset;">
+          //   </div>
+          // </div>
+
+          $("#page-booking-month").html(pageList);
+          pageList = pageList2;
+
+          $("#total-records").html(
+            `<div style="font-size: 15px; color: #555555; font-weight: bold">Total: ${totalMonthCount2} Bookings</div>`
+          );
+
+          // $("#text-total-per-year").text("" + totalYearCount);
+
+          //
+          var d = new Date();
+          var themonth = d.getMonth() + 1;
+
+          renderCal(themonth, isEmpty);
+
+          // var calendarEl = document.getElementById('calendar-test'); // Target the div
+
+          // var calendar = new FullCalendar.Calendar(calendarEl, {
+          //   initialView: 'dayGridMonth', // Initial calendar layout
+          //   height: '100%', // Dynamically adjust height
+          //   headerToolbar: {
+          //     left: 'prev,next',
+          //     center: 'title',
+          //     right: 'dayGridMonth,timeGridWeek'
+          //   },
+          // });
+          // calendar.render(); // Render the calendar
+        }
+
+        // $(".minusmonth").click(function () {
+        //   themonth += -1;
+        //   renderCal(themonth);
+        // });
+
+        // $(".addmonth").click(function () {
+        //   themonth += 1;
+        //   renderCal(themonth);
+        // });
+
+        // function addMonth(themonth){
+
+        // }
+
+        function renderCal(themonth, isEmpty) {
+          $(".calendar li").remove();
+          $(".calendar ul").append(
+            "<li>Mon</li><li>Tue</li><li>Wed</li><li>Thu</li><li>Fri</li><li>Sat</li> <li>Sun</li>"
+          );
+          var d = new Date(),
+            currentMonth = themonth, //d.getMonth() + themonth, // get this month
+            days = numDays(currentMonth, d.getYear()), // get number of days in the month
+            fDay = firstDay(currentMonth, d.getYear()) - 1, // find what day of the week the 1st lands on
+            months = [
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+              "August",
+              "September",
+              "October",
+              "November",
+              "December",
+            ]; // month names
+
+          $(".calendar p.monthname").text(
+            months[currentMonth - 1] + " Daily Records"
+          ); // add month name to calendar
+
+          for (var i = 0; i < fDay - 1; i++) {
+            // place the first day of the month in the correct position
+            $('<li class="empty">&nbsp;</li>').appendTo(".calendar ul");
+          }
+
+          for (var i = 1; i <= days; i++) {
+            console.log(selectedYear, themonth, Object.keys(dateData).length);
+            let val = isEmpty
+              ? ""
+              : dateData[selectedYear][themonth]?.[i] ?? "";
+
+            if (
+              d.getDate() == i &&
+              d.getMonth() + 1 == themonth &&
+              d.getFullYear() == selectedYear
+            ) {
+              $(
+                `<li class='active'>` +
+                  i +
+                  `<div style='font-size: 10px'>${
+                    val == "" ? "0" : val
+                  } today</div></li>`
+              ).appendTo(".calendar ul");
+            } else {
+              // write out the days
+              $(
+                `<li class=''>` +
+                  i +
+                  `<div style='font-size: 10px'>${
+                    val == "" ? "&nbsp;" : val + " bookings"
+                  }</div></li>`
+              ).appendTo(".calendar ul");
+            }
+          }
+
+          function firstDay(month, year) {
+            return new Date(year, month, 1).getDay();
+          }
+
+          function numDays(month, year) {
+            return new Date(year, month, 0).getDate();
+          }
+
+          // $(".calendar li").click(function () {
+          //   $(".calendar li").removeClass("active");
+          //   $(this).addClass("active");
+          // });
         }
 
         //   {
@@ -359,10 +1067,13 @@ $(document).ready(() => {
           overallBookCount + " Overall Bookings"
         );
 
-        drawBookingChart(bookCount, overallBookCount);
+        // drawBookingChart(bookCount, overallBookCount);
 
         $("#tbl-total-bookings").DataTable({
           searching: true,
+          // autoWidth: false,
+          // width: "100px !important",
+          scrollX: true,
           responsive: true,
           // columnDefs: [
           //   { visible: false,
@@ -376,6 +1087,30 @@ $(document).ready(() => {
           language: {
             emptyTable: "No entries to show",
             infoEmpty: "No entries to show",
+          },
+          initComplete: function () {
+            console.log("initComplete");
+
+            // Add a date picker input to the 'Start Date' footer for filtering
+            this.api()
+              .columns(2)
+              .every(function () {
+                var column = this;
+                console.log(column);
+
+                $(
+                  '<input type="text" placeholder="Filter Start Date" style="width: 100%">'
+                )
+                  .appendTo($(column.footer()))
+                  .datepicker({
+                    changeMonth: true,
+                    changeYear: true,
+                    dateFormat: "yy-mm-dd",
+                    onSelect: function (date) {
+                      column.search(date).draw();
+                    },
+                  });
+              });
           },
         });
       } else {
@@ -385,6 +1120,9 @@ $(document).ready(() => {
   }
 
   if (isPageAnalytics) {
+    let optYearSelected = +$("#option-revenue").val();
+    let optMonthSelected = +$("#option-revenue-month").val();
+
     const monetization = ref(database, "/");
     onValue(monetization, (snapshot) => {
       const data = snapshot.val();
@@ -393,54 +1131,250 @@ $(document).ready(() => {
 
       if (data) {
         let driverTotals = drawMonetizationChart(data);
-        // console.log("HERE!!", driverTotals);
+        console.log("HERE!!", driverTotals);
 
-        let dlist = "";
-
-        Object.entries(driverTotals).forEach(([id, value]) => {
-          // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
-          // chartData.push([id, `P${+amount.toFixed(2)}`]);
-          let totalBooking = 0;
-
-          Object.entries(data.income).forEach(([date, dateData]) => {
-            // Loop through drivers on the given date
-            Object.entries(dateData.drivers).forEach(([driverId, driverData]) => {
-              if(value.id == driverId){
-                console.log("Sample", driverId, Object.keys(driverData).length);
-                totalBooking += Object.keys(driverData).length;
-
-              }
-            });
+        $("#option-revenue")
+          .off("change")
+          .on("change", (e) => {
+            optYearSelected = $(e.target).val();
+            renderRevenueTable(driverTotals);
           });
 
-          dlist += `
-          <tr driverid="${value.id}">
-            <td id="driver-name">${id}</td>
-            <td>P${value.amount.toFixed(2)}</td>
-            <td>${totalBooking}</td>
-          </tr>
-        `;
-        });
+        $("#option-revenue-month")
+          .off("change")
+          .on("change", (e) => {
+            optMonthSelected = $(e.target).val();
+            console.log("change optMonthSelected", optMonthSelected);
+            renderRevenueTable(driverTotals);
+          });
 
-        $("#monetized-data").html(dlist);
+        renderRevenueTable(driverTotals);
 
-        $("#tbl-monetization").DataTable({
-          searching: true,
-          responsive: true,
-          // columnDefs: [
-          //   { visible: false,
-          //     targets: [0] }
-          // ],
-          ordering: true,
-          // processing: false,
-          // serverSide: false,
-          destroy: true,
-          info: false,
-          language: {
-            emptyTable: "No entries to show",
-            infoEmpty: "No entries to show",
-          },
-        });
+        function renderRevenueTable(driverTotals) {
+          // let dlist = "";
+          let dlist = [];
+          let tBook = 0;
+          let tInc = 0;
+
+          Object.entries(driverTotals.driverTotals).forEach(([id, value]) => {
+            // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
+            // chartData.push([id, `P${+amount.toFixed(2)}`]);
+            let totalBooking = 0;
+            let totalBooking2 = 0;
+            let totalIncome = 0;
+
+            Object.entries(data.income).forEach(([date, dateData]) => {
+              // Loop through drivers on the given date
+              Object.entries(dateData.drivers).forEach(
+                ([driverId, driverData]) => {
+                  if (value.id == driverId) {
+                    console.log(
+                      "Sample",
+                      driverId,
+                      Object.keys(driverData).length
+                    );
+
+                    // let mInc =
+                    //     driverTotals.driverIncomeInd[driverId]?.[
+                    //       optYearSelected
+                    //     ]?.[optMonthSelected]?.["income"] || 0;
+                    // console.log(mInc);
+
+                    // Overall
+                    if (optMonthSelected == 0) {
+                      totalBooking += Object.keys(driverData).length;
+                      // tBook += totalBooking;
+                      // console.log("tBook += totalBooking;", totalBooking);
+                    }
+                    // Per Month
+                    else {
+                      // console.log("22222", driverTotals.driverIncomeInd[driverId]);
+                      // console.log("11111", driverTotals.driverIncomeInd[driverId][optYearSelected][+optMonthSelected], optMonthSelected);
+                      let monthlyIncome =
+                        driverTotals.driverIncomeInd[driverId]?.[
+                          optYearSelected
+                        ]?.[optMonthSelected]?.["income"] || 0;
+                      let monthlyBooking =
+                        driverTotals.driverIncomeInd[driverId]?.[
+                          optYearSelected
+                        ]?.[optMonthSelected]?.["booking"] || 0;
+                      console.log("monthlyIncome", monthlyIncome);
+                      console.log("bookingMonth", monthlyBooking);
+                      // totalBooking = month;
+                      totalIncome = monthlyIncome;
+                      totalBooking2 = monthlyBooking;
+                      // totalBooking += Object.keys(driverData).length;
+                      // tBook += +monthlyIncome;
+
+                      // let totalBooking2 =
+                      // Object.entries(driverTotals.driverIncomeInd).forEach(
+                      //   ([c, value]) => {
+                      //     let month = value[optYearSelected][optMonthSelected] || 0;
+                      //     // let month = value[optYearSelected]; //[optMonthSelected] || 0;
+                      //     console.log("Loggging", driverId, c, month);
+
+                      //     if(c == driverId){
+                      //       totalBooking = month;
+                      //       console.log("Loggging", month);
+                      //     }
+
+                      //     // Object.entries(month).forEach(([v, b]) => {
+                      //     //   console.log(v, b);
+
+                      //     // });
+                      //   }
+                      // );
+                    }
+                  }
+                }
+              );
+            });
+
+            if (optMonthSelected == 0) {
+              // dlist += `
+              // <tr driverid="${value.id}">
+              //   <td id="driver-name">${id}</td>
+              //   <td>P${value.amount.toFixed(2)}</td>
+              //   <td>${totalBooking}</td>
+              // </tr>
+              // `;
+              dlist.push({
+                driverid: value.id,
+                driverName: id, // #id
+                amount: value.amount.toFixed(2),
+                totalBooking: totalBooking,
+              });
+
+              tBook += totalBooking;
+              tInc += +value.amount.toFixed(2);
+            } else {
+              console.log("totalBooking:", totalBooking);
+              console.log("totalIncome:", totalIncome);
+              console.log("optMonthSelected:", optMonthSelected);
+
+              // dlist += `
+              // <tr driverid="${value.id}">
+              //   <td id="driver-name">${id}</td>
+              //   <td>P${totalIncome.toFixed(2)}</td>
+              //   <td>${totalBooking}</td>
+              // </tr>
+              // `;
+
+              dlist.push({
+                driverid: value.id,
+                driverName: id, // #id
+                amount: `P${totalIncome.toFixed(2)}`,
+                totalBooking: totalBooking2,
+              });
+
+              tBook += totalBooking2;
+              tInc += +value.amount.toFixed(2);
+            }
+
+            // if (optMonthSelected == 0) {
+            //   dlist = "";
+            // }
+          });
+
+          // Add Total Row
+          dlist.push({
+            driverid: "Total",
+            driverName: "Total Revenue", // #id
+            amount: `P${tInc.toFixed(2)}`,
+            totalBooking: tBook,
+          });
+
+          tInc = 0;
+          tBook = 0;
+
+          console.log(dlist);
+          // $("#monetized-data").html(dlist);
+
+          // Check if the DataTable instance already exists, then destroy it
+          // if ($.fn.DataTable.isDataTable("#tbl-monetization")) {
+          // $("#tbl-monetization").DataTable().destroy();
+
+          // Destroy the existing DataTable instance
+          // if ($.fn.DataTable.isDataTable("#tbl-monetization")) {
+          // $("#tbl-monetization").DataTable().destroy();
+          // }
+
+          $("#tbl-monetization").DataTable({
+            data: dlist,
+            columns: [
+              { data: "driverName" },
+              { data: "amount" },
+              {
+                data: "totalBooking",
+                //   render: function (data, type, row) {
+                //     // Create a <td> cell with a data-custom attribute
+                //     return `<span data-custom="${row.customAttr}">${data}</span>`;
+                // },
+              },
+            ],
+            createdRow: function (row, rowData, dataIndex) {
+              // dlist += `
+              // <tr driverid="${value.id}">
+              //   <td id="driver-name">${id}</td>
+              //   <td>P${totalIncome.toFixed(2)}</td>
+              //   <td>${totalBooking}</td>
+              // </tr>
+              // `;
+              // driverid: value.id,
+              // driverName: id, // #id
+              // amount: `P${totalIncome.toFixed(2)}`,
+              // totalBooking: totalBooking2
+
+              if (rowData.driverid != "Total") {
+                $(row).attr("driverid", rowData.driverid);
+                $("td", row).eq(0).attr("id", "driver-name");
+                // $('td', row).eq(2).attr('title', `Value is ${rowData.value}`);
+                // } else {
+                //   $('td', row).eq(2).attr('driverid', rowData.driverid);
+                //   $('td', row).eq(2).attr('title', `Value is ${rowData.value}`);
+              } else {
+                $(row).css("background", "#ffe8d4");
+                // $('td', row).css('pointer-events', 'none'); // Disable interaction
+                // $(row).addClass("no-sort");
+                // const $table = $('#tbl-monetization');
+                // const lastRow = $table.find('tbody tr:last-child');
+
+                // const footer = $table.find('tfoot');
+                // if (!footer.length) {
+                //     $table.append('<tfoot></tfoot>');
+                //     $table.find("tfoot").html("<tr>" + $(row).html() + "</tr>");
+                //     console.log($($table));
+                //     $(row).empty();
+                // }
+                // footer.empty().append(lastRow); // Move row to tfoot
+              }
+            },
+            searching: true,
+            responsive: true,
+            // createdRow: function (row, data, dataIndex) {
+            //   // Add a custom attribute to the <tr> element
+            //   // $(row).attr("data-row-id", data.id); // Assuming `data.id` contains a unique identifier
+            //   // $(row).addClass("custom-class"); // Optionally, add a class to the row
+            //   console.log("data.id", data.id);
+            // },
+            // columnDefs: [
+            //   { visible: false,
+            //     targets: [0] }
+            // ],
+            ordering: true,
+            // processing: false,
+            // serverSide: false,
+            destroy: true,
+            info: false,
+            language: {
+              emptyTable: "No entries to show",
+              infoEmpty: "No entries to show",
+            },
+          });
+          // }
+
+          // console.log($("#monetized-data"));
+        }
       } else {
         console.log("not connected");
       }
@@ -626,93 +1560,85 @@ Napat Tours Admin`
     let name = $(e.target).parent().find("#driver-name").text();
     // console.log($(e.target).parent().find("#driver-name"));
 
-    let id = $(e.target).eq(0).parent().attr("driverid").trim();
-    $("#income-driver-name").text(name);
-    $("#modalIndividualIncome").modal("show");
+    let id = ($(e.target).eq(0).parent()?.attr("driverid") ?? "").trim();
+    console.log("id", id);
 
-    const indMonetization = ref(database, "income/");
-    onValue(indMonetization, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        console.log("INCOME", id, data);
-        // let dlist = "";
-        let dlist = [];
+    if (id != "") {
+      $("#income-driver-name").text(name);
+      $("#modalIndividualIncome").modal("show");
 
-        Object.entries(data).forEach(([date, driver]) => {
-          // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
-          // chartData.push([id, `P${+amount.toFixed(2)}`]);
-          Object.entries(driver).forEach(([d, drivers]) => {
+      const indMonetization = ref(database, "income/");
+      onValue(indMonetization, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          console.log("INCOME", id, data);
+          // let dlist = "";
+          let dlist = [];
+
+          Object.entries(data).forEach(([date, driver]) => {
             // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
             // chartData.push([id, `P${+amount.toFixed(2)}`]);
+            Object.entries(driver).forEach(([d, drivers]) => {
+              // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
+              // chartData.push([id, `P${+amount.toFixed(2)}`]);
 
-            Object.entries(drivers).forEach(([driverid, driverdata]) => {
-              if (driverid == id) {
-                Object.entries(driverdata).forEach(([time, timedata]) => {
-                  // console.log(time, timedata);
+              Object.entries(drivers).forEach(([driverid, driverdata]) => {
+                if (driverid == id) {
+                  Object.entries(driverdata).forEach(([time, timedata]) => {
+                    // console.log(time, timedata);
 
-                  // dlist += `
-                  //   <tr>
-                  //     <td>${date}</td>
-                  //     <td>${time.replaceAll("-", ":")}</td>
-                  //     <td>P${timedata.amount.toFixed(2)}</td>
-                  //   </tr>
-                  // `;
-                  dlist.push({
-                    date: date,
-                    time: time.replaceAll("-", ":"),
-                    earning: "P" + timedata.amount.toFixed(2),
+                    // dlist += `
+                    //   <tr>
+                    //     <td>${date}</td>
+                    //     <td>${time.replaceAll("-", ":")}</td>
+                    //     <td>P${timedata.amount.toFixed(2)}</td>
+                    //   </tr>
+                    // `;
+                    dlist.push({
+                      date: date,
+                      time: time.replaceAll("-", ":"),
+                      earning: "P" + timedata.amount.toFixed(2),
+                    });
                   });
-                });
-              }
+                }
+              });
             });
           });
-        });
 
-        // $("#individual-income").html(dlist);
-        // console.log("writing HTML", dlist);
+          // $("#individual-income").html(dlist);
+          // console.log("writing HTML", dlist);
 
-        $("#tbl-individual-income").DataTable({
-          data: dlist,
-          columns: [
-            { data: "date" }, // Column for Date
-            { data: "time" }, // Column for Time
-            { data: "earning" }, // Column for Earning
-          ],
-          searching: true,
-          responsive: true,
-          // columnDefs: [
-          //   { visible: false,
-          //     targets: [0] }
-          // ],
-          ordering: true,
-          // processing: false,
-          // serverSide: false,
-          destroy: true,
-          info: false,
-          language: {
-            emptyTable: "No entries to show",
-            infoEmpty: "No entries to show",
-          },
-        });
+          $("#tbl-individual-income").DataTable({
+            data: dlist,
+            columns: [
+              { data: "date" }, // Column for Date
+              { data: "time" }, // Column for Time
+              { data: "earning" }, // Column for Earning
+            ],
+            searching: true,
+            responsive: true,
+            // columnDefs: [
+            //   { visible: false,
+            //     targets: [0] }
+            // ],
+            ordering: true,
+            // processing: false,
+            // serverSide: false,
+            destroy: true,
+            info: false,
+            language: {
+              emptyTable: "No entries to show",
+              infoEmpty: "No entries to show",
+            },
+          });
 
-        dlist = "";
-      } else {
-        console.log("not connected");
-      }
-    });
+          dlist = "";
+        } else {
+          console.log("not connected");
+        }
+      });
+    }
   });
-
-  function formatTimestampToDate(timestamp) {
-    // Create a new Date object from the timestamp
-    const date = new Date(timestamp);
-    // Extract the year, day, and month
-    const year = date.getFullYear(); // Get the full year (yyyy)
-    const day = String(date.getDate()).padStart(2, "0"); // Get the day (dd) and ensure it is two digits
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get the month (mm, 0-based, so add 1)
-
-    // Return the formatted date
-    return `${year}-${month}-${day}`;
-  }
 
   window.formatTimestampToDateAll = (timestamp) => {
     const date = new Date(timestamp);
@@ -749,36 +1675,46 @@ Napat Tours Admin`
       // if (isAllowedToAppend) {
       let d = data.drivers;
       for (let driver in d) {
-        lists += `<tr>`;
-        // lists2 += `<tr id="${d[driver].driverid.trim()}">`;
+        let isDeleted = d[driver]?.isDeleted ?? false;
 
-        lists += `<td>${d[driver].plateno}</td>`;
-        // lists2 += `<td col="plateno">${d[driver].plateno}</td>`;
+        if (!isDeleted) {
+          lists += `<tr>`;
+          // lists2 += `<tr id="${d[driver].driverid.trim()}">`;
 
-        lists += `<td>${d[driver].drivername}</td>`;
-        // lists2 += `<td col="drivername">${d[driver].drivername}</td>`;
+          lists += `<td>${d[driver].plateno}</td>`;
+          // lists2 += `<td col="plateno">${d[driver].plateno}</td>`;
 
-        lists += `<td driverid="${driver}" class="message-driver" title="Double click to send message to driver">${d[driver].driveremail}</td>`;
-        // lists2 += `<td col="email">${d[driver].email}</td>`;
+          lists += `<td>${d[driver].drivername}</td>`;
+          // lists2 += `<td col="drivername">${d[driver].drivername}</td>`;
 
-        // lists2 += `<td col="password">${d[driver].password}</td>`;
+          lists += `<td driverid="${driver}" pass="${d[driver].driverpassword}" class="message-driver" title="Double click to send message to driver">${d[driver].driveremail}</td>`;
+          // lists2 += `<td col="email">${d[driver].email}</td>`;
 
-        lists += `<td>${d[driver].driverage}</td>`;
-        // lists2 += `<td col="driverage">${d[driver].driverage}</td>`;
+          // lists2 += `<td col="password">${d[driver].password}</td>`;
 
-        lists += `<td>${d[driver].driveraddress}</td>`;
-        // lists2 += `<td col="driveraddress">${d[driver].driveraddress}</td>`;
+          lists += `<td>${d[driver].driverage}</td>`;
+          // lists2 += `<td col="driverage">${d[driver].driverage}</td>`;
 
-        lists += `<td>${d[driver].drivercontact}</td>`;
-        // lists2 += `<td col="drivercontact">${d[driver].drivercontact}</td>`;
+          lists += `<td>${d[driver].driveraddress}</td>`;
+          // lists2 += `<td col="driveraddress">${d[driver].driveraddress}</td>`;
 
-        lists += `<td>${d[driver].vanmodel}</td>`;
-        // lists2 += `<td col="vanmodel">${d[driver].vanmodel}</td>`;
+          lists += `<td>${d[driver].drivercontact}</td>`;
+          // lists2 += `<td col="drivercontact">${d[driver].drivercontact}</td>`;
 
-        lists += `<td>${d[driver].dateaccountregistered}</td>`;
-        // lists2 += `<td col="dateaccountregistered">${d[driver].dateaccountregistered}</td>`;
+          lists += `<td>${d[driver].vanmodel}</td>`;
+          // lists2 += `<td col="vanmodel">${d[driver].vanmodel}</td>`;
 
-        lists += `</tr>`;
+          lists += `<td>${d[driver].dateaccountregistered}</td>`;
+
+          lists += `
+          <td style="font-size: 20px; text-align: center">
+            <i class="fa fa-trash btn-delete-user" style="cursor: pointer" title="Delete"></i>
+            <i class="fa fa-edit btn-update-user" style="cursor: pointer" title="User"></i>  
+          </td>`;
+          // lists2 += `<td col="dateaccountregistered">${d[driver].dateaccountregistered}</td>`;
+
+          lists += `</tr>`;
+        }
         // lists2 += `</tr>`;
 
         lists2 += `
@@ -835,6 +1771,7 @@ Napat Tours Admin`
       }
 
       $("#list-of-drivers").html(lists);
+
       // console.log(lists);
       // $("#btn-add-new").prev().remove();
       // isAllowedToAppend = true;
@@ -1077,29 +2014,34 @@ Napat Tours Admin`
 
       console.log(getCurrentDate("ymd-"));
 
+      $("#reg-modal-title").text("Register Driver Account");
+      $("#btn-register-driver").css("display", "block");
+      $("#btn-update-driver").css("display", "none");
+      $("#modalAccount").modal("show");
+      $("#date-account-registered").val(getCurrentDate("ymd-"));
+
       // Remove Add button with Check
       if ($("#encode-add i").hasClass("fa-plus-circle")) {
-        if (allowNewRow) {
-          $("#btn-add-new").before(newRow);
-          $("#date-account-registered").val(getCurrentDate("ymd-"));
-          $("#encode-add i").removeClass("fa-plus-circle");
-
-          $("#encode-add i").addClass("fa-check");
-          $("#encode-add i").css("color", "#00c700");
-        } else {
-          iziToast.warning({
-            // title: "Invalid Input",
-            message: `Please complete all inputs to add new one`,
-            icon: "fa fa-bell-exclamation",
-            position: "topRight",
-            timeout: 4000,
-          });
-        }
+        // if (allowNewRow) {
+        //   $("#btn-add-new").before(newRow);
+        //   $("#date-account-registered").val(getCurrentDate("ymd-"));
+        //   $("#encode-add i").removeClass("fa-plus-circle");
+        //   $("#encode-add i").addClass("fa-check");
+        //   $("#encode-add i").css("color", "#00c700");
+        // } else {
+        //   iziToast.warning({
+        //     // title: "Invalid Input",
+        //     message: `Please complete all inputs to add new one`,
+        //     icon: "fa fa-bell-exclamation",
+        //     position: "topRight",
+        //     timeout: 4000,
+        //   });
+        // }
       }
       // Remove check button with Add
-      else {
+      if (1 == 0) {
         // Done encoding, verify content for non-empty values
-        let data = validateEncode($("#btn-add-new"));
+        // let data = validateEncode($("#btn-add-new"));
 
         if (!allowNewRow) {
           iziToast.warning({
@@ -1168,6 +2110,446 @@ Napat Tours Admin`
               console.error("Update failed:", error);
             });
         }
+      }
+      /**
+       * **/
+    });
+
+    $("#btn-register-driver").on("click", () => {
+      // Done encoding, verify content for non-empty values
+      let data = validateEncode();
+      console.log(data);
+
+      if (data.isCompleted) {
+        // Check password if same first
+        if ($("#pass").val() != $("#pass2").val()) {
+          iziToast.info({
+            title: "Password mismatch",
+            message: `Password do not match`,
+            icon: "fa fa-bell-exclamation",
+            position: "topRight",
+            timeout: 4000,
+          });
+        } else {
+          let ret = validatePassword($("#pass").val());
+
+          if (!ret.isValid) {
+            iziToast.info({
+              title: "Password Incorrect",
+              message: `${ret.message}`,
+              icon: "fa fa-bell-exclamation",
+              position: "topRight",
+              timeout: 4000,
+            });
+          } else {
+            // Add extra details
+            let nameAbbrevation = data.data["drivernamef"]
+              .trim()
+              .substring(0, 2);
+            let dateAbbrevation = data.data["dateaccountregistered"]
+              .trim()
+              .replaceAll("-", "");
+            let plateAbbrevation = data.data["plateno"]
+              .trim()
+              .replaceAll("-", "");
+
+            data.data["driverid"] = (
+              nameAbbrevation +
+              dateAbbrevation +
+              plateAbbrevation
+            ).toUpperCase();
+            data.data["isAvailable"] = false;
+            data.data["isDeleted"] = false;
+            data.data["driverpassword"] = $("#pass").val();
+
+            data.data["drivername"] = data.data["drivernamef"].trim();
+
+            //
+            const updates = {};
+            updates[`/users/drivers/${data.data["driverid"]}`] = data.data;
+            console.log({ updates });
+
+            // console.log(updates);
+            update(ref(database), updates)
+              .then(() => {
+                iziToast.success({
+                  title: "Successfully Saved",
+                  message: `Driver's data has been saved`,
+                  icon: "fa fa-save",
+                  position: "topRight",
+                  timeout: 4000,
+                });
+
+                setTimeout(() => {
+                  window.location.href = window.location.href;
+                }, 1500);
+              })
+              .catch((error) => {
+                // iziToast.destroy();
+                iziToast.warning({
+                  title: "Save Failed",
+                  message: `${error}`,
+                  icon: "fa fa-bell-exclamation",
+                  position: "topRight",
+                  timeout: 4000,
+                });
+                console.error("Update failed:", error);
+              });
+          }
+        }
+      } else {
+        iziToast.warning({
+          title: "Incomplete",
+          message: `Please enter all driver's info`,
+          icon: "fa fa-bell-exclamation",
+          position: "topRight",
+          timeout: 4000,
+        });
+      }
+
+      // if (!allowNewRow) {
+      //   iziToast.warning({
+      //     // title: "Invalid Input",
+      //     message: `Please complete all inputs to add new one`,
+      //     icon: "fa fa-bell-exclamation",
+      //     position: "topRight",
+      //     timeout: 4000,
+      //   });
+      // } else {
+      // $("#encode-add i").removeClass("fa-check");
+      // $("#encode-add i").addClass("fa-plus-circle");
+      // $("#encode-add i").css("color", "#212529");
+
+      // iziToast.success({
+      //   title: "Success",
+      //   message: `Validations complete, saving to database`,
+      //   icon: "fa fa-bell-exclamation",
+      //   position: "topRight",
+      //   timeout: 4000,
+      // });
+      // isAllowedToAppend = false;
+
+      // console.log(data);
+      // // Add additionla data
+      // let nameAbbrevation = data["drivername"].trim().substring(0, 2);
+      // let dateAbbrevation = data["dateaccountregistered"]
+      //   .trim()
+      //   .replaceAll("-", "");
+      // let plateAbbrevation = data["plateno"].trim().replaceAll("-", "");
+
+      // data["driverid"] = (
+      //   nameAbbrevation +
+      //   dateAbbrevation +
+      //   plateAbbrevation
+      // ).toUpperCase();
+      // data["isAvailable"] = false;
+
+      // // Save to database
+      // const updates = {};
+      // updates[`/users/drivers/${data["drivername"]}`] = data;
+      // console.log(updates);
+      // update(ref(database), updates)
+      //   .then(() => {
+      //     iziToast.success({
+      //       title: "Successfully Saved",
+      //       message: `Driver's data has been saved`,
+      //       icon: "fa fa-save",
+      //       position: "topRight",
+      //       timeout: 4000,
+      //     });
+
+      //     // setTimeout(() => {
+      //     window.location.href = window.location.href;
+      //     // }, 1500);
+      //   })
+      //   .catch((error) => {
+      //     // iziToast.destroy();
+      //     iziToast.warning({
+      //       title: "Save Failed",
+      //       message: `${error}`,
+      //       icon: "fa fa-bell-exclamation",
+      //       position: "topRight",
+      //       timeout: 4000,
+      //     });
+      //     console.error("Update failed:", error);
+      //   });
+      // }
+    });
+
+    $(document).on("click", ".btn-delete-user", (e) => {
+      let driverid = $(e.target)
+        .parent()
+        .parent()
+        .find("td")
+        .eq(2)
+        .attr("driverid");
+
+      iziToast.warning({
+        title: "WARNING",
+        message: `Are you sure you want to delete this account?`,
+        icon: "fa fa-bell-exclamation",
+        overlay: true,
+        // timeout: 4000,
+        // zindex: 999,
+        position: "center",
+        buttons: [
+          [
+            "<button><b>YES</b></button>",
+            function (instance, toast) {
+              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+              console.log(
+                $(e.target).parent().parent().find("td").eq(2).attr("driverid")
+              );
+              // console.log($(e.target).parent().parent());
+
+              const updates = {};
+              updates[`/users/drivers/${driverid}/isDeleted`] = true;
+              console.log(updates);
+
+              update(ref(database), updates)
+                .then(() => {
+                  iziToast.success({
+                    title: "Successful",
+                    message: `Driver account has been deleted successfully`,
+                    icon: "fa fa-save",
+                    position: "topRight",
+                    timeout: 4000,
+                  });
+                })
+                .catch((error) => {
+                  // iziToast.destroy();
+                  iziToast.warning({
+                    title: "Delete Failed",
+                    message: `${error}`,
+                    icon: "fa fa-bell-exclamation",
+                    position: "topRight",
+                    timeout: 4000,
+                  });
+                  console.error("Update failed:", error);
+                });
+            },
+            true,
+          ],
+          [
+            "<button>NO</button>",
+            function (instance, toast) {
+              instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+            },
+          ],
+        ],
+        onClosing: function (instance, toast, closedBy) {
+          console.info("Closing | closedBy: " + closedBy);
+        },
+        onClosed: function (instance, toast, closedBy) {
+          console.info("Closed | closedBy: " + closedBy);
+        },
+      });
+    });
+
+    $(document).on("click", ".btn-update-user", (e) => {
+      let driverid = $(e.target)
+        .parent()
+        .parent()
+        .find("td")
+        .eq(2)
+        .attr("driverid");
+      let driverpassword = $(e.target)
+        .parent()
+        .parent()
+        .find("td")
+        .eq(2)
+        .attr("pass");
+      let data = $(e.target).parent().parent().find("td");
+
+      $("#btn-update-driver").attr("driverid", driverid);
+
+      $("#reg-modal-title").text("Update Driver Account");
+      $("#btn-update-driver").css("display", "block");
+      $("#btn-register-driver").css("display", "none");
+
+      $("#modalAccount").modal("show");
+
+      // First Name
+      $("#driver-name-f").val(data.eq(1).text().trim());
+
+      // Email
+      $("#driver-email").val(data.eq(2).text().trim());
+
+      // Van Plate Numnber
+      $("#plate-no").val(data.eq(0).text().trim());
+
+      // Age
+      $("#driver-age").val(data.eq(3).text().trim());
+
+      // Address
+      $("#driver-address").val(data.eq(4).text().trim());
+
+      // Contact
+      $("#driver-contact").val(data.eq(5).text().trim());
+
+      // Van Model
+      $("#van-model").val(data.eq(6).text().trim());
+
+      // Account Registered
+      $("#date-account-registered").val(data.eq(7).text().trim());
+
+      // Password
+      $("#pass").val(driverpassword);
+
+      // Password2
+      $("#pass2").val(driverpassword);
+
+      // iziToast.warning({
+      //   title: "WARNING",
+      //   message: `Are you sure you want to delete this account?`,
+      //   icon: "fa fa-bell-exclamation",
+      //   overlay: true,
+      //   // timeout: 4000,
+      //   // zindex: 999,
+      //   position: "center",
+      //   buttons: [
+      //     [
+      //       "<button><b>YES</b></button>",
+      //       function (instance, toast) {
+      //         instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+      //         console.log(
+      //           $(e.target).parent().parent().find("td").eq(2).attr("driverid")
+      //         );
+      //         // console.log($(e.target).parent().parent());
+
+      //         const updates = {};
+      //         updates[`/users/drivers/${driverid}/isDeleted`] = true;
+      //         console.log(updates);
+
+      //         update(ref(database), updates)
+      //           .then(() => {
+      //             iziToast.success({
+      //               title: "Successful",
+      //               message: `Driver account has been deleted successfully`,
+      //               icon: "fa fa-save",
+      //               position: "topRight",
+      //               timeout: 4000,
+      //             });
+
+      //           })
+      //           .catch((error) => {
+      //             // iziToast.destroy();
+      //             iziToast.warning({
+      //               title: "Delete Failed",
+      //               message: `${error}`,
+      //               icon: "fa fa-bell-exclamation",
+      //               position: "topRight",
+      //               timeout: 4000,
+      //             });
+      //             console.error("Update failed:", error);
+      //           });
+      //         ;
+      //       },
+      //       true,
+      //     ],
+      //     [
+      //       "<button>NO</button>",
+      //       function (instance, toast) {
+      //         instance.hide({ transitionOut: "fadeOut" }, toast, "button");
+      //       },
+      //     ],
+      //   ],
+      //   onClosing: function (instance, toast, closedBy) {
+      //     console.info("Closing | closedBy: " + closedBy);
+      //   },
+      //   onClosed: function (instance, toast, closedBy) {
+      //     console.info("Closed | closedBy: " + closedBy);
+      //   },
+      // });
+    });
+
+    $("#btn-update-driver").on("click", (e) => {
+      // Done encoding, verify content for non-empty values
+      let data = validateEncode();
+      let driverid = $(e.target).attr("driverid");
+
+      console.log(driverid);
+
+      if (data.isCompleted) {
+        // Check password if same first
+        if ($("#pass").val() != $("#pass2").val()) {
+          iziToast.info({
+            title: "Password mismatch",
+            message: `Password do not match`,
+            icon: "fa fa-bell-exclamation",
+            position: "topRight",
+            timeout: 4000,
+          });
+        } else {
+          let ret = validatePassword($("#pass").val());
+
+          if (!ret.isValid) {
+            iziToast.info({
+              title: "Password Incorrect",
+              message: `${ret.message}`,
+              icon: "fa fa-bell-exclamation",
+              position: "topRight",
+              timeout: 4000,
+            });
+          } else {
+            // Add extra details
+            let nameAbbrevation = data.data["drivernamef"]
+              .trim()
+              .substring(0, 2);
+            let dateAbbrevation = data.data["dateaccountregistered"]
+              .trim()
+              .replaceAll("-", "");
+            let plateAbbrevation = data.data["plateno"]
+              .trim()
+              .replaceAll("-", "");
+
+            data.data["driverid"] = driverid.trim();
+            data.data["isAvailable"] = false;
+            data.data["isDeleted"] = false;
+            data.data["driverpassword"] = $("#pass").val().trim();
+
+            data.data["drivername"] = data.data["drivernamef"].trim();
+            
+            const updates = {};
+            updates[`/users/drivers/${driverid.trim()}`] = data.data;
+            console.log({ updates });
+
+            // console.log(updates);
+            update(ref(database), updates)
+              .then(() => {
+                iziToast.success({
+                  title: "Successfully Updated",
+                  message: `Driver's data has been updated`,
+                  icon: "fa fa-save",
+                  position: "topRight",
+                  timeout: 4000,
+                });
+
+                setTimeout(() => {
+                  // window.location.href = window.location.href;
+                }, 1500);
+              })
+              .catch((error) => {
+                // iziToast.destroy();
+                iziToast.warning({
+                  title: "Update Failed",
+                  message: `${error}`,
+                  icon: "fa fa-bell-exclamation",
+                  position: "topRight",
+                  timeout: 4000,
+                });
+                console.error("Update failed:", error);
+              });
+          }
+        }
+      } else {
+        iziToast.warning({
+          title: "Incomplete",
+          message: `Please enter all driver's info`,
+          icon: "fa fa-bell-exclamation",
+          position: "topRight",
+          timeout: 4000,
+        });
       }
     });
 
@@ -1467,30 +2849,23 @@ Napat Tours Admin`
     }
   });
 
-  function validateEncode(o) {
-    let encodeAdd = o;
-    let totalIndex = encodeAdd.parent().find("tr").length - 2; // subtracted by one to avoid selections buttons
-    let available = encodeAdd.parent().find("tr").eq(totalIndex);
-    let isCompleted = true;
+  function validateEncode() {
+    let encodeAdd = $("#page-register");
     let data = {};
+    let isCompleted = true;
+    // let isPassSame = false;
 
-    // console.log(encodeAdd.parent().find("tr").eq(1));
-    available.find("td input").each((i, v) => {
-      if ($(v).val() == "") {
-        isCompleted = false;
-      } else {
+    encodeAdd.find("input").each((i, v) => {
+      // console.log(i, v);
+      if ($(v).val() != "") {
         let id = $(v).attr("id").replaceAll("-", "");
         data[id] = $(v).val();
+      } else {
+        isCompleted = false;
       }
     });
 
-    if (!isCompleted) {
-      allowNewRow = false;
-    } else {
-      allowNewRow = true;
-    }
-
-    return data;
+    return { data, isCompleted: isCompleted };
   }
 
   $("#btn-sign-out").on("click", () => {

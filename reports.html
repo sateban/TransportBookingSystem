@@ -5,6 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles/all2.css" />
+    <link rel="stylesheet" href="styles/responsive.bootstrap.css" />
+    <link rel="stylesheet" href="styles/responsive.dataTables.css" />
     <link rel="stylesheet" href="styles/style2.css" />
     <link rel="stylesheet" href="styles/1all.min.css" />
     <link rel="stylesheet" href="styles/1style.css" />
@@ -21,7 +23,7 @@
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap"
       rel="stylesheet"
     /> -->
-    <title>Analytics</title>
+    <title>Reports</title>
   </head>
   <body>
     <div class="loader">
@@ -45,7 +47,7 @@
           <li>
             <a href="" class="sidebar-link">
               <i class="fa-solid fa-pie-chart fa-fw"></i>
-              <span>Analytics</span>
+              <span>Reports</span>
             </a>
           </li>
 
@@ -69,7 +71,7 @@
             </a>
           </li>
 
-<!-- 
+          <!-- 
        
           <li>
             <a href="./pages/Friends.html" class="sidebar-link">
@@ -107,7 +109,7 @@
         </div>
         <div class="main-content">
           <div class="title">
-            <h1>Analytics</h1>
+            <h1>Reports</h1>
           </div>
           <div
             class="main-content-boxes"
@@ -133,7 +135,8 @@
                         aria-expanded="true"
                         aria-controls="collapseOne"
                       >
-                        Total Bookings
+                        <i class="fa fa-book"></i>
+                        &nbsp; Booking Reports
                       </button>
                     </h2>
                     <div
@@ -147,6 +150,16 @@
                           class="projects-box-section2"
                           style="padding: 0 !important; overflow: hidden"
                         >
+                          <!-- <button
+                            id="popoverButton"
+                            class="btn btn-primary"
+                            data-toggle="popover"
+                            title="Popover Title"
+                            data-bs-html="true" 
+                            data-bs-content="<div style='color:red; width: 100px'><strong>HTML Content</strong></div><p>This is a paragraph.</p>"
+                          >
+                            Hover over me
+                          </button> -->
                           <!-- <div
                             class="box-section1"
                             style="margin-bottom: unset !important"
@@ -156,18 +169,58 @@
                             </div>
                           </div> -->
                           <br />
-                          <div class="container">
+                          <h4 class="" style="text-align: center">
+                            Booking Insights
+                          </h4>
+
+                          <div
+                            class="container"
+                            style="
+                              background: #e0e0e0;
+                              background-color: #f9f9f9;
+                              border: 1px solid #ddd;
+                              border-radius: 20px;
+                              box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+                              padding: 20px;
+                            "
+                          >
                             <div class="row">
-                              <div class="col-6">
+                              <div class="col-12">
+                                <div class="col-2">
+                                  <select
+                                    class="form-select"
+                                    aria-label="Default select example"
+                                    id="option-year"
+                                  >
+                                    <!-- <option selected disabled>
+                                      Select Year
+                                    </option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option> -->
+                                  </select>
+                                  <!-- <div id="text-total-per-year"></div> -->
+                                </div>
+                                <br />
+
                                 <h4
                                   class="text-total-bookings"
                                   id="date-today"
                                 ></h4>
+
+                                <div id="page-booking-month">
+                                  <div class="" style="text-align: center">
+                                    Loading...
+                                  </div>
+                                </div>
+
+                                <h4
+                                  class="text-total-bookings"
+                                  id="text-overall-booking"
+                                ></h4>
                                 <div
                                   id="myChart"
-                                  style="
-                                    width: 100%;
-                                  "
+                                  style="width: 100%; display: block"
                                 ></div>
 
                                 <!-- <h6
@@ -179,28 +232,45 @@
                           id="overall-total-booking-gen"
                         ></h6> -->
                               </div>
-                              <div class="col-6"></div>
+                              <!-- <div class="col-6"></div> -->
                             </div>
                           </div>
                           <br />
                           <br />
+                          <!-- 
+                          <div id="calendar-test"></div> -->
 
-                          <table
-                            id="tbl-total-bookings"
-                            class="table"
-                            style="width: 100%"
+                          <h4 class="" style="text-align: center">
+                            Booking History
+                          </h4>
+
+                          <div
+                            style="
+                              background: #e0e0e0;
+                              background-color: #f9f9f9;
+                              border: 1px solid #ddd;
+                              border-radius: 20px;
+                              box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+                              padding: 20px;
+                            "
                           >
-                            <thead>
-                              <tr>
-                                <td>Date</td>
-                                <td>Driver</td>
-                                <td>Passenger</td>
-                                <td>From</td>
-                                <td>To</td>
-                              </tr>
-                            </thead>
-                            <tbody id="total-bookings-data"></tbody>
-                          </table>
+                            <table
+                              id="tbl-total-bookings"
+                              class="table-responsive tbl-total-bookings"
+                              style="width: 100%; min-width: unset !important"
+                            >
+                              <thead>
+                                <tr>
+                                  <td>Date</td>
+                                  <td>Driver</td>
+                                  <td>Passenger</td>
+                                  <td>From</td>
+                                  <td>To</td>
+                                </tr>
+                              </thead>
+                              <tbody id="total-bookings-data"></tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -217,7 +287,8 @@
                         aria-expanded="true"
                         aria-controls="collapseTwo"
                       >
-                        Monetization
+                        <i class="fa fa-dollar-sign"></i>
+                        &nbsp; Revenue
                       </button>
                     </h2>
                     <div
@@ -249,10 +320,7 @@
                                 ></h4>
                                 <div
                                   id="monetization-chart"
-                                  style="
-                                    width: 100%;
-                                    /* height: 100px; */
-                                  "
+                                  style="width: 100%; /* height: 100px; */"
                                 ></div>
 
                                 <!-- <h6
@@ -270,23 +338,85 @@
                           <br />
                           <br />
 
-                          <table
-                            id="tbl-monetization"
-                            class="table"
-                            style="width: 100%"
+                          <h4 class="center">Revenue History</h4>
+
+                          <div
+                            style="
+                              background: #e0e0e0;
+                              background-color: #f9f9f9;
+                              border: 1px solid #ddd;
+                              border-radius: 20px;
+                              box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+                              padding: 20px;
+                            "
                           >
-                            <thead>
-                              <tr>
-                                <!-- <td>Date</td> -->
-                                <td>Driver</td>
-                                <!-- <td>Passenger</td> -->
-                                <td>Total Income</td> 
-                                <td>Total Bookings</td> 
-                                <!-- <td>To</td> -->
-                              </tr>
-                            </thead>
-                            <tbody id="monetized-data"></tbody>
-                          </table>
+                            <div class="row">
+                              <div class="col-2">
+                                <span
+                                  style="font-size: 10px; font-style: italic"
+                                  >Filter by Year</span
+                                >
+                                <select
+                                  class="form-select"
+                                  aria-label="Default select example"
+                                  id="option-revenue"
+                                >
+                                  <!-- <option selected disabled>
+                                Select Year
+                              </option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option> -->
+                                </select>
+                              </div>
+                              <div class="col-3">
+                                <span
+                                  style="font-size: 10px; font-style: italic"
+                                  >Filter by Month</span
+                                >
+                                <select
+                                  class="form-select"
+                                  aria-label="Default select example"
+                                  id="option-revenue-month"
+                                >
+                                  <!-- <option selected disabled>
+                                Select Year
+                              </option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option> -->
+                                </select>
+                              </div>
+                            </div>
+                            <br />
+                            <br />
+
+                            <div>
+
+                            
+                            <table
+                              id="tbl-monetization"
+                              class="table"
+                              style="width: 100%; min-width: unset !important"
+                            >
+                              <thead>
+                                <tr>
+                                  <!-- <td>Date</td> -->
+                                  <td>Driver</td>
+                                  <!-- <td>Passenger</td> -->
+                                  <td>Total Income</td>
+                                  <td>Total Bookings</td>
+                                  <!-- <td>To</td> -->
+                                </tr>
+                              </thead>
+                              <tbody id="monetized-data"></tbody>
+                            </table>
+                            <div style="
+    font-size: 10px;
+    font-style: italic;
+">Double click Driver name to open individual income</div>
+                          </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -557,44 +687,46 @@
 
     <!-- Modal for Individual Income -->
     <div
-    class="modal fade"
-    id="modalIndividualIncome"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="modalIndividualIncomeTitle"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Driver Income</h5>
-          <span
-            type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-label="Close"
-            style="font-size: 20px"
-          >
-            <span aria-hidden="true">&times;</span>
-          </span>
-        </div>
-        <div class="modal-body">
-          <h5 class="text-total-bookings" id=""><b>Driver Name: <span id="income-driver-name"></span></b></h5>
-          <br />
+      class="modal fade"
+      id="modalIndividualIncome"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalIndividualIncomeTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Driver Income</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <h5 class="text-total-bookings" id="">
+              <b>Driver Name: <span id="income-driver-name"></span></b>
+            </h5>
+            <br />
 
-          <table id="tbl-individual-income" class="table" style="width: 100%">
-            <thead>
-              <tr>
-                <td>Date</td>
-                <td>Time</td>
-                <!-- <td>Driver</td> -->
-                <td>Earning</td>
-                <!-- <td>Booking</td> -->
-              </tr>
-            </thead>
-            <tbody id="individual-income"></tbody>
-          </table>
-          <!-- <div class="modal-footer">
+            <table id="tbl-individual-income" class="table" style="width: 100%">
+              <thead>
+                <tr>
+                  <td>Date</td>
+                  <td>Time</td>
+                  <!-- <td>Driver</td> -->
+                  <td>Earning</td>
+                  <!-- <td>Booking</td> -->
+                </tr>
+              </thead>
+              <tbody id="individual-income"></tbody>
+            </table>
+            <!-- <div class="modal-footer">
             <button
               type="button"
               class="btn btn-secondary"
@@ -603,10 +735,10 @@
               Close
             </button>
           </div> -->
+          </div>
         </div>
       </div>
     </div>
-  </div>
     <script src="script/jquery.3.2.1.min.js"></script>
     <script src="assets/bootstrap/js/popper.js"></script>
     <script src="assets/datatable/datatables.min.js"></script>

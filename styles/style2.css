@@ -228,11 +228,11 @@ a {
 .left {
   background-color: var(--ccc-color);
 }
-.left::before {
+/* .left::before {
   content: "\f00d";
   color: var(--ccc-color);
   right: 43px;
-}
+} */
 div.loader {
   height: 100vh;
   width: 100%;
@@ -2796,5 +2796,138 @@ main .projects-box .projects-box-section2 table tr td a.rejected {
 }
 
 .message-driver:hover {
+  text-decoration: underline;
+}
+
+
+#headingOne button {
+  background-color: #e8fcff;
+}
+
+#headingTwo button {
+  background-color: #ffe8e8;
+
+}
+
+#headingOne button, #headingTwo button {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.accordion-item {
+  margin-bottom: 20px;
+}
+
+@import url(https://fonts.googleapis.com/css?family=Lato:300);
+* {
+	box-sizing: border-box;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.left {
+  float: left;
+}
+.right {
+  float: right;
+}
+.monthname {
+  width: 100%;
+}
+.pointer {
+  cursor: pointer;
+  user-select: none;
+}
+
+body {
+  background-color: #F6F2F2;
+  font-family: 'Lato',sans-serif;
+  padding: 1em 0;
+}
+
+.header1 {
+  border-bottom: 1px solid #ddd;
+  padding: .5em;
+  margin-bottom: .5em;
+}
+
+.group:after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
+.calendar p {
+  line-height: 1.5em;
+	margin: 0;
+	color: #444;
+}
+
+.calendar {
+	background: #fff;
+	color: #777;
+	padding: 0;
+	/* max-width: 20em; */
+	/* min-height: 15em; */
+	margin: .5em auto;
+}
+
+.calendar li {
+	float: left;
+	width: calc(100% / 7);
+	text-align: center;
+	padding: .35em 0;
+	cursor: pointer;
+}
+
+.calendar li.empty {
+  pointer-events: none;
+}
+
+.calendar li:hover {
+	color: red;
+}
+
+.calendar li.active,
+.calendar li.active:hover {
+  background-color: red;
+  color: #fff;
+}
+
+.calendar li:nth-child(-n+6) {
+	color: #777;
+}
+.center {
+	text-align: center;
+}
+
+
+#tbl-total-bookings {
+  background: #e0e0e0;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+}
+
+.tbl-total-bookings {
+  border-radius: unset !important;
+}
+
+#btn-add-new .fa-plus-circle {
+  transition: 0.2s;
+}
+
+#btn-add-new .fa-plus-circle:hover {
+  color: rgb(0, 206, 110)
+}
+
+#monetized-data td {
   text-decoration: underline;
 }
