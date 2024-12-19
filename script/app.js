@@ -75,6 +75,9 @@ let isPageAnalytics =
   window.location.href.includes("analytics") ||
   window.location.href.includes("reports");
 
+let isPageFeedback = window.location.href.includes("feedback");
+let isPageActivity = window.location.href.includes("activity");
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -360,7 +363,7 @@ function drawMonetizationChart(d) {
 
 $(document).ready(() => {
   // $(function () {
-  $('[data-toggle="popover"]').popover();
+  // $('[data-toggle="popover"]').popover();
   // });
 
   // $(".sd-CustomSelect").multipleSelect({
@@ -1119,7 +1122,7 @@ $(document).ready(() => {
     });
   }
 
-  if (isPageAnalytics) {
+  if (isPageAnalytics || isPageActivity) {
     let optYearSelected = +$("#option-revenue").val();
     let optMonthSelected = +$("#option-revenue-month").val();
 
@@ -1130,240 +1133,46 @@ $(document).ready(() => {
       let userData = [];
 
       if (data) {
-        let driverTotals = drawMonetizationChart(data);
-        console.log("HERE!!", driverTotals);
+        if (isPageActivity) {
+          let activities = [];
+          let counter = 0;
+          console.log("isPageActivity", data.activity.admin);
 
-        $("#option-revenue")
-          .off("change")
-          .on("change", (e) => {
-            optYearSelected = $(e.target).val();
-            renderRevenueTable(driverTotals);
-          });
+          Object.entries(data.activity.admin).forEach(([timestamp, value]) => {
+            console.log(timestamp, value);
 
-        $("#option-revenue-month")
-          .off("change")
-          .on("change", (e) => {
-            optMonthSelected = $(e.target).val();
-            console.log("change optMonthSelected", optMonthSelected);
-            renderRevenueTable(driverTotals);
-          });
-
-        renderRevenueTable(driverTotals);
-
-        function renderRevenueTable(driverTotals) {
-          // let dlist = "";
-          let dlist = [];
-          let tBook = 0;
-          let tInc = 0;
-
-          Object.entries(driverTotals.driverTotals).forEach(([id, value]) => {
-            // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
-            // chartData.push([id, `P${+amount.toFixed(2)}`]);
-            let totalBooking = 0;
-            let totalBooking2 = 0;
-            let totalIncome = 0;
-
-            Object.entries(data.income).forEach(([date, dateData]) => {
-              // Loop through drivers on the given date
-              Object.entries(dateData.drivers).forEach(
-                ([driverId, driverData]) => {
-                  if (value.id == driverId) {
-                    console.log(
-                      "Sample",
-                      driverId,
-                      Object.keys(driverData).length
-                    );
-
-                    // let mInc =
-                    //     driverTotals.driverIncomeInd[driverId]?.[
-                    //       optYearSelected
-                    //     ]?.[optMonthSelected]?.["income"] || 0;
-                    // console.log(mInc);
-
-                    // Overall
-                    if (optMonthSelected == 0) {
-                      totalBooking += Object.keys(driverData).length;
-                      // tBook += totalBooking;
-                      // console.log("tBook += totalBooking;", totalBooking);
-                    }
-                    // Per Month
-                    else {
-                      // console.log("22222", driverTotals.driverIncomeInd[driverId]);
-                      // console.log("11111", driverTotals.driverIncomeInd[driverId][optYearSelected][+optMonthSelected], optMonthSelected);
-                      let monthlyIncome =
-                        driverTotals.driverIncomeInd[driverId]?.[
-                          optYearSelected
-                        ]?.[optMonthSelected]?.["income"] || 0;
-                      let monthlyBooking =
-                        driverTotals.driverIncomeInd[driverId]?.[
-                          optYearSelected
-                        ]?.[optMonthSelected]?.["booking"] || 0;
-                      console.log("monthlyIncome", monthlyIncome);
-                      console.log("bookingMonth", monthlyBooking);
-                      // totalBooking = month;
-                      totalIncome = monthlyIncome;
-                      totalBooking2 = monthlyBooking;
-                      // totalBooking += Object.keys(driverData).length;
-                      // tBook += +monthlyIncome;
-
-                      // let totalBooking2 =
-                      // Object.entries(driverTotals.driverIncomeInd).forEach(
-                      //   ([c, value]) => {
-                      //     let month = value[optYearSelected][optMonthSelected] || 0;
-                      //     // let month = value[optYearSelected]; //[optMonthSelected] || 0;
-                      //     console.log("Loggging", driverId, c, month);
-
-                      //     if(c == driverId){
-                      //       totalBooking = month;
-                      //       console.log("Loggging", month);
-                      //     }
-
-                      //     // Object.entries(month).forEach(([v, b]) => {
-                      //     //   console.log(v, b);
-
-                      //     // });
-                      //   }
-                      // );
-                    }
-                  }
-                }
-              );
+            activities.push({
+              id: counter,
+              timestamp: formatTimestampToDateAll(+timestamp),
+              activity: value.activity,
+              page: value.page.toUpperCase(),
+              uid: value.uid,
             });
-
-            if (optMonthSelected == 0) {
-              // dlist += `
-              // <tr driverid="${value.id}">
-              //   <td id="driver-name">${id}</td>
-              //   <td>P${value.amount.toFixed(2)}</td>
-              //   <td>${totalBooking}</td>
-              // </tr>
-              // `;
-              dlist.push({
-                driverid: value.id,
-                driverName: id, // #id
-                amount: value.amount.toFixed(2),
-                totalBooking: totalBooking,
-              });
-
-              tBook += totalBooking;
-              tInc += +value.amount.toFixed(2);
-            } else {
-              console.log("totalBooking:", totalBooking);
-              console.log("totalIncome:", totalIncome);
-              console.log("optMonthSelected:", optMonthSelected);
-
-              // dlist += `
-              // <tr driverid="${value.id}">
-              //   <td id="driver-name">${id}</td>
-              //   <td>P${totalIncome.toFixed(2)}</td>
-              //   <td>${totalBooking}</td>
-              // </tr>
-              // `;
-
-              dlist.push({
-                driverid: value.id,
-                driverName: id, // #id
-                amount: `P${totalIncome.toFixed(2)}`,
-                totalBooking: totalBooking2,
-              });
-
-              tBook += totalBooking2;
-              tInc += +value.amount.toFixed(2);
-            }
-
-            // if (optMonthSelected == 0) {
-            //   dlist = "";
-            // }
+            counter++;
           });
 
-          // Add Total Row
-          dlist.push({
-            driverid: "Total",
-            driverName: "Total Revenue", // #id
-            amount: `P${tInc.toFixed(2)}`,
-            totalBooking: tBook,
-          });
-
-          tInc = 0;
-          tBook = 0;
-
-          console.log(dlist);
-          // $("#monetized-data").html(dlist);
-
-          // Check if the DataTable instance already exists, then destroy it
-          // if ($.fn.DataTable.isDataTable("#tbl-monetization")) {
-          // $("#tbl-monetization").DataTable().destroy();
-
-          // Destroy the existing DataTable instance
-          // if ($.fn.DataTable.isDataTable("#tbl-monetization")) {
-          // $("#tbl-monetization").DataTable().destroy();
-          // }
-
-          $("#tbl-monetization").DataTable({
-            data: dlist,
+          $("#tbl-activity").DataTable({
+            data: activities,
             columns: [
-              { data: "driverName" },
-              { data: "amount" },
+              { data: "id" },
+              { data: "timestamp" },
+              { data: "activity" },
+              { data: "page" },
+            ],
+            columnDefs: [
               {
-                data: "totalBooking",
-                //   render: function (data, type, row) {
-                //     // Create a <td> cell with a data-custom attribute
-                //     return `<span data-custom="${row.customAttr}">${data}</span>`;
-                // },
+                targets: 0, // Target column 0
+                visible: false, // Hide column 0
+                searchable: false, // Exclude from search (optional)
               },
             ],
-            createdRow: function (row, rowData, dataIndex) {
-              // dlist += `
-              // <tr driverid="${value.id}">
-              //   <td id="driver-name">${id}</td>
-              //   <td>P${totalIncome.toFixed(2)}</td>
-              //   <td>${totalBooking}</td>
-              // </tr>
-              // `;
-              // driverid: value.id,
-              // driverName: id, // #id
-              // amount: `P${totalIncome.toFixed(2)}`,
-              // totalBooking: totalBooking2
-
-              if (rowData.driverid != "Total") {
-                $(row).attr("driverid", rowData.driverid);
-                $("td", row).eq(0).attr("id", "driver-name");
-                // $('td', row).eq(2).attr('title', `Value is ${rowData.value}`);
-                // } else {
-                //   $('td', row).eq(2).attr('driverid', rowData.driverid);
-                //   $('td', row).eq(2).attr('title', `Value is ${rowData.value}`);
-              } else {
-                $(row).css("background", "#ffe8d4");
-                // $('td', row).css('pointer-events', 'none'); // Disable interaction
-                // $(row).addClass("no-sort");
-                // const $table = $('#tbl-monetization');
-                // const lastRow = $table.find('tbody tr:last-child');
-
-                // const footer = $table.find('tfoot');
-                // if (!footer.length) {
-                //     $table.append('<tfoot></tfoot>');
-                //     $table.find("tfoot").html("<tr>" + $(row).html() + "</tr>");
-                //     console.log($($table));
-                //     $(row).empty();
-                // }
-                // footer.empty().append(lastRow); // Move row to tfoot
-              }
-            },
+            // createdRow: function (row, rowData, dataIndex) {
+            //   // $(row).attr("driverid", rowData.driverid);
+            //   // $(row).css("background", "#ffe8d4");
+            // },
             searching: true,
             responsive: true,
-            // createdRow: function (row, data, dataIndex) {
-            //   // Add a custom attribute to the <tr> element
-            //   // $(row).attr("data-row-id", data.id); // Assuming `data.id` contains a unique identifier
-            //   // $(row).addClass("custom-class"); // Optionally, add a class to the row
-            //   console.log("data.id", data.id);
-            // },
-            // columnDefs: [
-            //   { visible: false,
-            //     targets: [0] }
-            // ],
             ordering: true,
-            // processing: false,
-            // serverSide: false,
             destroy: true,
             info: false,
             language: {
@@ -1371,9 +1180,254 @@ $(document).ready(() => {
               infoEmpty: "No entries to show",
             },
           });
-          // }
+        }
 
-          // console.log($("#monetized-data"));
+        if (isPageAnalytics) {
+          let driverTotals = drawMonetizationChart(data);
+          console.log("HERE!!", driverTotals);
+
+          $("#option-revenue")
+            .off("change")
+            .on("change", (e) => {
+              optYearSelected = $(e.target).val();
+              renderRevenueTable(driverTotals);
+            });
+
+          $("#option-revenue-month")
+            .off("change")
+            .on("change", (e) => {
+              optMonthSelected = $(e.target).val();
+              console.log("change optMonthSelected", optMonthSelected);
+              renderRevenueTable(driverTotals);
+            });
+
+          renderRevenueTable(driverTotals);
+
+          function renderRevenueTable(driverTotals) {
+            // let dlist = "";
+            let dlist = [];
+            let tBook = 0;
+            let tInc = 0;
+
+            Object.entries(driverTotals.driverTotals).forEach(([id, value]) => {
+              // chartData.push([`P${amount.toFixed(2)} - ${id}`, amount]);
+              // chartData.push([id, `P${+amount.toFixed(2)}`]);
+              let totalBooking = 0;
+              let totalBooking2 = 0;
+              let totalIncome = 0;
+
+              Object.entries(data.income).forEach(([date, dateData]) => {
+                // Loop through drivers on the given date
+                Object.entries(dateData.drivers).forEach(
+                  ([driverId, driverData]) => {
+                    if (value.id == driverId) {
+                      console.log(
+                        "Sample",
+                        driverId,
+                        Object.keys(driverData).length
+                      );
+
+                      // let mInc =
+                      //     driverTotals.driverIncomeInd[driverId]?.[
+                      //       optYearSelected
+                      //     ]?.[optMonthSelected]?.["income"] || 0;
+                      // console.log(mInc);
+
+                      // Overall
+                      if (optMonthSelected == 0) {
+                        totalBooking += Object.keys(driverData).length;
+                        // tBook += totalBooking;
+                        // console.log("tBook += totalBooking;", totalBooking);
+                      }
+                      // Per Month
+                      else {
+                        // console.log("22222", driverTotals.driverIncomeInd[driverId]);
+                        // console.log("11111", driverTotals.driverIncomeInd[driverId][optYearSelected][+optMonthSelected], optMonthSelected);
+                        let monthlyIncome =
+                          driverTotals.driverIncomeInd[driverId]?.[
+                            optYearSelected
+                          ]?.[optMonthSelected]?.["income"] || 0;
+                        let monthlyBooking =
+                          driverTotals.driverIncomeInd[driverId]?.[
+                            optYearSelected
+                          ]?.[optMonthSelected]?.["booking"] || 0;
+                        console.log("monthlyIncome", monthlyIncome);
+                        console.log("bookingMonth", monthlyBooking);
+                        // totalBooking = month;
+                        totalIncome = monthlyIncome;
+                        totalBooking2 = monthlyBooking;
+                        // totalBooking += Object.keys(driverData).length;
+                        // tBook += +monthlyIncome;
+
+                        // let totalBooking2 =
+                        // Object.entries(driverTotals.driverIncomeInd).forEach(
+                        //   ([c, value]) => {
+                        //     let month = value[optYearSelected][optMonthSelected] || 0;
+                        //     // let month = value[optYearSelected]; //[optMonthSelected] || 0;
+                        //     console.log("Loggging", driverId, c, month);
+
+                        //     if(c == driverId){
+                        //       totalBooking = month;
+                        //       console.log("Loggging", month);
+                        //     }
+
+                        //     // Object.entries(month).forEach(([v, b]) => {
+                        //     //   console.log(v, b);
+
+                        //     // });
+                        //   }
+                        // );
+                      }
+                    }
+                  }
+                );
+              });
+
+              if (optMonthSelected == 0) {
+                // dlist += `
+                // <tr driverid="${value.id}">
+                //   <td id="driver-name">${id}</td>
+                //   <td>P${value.amount.toFixed(2)}</td>
+                //   <td>${totalBooking}</td>
+                // </tr>
+                // `;
+                dlist.push({
+                  driverid: value.id,
+                  driverName: id, // #id
+                  amount: value.amount.toFixed(2),
+                  totalBooking: totalBooking,
+                });
+
+                tBook += totalBooking;
+                tInc += +value.amount.toFixed(2);
+              } else {
+                console.log("totalBooking:", totalBooking);
+                console.log("totalIncome:", totalIncome);
+                console.log("optMonthSelected:", optMonthSelected);
+
+                // dlist += `
+                // <tr driverid="${value.id}">
+                //   <td id="driver-name">${id}</td>
+                //   <td>P${totalIncome.toFixed(2)}</td>
+                //   <td>${totalBooking}</td>
+                // </tr>
+                // `;
+
+                dlist.push({
+                  driverid: value.id,
+                  driverName: id, // #id
+                  amount: `P${totalIncome.toFixed(2)}`,
+                  totalBooking: totalBooking2,
+                });
+
+                tBook += totalBooking2;
+                tInc += +value.amount.toFixed(2);
+              }
+
+              // if (optMonthSelected == 0) {
+              //   dlist = "";
+              // }
+            });
+
+            // Add Total Row
+            dlist.push({
+              driverid: "Total",
+              driverName: "Total Revenue", // #id
+              amount: `P${tInc.toFixed(2)}`,
+              totalBooking: tBook,
+            });
+
+            tInc = 0;
+            tBook = 0;
+
+            console.log(dlist);
+            // $("#monetized-data").html(dlist);
+
+            // Check if the DataTable instance already exists, then destroy it
+            // if ($.fn.DataTable.isDataTable("#tbl-monetization")) {
+            // $("#tbl-monetization").DataTable().destroy();
+
+            // Destroy the existing DataTable instance
+            // if ($.fn.DataTable.isDataTable("#tbl-monetization")) {
+            // $("#tbl-monetization").DataTable().destroy();
+            // }
+
+            $("#tbl-monetization").DataTable({
+              data: dlist,
+              columns: [
+                { data: "driverName" },
+                { data: "amount" },
+                {
+                  data: "totalBooking",
+                  //   render: function (data, type, row) {
+                  //     // Create a <td> cell with a data-custom attribute
+                  //     return `<span data-custom="${row.customAttr}">${data}</span>`;
+                  // },
+                },
+              ],
+              createdRow: function (row, rowData, dataIndex) {
+                // dlist += `
+                // <tr driverid="${value.id}">
+                //   <td id="driver-name">${id}</td>
+                //   <td>P${totalIncome.toFixed(2)}</td>
+                //   <td>${totalBooking}</td>
+                // </tr>
+                // `;
+                // driverid: value.id,
+                // driverName: id, // #id
+                // amount: `P${totalIncome.toFixed(2)}`,
+                // totalBooking: totalBooking2
+
+                if (rowData.driverid != "Total") {
+                  $(row).attr("driverid", rowData.driverid);
+                  $("td", row).eq(0).attr("id", "driver-name");
+                  // $('td', row).eq(2).attr('title', `Value is ${rowData.value}`);
+                  // } else {
+                  //   $('td', row).eq(2).attr('driverid', rowData.driverid);
+                  //   $('td', row).eq(2).attr('title', `Value is ${rowData.value}`);
+                } else {
+                  $(row).css("background", "#ffe8d4");
+                  // $('td', row).css('pointer-events', 'none'); // Disable interaction
+                  // $(row).addClass("no-sort");
+                  // const $table = $('#tbl-monetization');
+                  // const lastRow = $table.find('tbody tr:last-child');
+
+                  // const footer = $table.find('tfoot');
+                  // if (!footer.length) {
+                  //     $table.append('<tfoot></tfoot>');
+                  //     $table.find("tfoot").html("<tr>" + $(row).html() + "</tr>");
+                  //     console.log($($table));
+                  //     $(row).empty();
+                  // }
+                  // footer.empty().append(lastRow); // Move row to tfoot
+                }
+              },
+              searching: true,
+              responsive: true,
+              // createdRow: function (row, data, dataIndex) {
+              //   // Add a custom attribute to the <tr> element
+              //   // $(row).attr("data-row-id", data.id); // Assuming `data.id` contains a unique identifier
+              //   // $(row).addClass("custom-class"); // Optionally, add a class to the row
+              //   console.log("data.id", data.id);
+              // },
+              // columnDefs: [
+              //   { visible: false,
+              //     targets: [0] }
+              // ],
+              ordering: true,
+              // processing: false,
+              // serverSide: false,
+              destroy: true,
+              info: false,
+              language: {
+                emptyTable: "No entries to show",
+                infoEmpty: "No entries to show",
+              },
+            });
+            // }
+
+            // console.log($("#monetized-data"));
+          }
         }
       } else {
         console.log("not connected");
@@ -1544,13 +1598,27 @@ Napat Tours Admin`
             "email"
           )}`,
         });
+
+        logActivity(
+          `Send email to ${$("#email-driver-name").attr(
+            "email"
+          )} for updated password`,
+          "accounts"
+        );
       },
       error: (e) => {
         iziToast.destroy();
         iziToast.warning({
           title: "Email Not Sent",
-          message: `Please try again later (${e})`,
+          message: `Please try again later (${e.message})`,
         });
+
+        logActivity(
+          `Failed to send email to ${$("#email-driver-name").attr(
+            "email"
+          )} for updated password`,
+          "accounts"
+        );
       },
       done: () => {},
     });
@@ -1687,33 +1755,63 @@ Napat Tours Admin`
           lists += `<td>${d[driver].drivername}</td>`;
           // lists2 += `<td col="drivername">${d[driver].drivername}</td>`;
 
-          lists += `<td driverid="${driver}" pass="${d[driver].driverpassword}" class="message-driver" title="Double click to send message to driver">${d[driver].driveremail}</td>`;
+          if (isPageFeedback) {
+            lists += `<td>${d[driver].driveremail}</td>`;
+
+            if (d[driver].feedback) {
+              let li = "<ul style='padding: 0px; margin: 0px'>";
+              Object.entries(d[driver].feedback).forEach(([email, value]) => {
+                console.log(
+                  sanitizeText(d[driver].driveremail),
+                  sanitizeText(email)
+                );
+
+                li += `<li><span style="font-weight: normal">Customer: </span>${
+                  value?.customerName ?? ""
+                }</li>`;
+                li += `<li><span style="font-weight: normal">Rating: </span>${"⭐".repeat(
+                  value?.rating ?? 0
+                )}</li>`;
+                li += `<li><span style="font-weight: normal">Comment: </span>${
+                  value?.comment ?? ""
+                }</li>`;
+                li += `<br/>`;
+              });
+
+              li += "</ul>";
+              lists += `<td>${li}</td>`;
+            } else {
+              lists += `<td>~ </td>`;
+            }
+          } else {
+            lists += `<td driverid="${driver}" pass="${d[driver].driverpassword}" class="message-driver" title="Double click to send message to driver">${d[driver].driveremail}</td>`;
+
+            lists += `<td>${d[driver].driverage}</td>`;
+            // lists2 += `<td col="driverage">${d[driver].driverage}</td>`;
+
+            lists += `<td>${d[driver].driveraddress}</td>`;
+            // lists2 += `<td col="driveraddress">${d[driver].driveraddress}</td>`;
+
+            lists += `<td>${d[driver].drivercontact}</td>`;
+            // lists2 += `<td col="drivercontact">${d[driver].drivercontact}</td>`;
+
+            lists += `<td>${d[driver].vanmodel}</td>`;
+            // lists2 += `<td col="vanmodel">${d[driver].vanmodel}</td>`;
+
+            lists += `<td>${d[driver].dateaccountregistered}</td>`;
+
+            lists += `
+          <td style="font-size: 20px; text-align: center">
+            <i class="fa fa-trash btn-delete-user" style="cursor: pointer" title="Delete"></i>
+            <i class="fa fa-edit btn-update-user" style="cursor: pointer" title="Edit"></i>  
+          </td>`;
+            // lists2 += `<td col="dateaccountregistered">${d[driver].dateaccountregistered}</td>`;
+
+            lists += `</tr>`;
+          }
           // lists2 += `<td col="email">${d[driver].email}</td>`;
 
           // lists2 += `<td col="password">${d[driver].password}</td>`;
-
-          lists += `<td>${d[driver].driverage}</td>`;
-          // lists2 += `<td col="driverage">${d[driver].driverage}</td>`;
-
-          lists += `<td>${d[driver].driveraddress}</td>`;
-          // lists2 += `<td col="driveraddress">${d[driver].driveraddress}</td>`;
-
-          lists += `<td>${d[driver].drivercontact}</td>`;
-          // lists2 += `<td col="drivercontact">${d[driver].drivercontact}</td>`;
-
-          lists += `<td>${d[driver].vanmodel}</td>`;
-          // lists2 += `<td col="vanmodel">${d[driver].vanmodel}</td>`;
-
-          lists += `<td>${d[driver].dateaccountregistered}</td>`;
-
-          lists += `
-          <td style="font-size: 20px; text-align: center">
-            <i class="fa fa-trash btn-delete-user" style="cursor: pointer" title="Delete"></i>
-            <i class="fa fa-edit btn-update-user" style="cursor: pointer" title="User"></i>  
-          </td>`;
-          // lists2 += `<td col="dateaccountregistered">${d[driver].dateaccountregistered}</td>`;
-
-          lists += `</tr>`;
         }
         // lists2 += `</tr>`;
 
@@ -1904,11 +2002,13 @@ Napat Tours Admin`
         const user = userCredential.user;
         sessionStorage.setItem("uid", user.uid);
         window.location.href = "admin.html";
+        logActivity("Successful Login", "login");
       })
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
         console.log(errorMessage);
+        logActivity("Error Login", "login");
 
         iziToast.warning({
           title: "Login Error",
@@ -1922,6 +2022,7 @@ Napat Tours Admin`
 
   $("#btn-login").on("click", (e) => {
     e.preventDefault();
+    console.log("Testtetett");
 
     let email = $("#email");
     let password = $("#password");
@@ -2013,6 +2114,12 @@ Napat Tours Admin`
       // Append the new row before the row with id 'btn-add-new'
 
       console.log(getCurrentDate("ymd-"));
+
+      $("#page-register")
+        .find("input")
+        .each((i, v) => {
+          $(v).val("");
+        });
 
       $("#reg-modal-title").text("Register Driver Account");
       $("#btn-register-driver").css("display", "block");
@@ -2164,6 +2271,7 @@ Napat Tours Admin`
 
             data.data["drivername"] = data.data["drivernamef"].trim();
 
+            logActivity("Save Driver's Info", "accounts");
             //
             const updates = {};
             updates[`/users/drivers/${data.data["driverid"]}`] = data.data;
@@ -2301,6 +2409,8 @@ Napat Tours Admin`
                 $(e.target).parent().parent().find("td").eq(2).attr("driverid")
               );
               // console.log($(e.target).parent().parent());
+
+              logActivity("Delete Driver's Info", "accounts");
 
               const updates = {};
               updates[`/users/drivers/${driverid}/isDeleted`] = true;
@@ -2509,37 +2619,78 @@ Napat Tours Admin`
             data.data["driverpassword"] = $("#pass").val().trim();
 
             data.data["drivername"] = data.data["drivernamef"].trim();
-            
+
             const updates = {};
             updates[`/users/drivers/${driverid.trim()}`] = data.data;
             console.log({ updates });
 
-            // console.log(updates);
-            update(ref(database), updates)
-              .then(() => {
-                iziToast.success({
-                  title: "Successfully Updated",
-                  message: `Driver's data has been updated`,
-                  icon: "fa fa-save",
-                  position: "topRight",
-                  timeout: 4000,
-                });
+            iziToast.warning({
+              title: "WARNING",
+              message: `Are you sure you want to update this account?`,
+              icon: "fa fa-bell-exclamation",
+              overlay: true,
+              // timeout: 4000,
+              // zindex: 999,
+              position: "center",
+              buttons: [
+                [
+                  "<button><b>YES</b></button>",
+                  function (instance, toast) {
+                    instance.hide(
+                      { transitionOut: "fadeOut" },
+                      toast,
+                      "button"
+                    );
 
-                setTimeout(() => {
-                  // window.location.href = window.location.href;
-                }, 1500);
-              })
-              .catch((error) => {
-                // iziToast.destroy();
-                iziToast.warning({
-                  title: "Update Failed",
-                  message: `${error}`,
-                  icon: "fa fa-bell-exclamation",
-                  position: "topRight",
-                  timeout: 4000,
-                });
-                console.error("Update failed:", error);
-              });
+                    logActivity("Update Driver's Account", "accounts");
+
+                    // console.log(updates);
+                    update(ref(database), updates)
+                      .then(() => {
+                        iziToast.success({
+                          title: "Successfully Updated",
+                          message: `Driver's data has been updated`,
+                          icon: "fa fa-save",
+                          position: "topRight",
+                          timeout: 4000,
+                        });
+
+                        setTimeout(() => {
+                          window.location.href = window.location.href;
+                        }, 1500);
+                      })
+                      .catch((error) => {
+                        // iziToast.destroy();
+                        iziToast.warning({
+                          title: "Update Failed",
+                          message: `${error}`,
+                          icon: "fa fa-bell-exclamation",
+                          position: "topRight",
+                          timeout: 4000,
+                        });
+                        console.error("Update failed:", error);
+                      });
+                  },
+                  true,
+                ],
+                [
+                  "<button>NO</button>",
+                  function (instance, toast) {
+                    instance.hide(
+                      { transitionOut: "fadeOut" },
+                      toast,
+                      "button"
+                    );
+                  },
+                ],
+              ],
+              onClosing: function (instance, toast, closedBy) {
+                console.info("Closing | closedBy: " + closedBy);
+              },
+              onClosed: function (instance, toast, closedBy) {
+                console.info("Closed | closedBy: " + closedBy);
+              },
+            });
           }
         }
       } else {
@@ -2578,11 +2729,11 @@ Napat Tours Admin`
 
             lists += `<td>${d[driver].drivername}</td>`;
 
-            lists += `<td>${d[driver].schedule.day_available}</td>`;
+            lists += `<td>${d[driver]?.schedule?.day_available ?? ""}</td>`;
 
-            lists += `<td>${d[driver].schedule.start}</td>`;
+            lists += `<td>${d[driver]?.schedule?.start ?? ""}</td>`;
 
-            lists += `<td>${d[driver].schedule.end}</td>`;
+            lists += `<td>${d[driver]?.schedule?.end ?? ""}</td>`;
 
             lists += `</tr>`;
           }
@@ -2717,7 +2868,8 @@ Napat Tours Admin`
       $("#list-of-schedule").on("click", ".save-day-schedule", (e) => {
         let day = $(e.target).parent().find("input").val().toUpperCase();
         let driverid = $(e.target).parent().parent().attr("driverid");
-        console.log(driverid);
+        let drivername = $(e.target).parent().parent().find("td").eq(0).text();
+        console.log(drivername);
 
         let splitDay = day.split(",");
         let dayList = ["M", "T", "W", "TH", "F", "SAT", "SUN"];
@@ -2754,6 +2906,11 @@ Napat Tours Admin`
                 position: "topRight",
                 timeout: 3000,
               });
+
+              logActivity(
+                `Update schedule of ${drivername} to ${day}`,
+                "schedule"
+              );
             })
             .catch((error) => {
               iziToast.warning({
@@ -2763,6 +2920,11 @@ Napat Tours Admin`
                 position: "topRight",
                 timeout: 4000,
               });
+
+              logActivity(
+                `Failed update of schedule of ${drivername} to ${day}`,
+                "schedule"
+              );
             });
         }
       });
@@ -2771,6 +2933,7 @@ Napat Tours Admin`
       $("#list-of-schedule").on("click", ".save-start-schedule", (e) => {
         let time = $(e.target).parent().find("input").val().trim();
         let driverid = $(e.target).parent().parent().attr("driverid");
+        let drivername = $(e.target).parent().parent().find("td").eq(0).text();
         console.log(driverid);
 
         if (time == "") {
@@ -2794,6 +2957,11 @@ Napat Tours Admin`
                 position: "topRight",
                 timeout: 3000,
               });
+
+              logActivity(
+                `Update start time of ${drivername} to ${time}`,
+                "schedule"
+              );
             })
             .catch((error) => {
               iziToast.warning({
@@ -2803,6 +2971,11 @@ Napat Tours Admin`
                 position: "topRight",
                 timeout: 4000,
               });
+
+              logActivity(
+                `Failed to update start time of ${drivername} to ${time}`,
+                "schedule"
+              );
             });
         }
       });
@@ -2811,6 +2984,7 @@ Napat Tours Admin`
       $("#list-of-schedule").on("click", ".save-end-schedule", (e) => {
         let time = $(e.target).parent().find("input").val().trim();
         let driverid = $(e.target).parent().parent().attr("driverid");
+        let drivername = $(e.target).parent().parent().find("td").eq(0).text();
         console.log(driverid);
 
         if (time == "") {
@@ -2834,6 +3008,11 @@ Napat Tours Admin`
                 position: "topRight",
                 timeout: 3000,
               });
+
+              logActivity(
+                `Update end time of ${drivername} to ${time}`,
+                "schedule"
+              );
             })
             .catch((error) => {
               iziToast.warning({
@@ -2843,6 +3022,11 @@ Napat Tours Admin`
                 position: "topRight",
                 timeout: 4000,
               });
+
+              logActivity(
+                `Failed to update end time of ${drivername} to ${time}`,
+                "schedule"
+              );
             });
         }
       });
@@ -2886,6 +3070,8 @@ Napat Tours Admin`
             instance.hide({ transitionOut: "fadeOut" }, toast, "button");
             window.location.href = "index.html";
             sessionStorage.setItem("uid", "");
+
+            logActivity("Admin Logout", "dashboard");
           },
           true,
         ],
@@ -2995,6 +3181,27 @@ Napat Tours Admin`
 
   window.getDatabase = () => {
     return database;
+  };
+
+  window.logActivity = (act, page) => {
+    const updates = {};
+    let data = {};
+
+    data = {
+      activity: act,
+      page: page,
+      uid: sessionStorage.getItem("uid"),
+    };
+
+    updates[`/activity/admin/${new Date().getTime()}/`] = data;
+
+    update(ref(database), updates)
+      .then(() => {
+        console.log("Act Success");
+      })
+      .catch((error) => {
+        console.log("Act Error");
+      });
   };
   // }
 });

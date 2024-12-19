@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/all2.css" />
+    <link rel="stylesheet" href="styles/responsive.bootstrap.css" />
+    <link rel="stylesheet" href="styles/responsive.dataTables.css" />
+    <link rel="stylesheet" href="styles/style2.css" />
+    <link rel="stylesheet" href="styles/1all.min.css" />
+    <link rel="stylesheet" href="styles/1style.css" />
+    <link href="assets/bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <link rel="stylesheet" href="styles/jquery-ui.css" />
+    <link rel="stylesheet" href="styles/iziToast.css" />
+    <link rel="stylesheet" href="styles/all.css" />
+    <link rel="stylesheet" href="styles/select2.min.css" />
+    <link
+      rel="stylesheet"
+      href="assets/datatable/dataTables.bootstrap.min.css"
+    />
+    <!-- <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap"
+      rel="stylesheet"
+    /> -->
+    <title>Reports</title>
+  </head>
+  <body>
+    <div class="loader">
+      <h1>Loading<span>....</span></h1>
+    </div>
+    <div class="page-content index-page">
+      <div class="sidebar">
+        <div class="brand">
+          <i class="fa-solid fa-xmark xmark"></i>
+          <img class="img" src="assets/images/napat_tours.png" width="50%" />
+          <!-- <h3 class="brand-name">Zana</h3> -->
+        </div>
+        <ul>
+          <li>
+            <a href="admin.html" class="sidebar-link">
+              <i class="fa-regular fa-chart-bar fa-fw"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="" class="sidebar-link">
+              <i class="fa-solid fa-pie-chart fa-fw"></i>
+              <span>Reports</span>
+            </a>
+          </li>
+
+          <!-- <li>
+            <a href="" class="sidebar-link">
+              <i class="fa-regular fa-dollar-sign fa-fw"></i
+              ><span>Revenue</span>
+            </a>
+          </li> -->
+
+          <li>
+            <a href="accounts.html" class="sidebar-link">
+              <i class="fa fa-users fa-fw"></i><span>Accounts</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="schedule.html" class="sidebar-link active">
+              <i class="fa-solid fa-graduation-cap fa-fw"></i
+              ><span>Schedule</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="activity.html" class="sidebar-link">
+              <i class="fa fa-history fa-fw"></i
+              ><span>Activity</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="feedback.html" class="sidebar-link">
+              <i class="fa fa-comments fa-fw"></i
+              ><span>Feedbacks</span>
+            </a>
+          </li>
+
+          <!-- 
+       
+          <li>
+            <a href="./pages/Friends.html" class="sidebar-link">
+              <i class="fa-regular fa-circle-user fa-fw"></i
+              ><span>Friends</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="./pages/Files.html" class="sidebar-link">
+              <i class="fa-regular fa-file fa-fw"></i> <span>Files</span>
+            </a>
+          </li> -->
+
+          <!-- <li>
+            <a href="./pages/Plans.html" class="sidebar-link">
+              <i class="fa-regular fa-credit-card fa-fw"></i><span>Plans</span>
+            </a>
+          </li> -->
+        </ul>
+      </div>
+      <main>
+        <div class="header">
+          <i class="fa-solid fa-bars bar-item"></i>
+          <!-- <div class="search"> -->
+          <!-- <input type="search" placeholder="Type A Keyword" /> -->
+          <i class="fa fa-sign-out" id="btn-sign-out"></i>
+          <!-- </div> -->
+
+          <!-- <div class="profile">
+            <span class="bell"><i class="fa-regular fa-bell fa-lg"></i></span>
+
+            <img src="./images/avatar.png" alt="No Image" />
+          </div> -->
+        </div>
+        <div class="main-content">
+          <div class="title">
+            <h1>Activity</h1>
+          </div>
+          <div
+            class="main-content-boxes"
+            id="main-box"
+            style="display: block !important"
+          >
+            <div class="box first-box" style="">
+              <div class="projects-box">
+                <!-- <div class="box-section1">
+                  <div class="box-title">
+                    <h2>Projects</h2>
+                  </div>
+                </div> -->
+                <h4 class="" style="text-align: center">
+                  <!-- Booking Insights -->
+                </h4>
+
+                <div
+                  class="container"
+                  style="
+                    background: #e0e0e0;
+                    background-color: #f9f9f9;
+                    border: 1px solid #ddd;
+                    border-radius: 20px;
+                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+                    padding: 20px;
+                  "
+                >
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="col-2">
+                        <!-- <select
+                          class="form-select"
+                          aria-label="Default select example"
+                          id="option-year"
+                        > -->
+                          <!-- <option selected disabled>
+                            Select Year
+                          </option>
+                          <option value="1">One</option>
+                          <option value="2">Two</option>
+                          <option value="3">Three</option> -->
+                        <!-- </select> -->
+                        <!-- <div id="text-total-per-year"></div> -->
+                      </div>
+                   
+                      <div id="page-booking-month">
+                        <div class="" style="text-align: center">
+                          <!-- Loading... -->
+                        </div>
+                      </div>
+
+                      <table id="tbl-activity" class="table" style="width: 100%">
+                        <thead>
+                          <tr>
+                            <td>No</td>
+                            <td>Date</td>
+                            <td>Activity</td>
+                            <td>Page</td>
+                          </tr>
+                        </thead>
+                        <tbody id="tbody-activity">
+
+                        </tbody>
+                      </table>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+
+    <!-- Modal for Individual Income -->
+    <div
+      class="modal fade"
+      id="modalIndividualIncome"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalIndividualIncomeTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Driver Income</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <h5 class="text-total-bookings" id="">
+              <b>Driver Name: <span id="income-driver-name"></span></b>
+            </h5>
+            <br />
+
+            <table id="tbl-individual-income" class="table" style="width: 100%">
+              <thead>
+                <tr>
+                  <td>Date</td>
+                  <td>Time</td>
+                  <!-- <td>Driver</td> -->
+                  <td>Earning</td>
+                  <!-- <td>Booking</td> -->
+                </tr>
+              </thead>
+              <tbody id="individual-income"></tbody>
+            </table>
+            <!-- <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+          </div> -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="script/jquery.3.2.1.min.js"></script>
+    <script src="assets/bootstrap/js/popper.js"></script>
+    <script src="assets/datatable/datatables.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- <script src="assets/bootstrap/js/bootstrap.min.js"></script> -->
+    <script src="script/jquery-ui.js"></script>
+    <script src="script/iziToast.min.js"></script>
+    <script src="script/FullCalendar.js"></script>
+    <script src="script/loader.js" defer></script>
+    <script src="script/calendar.js"></script>
+    <!-- <script type="module" src="script/analytics.js"></script> -->
+    <script type="module" src="script/app.js"></script>
+    <script src="script/script2.js" defer></script>
+  </body>
+</html>

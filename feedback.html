@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap"
       rel="stylesheet"
     /> -->
-    <title>Dashboard</title>
+    <title>Accounts</title>
   </head>
   <body>
     <div class="loader">
@@ -56,9 +56,8 @@
           </li> -->
 
           <li>
-            <a href="accounts.html" class="sidebar-link">
-              <i class="fa fa-users fa-fw"></i
-              ><span>Accounts</span>
+            <a href="accounts.html" class="sidebar-link active">
+              <i class="fa fa-users fa-fw"></i><span>Accounts</span>
             </a>
           </li>
 
@@ -118,7 +117,6 @@
           <i class="fa fa-sign-out" id="btn-sign-out"></i>
           <!-- </div> -->
 
-          
           <!-- <div class="profile">
             <span class="bell"><i class="fa-regular fa-bell fa-lg"></i></span>
 
@@ -127,70 +125,56 @@
         </div>
         <div class="main-content">
           <div class="title">
-            <h1>Dashboard</h1>
+            <h1>Feedbacks</h1>
           </div>
-          <div class="main-content-boxes" id="main-box" style="display: block !important;">
-            <div class="box first-box" style="">
-              <div class="box-section1">
-                <div class="box-title">
-                  <h2>Welcome</h2>
-                  <p>Admin</p>
+          <!-- <div class="main-content-boxes" id="main-box"> -->
+          <div class="" id="main-box">
+            <div class="box first-box" style="/*width: max-content;*/">
+              <div class="projects-box">
+                <!-- <div class="box-section1">
+                  <div class="box-title">
+                    <h2>Projects</h2>
+                  </div>
+                </div> -->
+                <div class="container">
+                  <div
+                    class="projects-box-section2"
+                    style="padding: 0 !important; overflow: auto"
+                  >
+                    <div
+                      class="box-section1"
+                      style="margin-bottom: unset !important;"
+                    >
+                      <!-- <div class="box-title">
+                        <h2>Driver</h2>
+                      </div>
+                    </div> -->
+                    <table style="width: 100%; min-width: unset !important">
+                      <thead>
+                        <tr>
+                          <td>Plate Number</td>
+                          <td>Driver</td>
+                          <td>Email</td>
+                          <td>Comments</td>
+                          <!-- <td>Password</td> -->
+                          <!-- <td>Age</td>
+                          <td>Address</td>
+                          <td>Contact</td>
+                          <td>Van Model</td>
+                          <td>Date Registered</td>
+                          <td>Actions</td> -->
+                        </tr>
+                      </thead>
+                      <tbody id="list-of-drivers"></tbody>
+                    </table>
+                  </div>
                 </div>
-                <div class="box-image">
-                  <img src="./images/welcome.png" alt="No image" />
-                </div>
-                <img src="./images/avatar.png" alt="No image" class="avatar" />
               </div>
 
               <!-- 2nd -->
               <br />
               <br />
               <br />
-
-              <!-- <div class="box">
-                <div
-                  class="box-section1"
-                  style="margin-bottom: unset !important"
-                >
-                  <div class="box-title">
-                    <h2>Tour Setups</h2>
-                  </div>
-                </div>
-                <div class="fourth-box-section2">
-                  <div
-                    class="small-box"
-                    id="trip-history"
-                    data-toggle="modal"
-                    data-target="#modalTripHistory"
-                  >
-                    <i class="fa fa-history fa-2x mb-10"></i>
-                    <h6>Trip History</h6>
-                  </div>
-
-                  <div
-                    class="small-box"
-                    id="manage-schedule"
-                    data-toggle="modal"
-                    data-target="#modalManageSchedule"
-                  >
-                    <i
-                      class="fad fa-business-time fa-circle-check fa-2x mb-10"
-                    ></i>
-                    <h6>Manage Schedule</h6>
-                  </div>
-
-                  <div
-                    class="small-box"
-                    id="update-info"
-                    data-toggle="modal"
-                    data-target="#modalUpdateInfo"
-                  >
-                    <i class="fa fa-eraser fa-2x mb-10"></i>
-                    <h6>Update Info</h6>
-                  </div>
-                </div>
-              </div> -->
-
               <!-- <a>Profile </a> -->
             </div>
             <!-- 
@@ -210,6 +194,111 @@
           </div>
         </div>
       </main>
+    </div>
+
+    <!-- Modal For Account Creation -->
+    <div
+      class="modal fade"
+      id="modalAccount"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalAccountTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reg-modal-title">Register Driver Account</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <!-- <h5 class="text-total-bookings" id="date-today"></h5>
+            <h6 class="text-total-bookings" id="total-booking-gen"></h6>
+            <h6 class="text-total-bookings" id="overall-total-booking-gen"></h6>
+            <br />
+            <br /> -->
+
+            <div class="container mt-3">
+              <form>
+                <div class="row jumbotron box8" id="page-register">
+                  <div class="col-sm-6 form-group">
+                    <label for="name-f">First Name</label>
+                    <input type="text" class="form-control" name="fname" id="driver-name-f" placeholder="Enter your first name." required>
+                  </div>
+                  <!-- <div class="col-sm-6 form-group">
+                    <label for="name-l">Last name</label>
+                    <input type="text" class="form-control" name="lname" id="driver-name-l" placeholder="Enter your last name." required>
+                  </div> -->
+                  <div class="col-sm-6 form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" name="email" id="driver-email" placeholder="Enter your email." required>
+                  </div>
+                  <div class="col-sm-6 form-group">
+                    <label for="address-1">Van Plate Number</label>
+                    <input type="text" class="form-control" name="Locality" id="plate-no" placeholder="Van Plate Number" required>
+                  </div>
+                  <div class="col-sm-6 form-group">
+                    <label for="address-2">Age</label>
+                    <input type="number" class="form-control" name="address" id="driver-age" placeholder="Enter age" required>
+                  </div>
+                  <div class="col-sm-4 form-group">
+                    <label for="driver-address">Address</label>
+                    <input type="address" class="form-control" name="driver-address" id="driver-address" placeholder="Enter address" required>
+                  </div>
+                  <div class="col-sm-2 form-group">
+                    <label for="zip">Contact No.</label>
+                    <input type="number" class="form-control" name="Zip" id="driver-contact" placeholder="Enter contact number" required>
+                  </div>
+                  <div class="col-sm-6 form-group">
+                    <label for="Model">Van Model</label>
+                    <input type="text" class="form-control" name="Zip" id="van-model" placeholder="Enter van model" required>
+                  </div>
+                  <div class="col-sm-6 form-group">
+                    <label for="Date">Account Registered</label>
+                    <input type="date" name="dob" class="form-control" id="date-account-registered" placeholder="" disabled required>
+                  </div>
+                  <!-- <div class="col-sm-6 form-group">
+                    <label for="sex">Gender</label>
+                    <select id="sex" class="form-control browser-default custom-select">
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="unspesified">Unspecified</option>
+                    </select>
+                  </div> -->
+                  <div class="col-sm-6 form-group">
+                  </div>
+                  <div class="col-sm-6 form-group">
+                    <label for="pass">Password</label>
+                    <input type="Password" name="password" class="form-control new-row-input" id="pass" placeholder="Enter your password." required>
+                  </div>
+                  <div class="col-sm-6 form-group">
+                    <label for="pass2">Confirm Password</label>
+                    <input type="Password" name="cnf-password" class="form-control new-row-input  " id="pass2" placeholder="Re-enter your password." required>
+                  </div>
+            
+                  <!-- <div class="col-sm-12 form-group mb-0">
+                    <button class="btn btn-primary float-right">Submit</button>
+                  </div>
+             -->
+                </div>
+              </form>
+            </div>
+
+            <div class="modal-footer">
+              <button id="btn-register-driver" class="btn btn-primary float-right">Register</button>
+              <button id="btn-update-driver" style="display: none;" class="btn btn-primary float-right">Update</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal For Total Bookings -->
@@ -448,6 +537,90 @@
       </div>
     </div>
 
+    <!-- Modal For Driver Email -->
+    <div
+      class="modal fade"
+      id="modalEmailDriver"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalEmailDriverTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="margin: 0 auto; width: 50%">
+          <div class="modal-header">
+            <h5 class="modal-title">Email Driver</h5>
+            <span
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+              style="font-size: 20px"
+            >
+              <span aria-hidden="true">&times;</span>
+            </span>
+          </div>
+          <div class="modal-body">
+            <h5>Set Password:</h5>
+            <div class="mb-3 row">
+              <label for="driver-password" class="col-3 col-form-label"
+                >Change Password</label
+              >
+              <div class="col-7">
+                <input
+                  type="password"
+                  placeholder="Password"
+                  class="form-control new-row-input"
+                  id="driver-password"
+                  value=""
+                  autocomplete="off"
+                />
+              </div>
+
+              <input
+                type="button"
+                class="btn col-2 btn-primary"
+                id="change-driver-password"
+                value="Change"
+              />
+            </div>
+
+            <!-- <br /> -->
+            <hr />
+            <h5>Send Email to Driver:</h5>
+            <textarea
+              class="form-control"
+              id="email-driver-name"
+              disabled
+              style="height: 100px"
+            >
+            </textarea>
+
+            <div class="col-12 p-3" style="text-align: right">
+              <input
+                type="button"
+                class="btn btn-secondary"
+                id="btn-send-email"
+                value="Send Email"
+                disabled
+              />
+            </div>
+
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="script/jquery.3.2.1.min.js"></script>
     <script src="assets/bootstrap/js/popper.js"></script>
     <script src="assets/datatable/datatables.min.js"></script>
@@ -455,6 +628,7 @@
     <script src="script/jquery-ui.js"></script>
     <script src="script/iziToast.min.js"></script>
     <script src="script/FullCalendar.js"></script>
+    <script src="script/loader.js" defer></script>
     <script src="script/calendar.js"></script>
     <script type="module" src="script/app.js"></script>
     <script src="script/script2.js" defer></script>
